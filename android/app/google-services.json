@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "663748995058",
+    "project_id": "gestr-dev",
+    "storage_bucket": "gestr-dev.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:663748995058:android:d3834c037dffc08e89ad6b",
+        "android_client_info": {
+          "package_name": "com.example.gestr"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDP9PNLbIewAHg6l-fRRAZKRz39xtNzvkw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

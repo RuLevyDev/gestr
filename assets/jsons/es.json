@@ -1,0 +1,33 @@
+{
+    "authPage": {
+        "createAccount": "Crear cuenta",
+        "welcomeBack": "Bienvenido de nuevo",
+        "signUpDetails": "Por favor ingresa tus datos para registrarte.",
+        "loginDetails": "¡Bienvenido de nuevo! Por favor ingresa tus datos.",
+        "signUpWithGoogle": "Registrarse con Google",
+        "loginWithGoogle": "Iniciar sesión con Google",
+        "forgotPassword": "¿Olvidaste la contraseña?",
+        "signUpButton": "Registrarse",
+        "resetPasswordButton": "Enviar enlace de reinicio",
+        "loginButton": "Iniciar sesión",
+        "alreadyHaveAccount": "¿Ya tienes una cuenta? ",
+        "dontHaveAccount": "¿No tienes cuenta? ",
+        "signUpLink": "Registrarse",
+        "loginLink": "Iniciar sesión",
+        "emailHint": "Nombre@GesTr.net",
+        "passwordHint": "Ingresa tu contraseña",
+        "checkEmail": "Revisa tu correo electrónico para restablecer la contraseña",
+        "enterEmailToResetPass": "Ingresa tu correo electrónico para restablecer la contraseña"
+    },
+    "unknownRoutePage": {
+        "appBarTitle": "Ruta desconocida",
+        "bodyText": "404\nPágina no encontrada"
+    },
+    "authFailure": {
+        "emailAlreadyInUse": "El email ya está en uso.",
+        "invalidCredentials": "Credenciales inválidas.",
+        "userNotFound": "Usuario no encontrado.",
+        "unknownAuthFailure": "Falla desconocida o no clasificada de autenticación.",
+        "cancelledByUser": "Inicio de sesión cancelado por el usuario."
+    }
+}

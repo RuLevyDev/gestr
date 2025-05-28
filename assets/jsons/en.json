@@ -1,0 +1,33 @@
+{
+    "authPage": {
+        "createAccount": "Create account",
+        "welcomeBack": "Welcome back",
+        "signUpDetails": "Please enter your details to sign up.",
+        "loginDetails": "Welcome back! Please enter your details.",
+        "signUpWithGoogle": "Sign up with Google",
+        "loginWithGoogle": "Log in with Google",
+        "forgotPassword": "Forgot password?",
+        "signUpButton": "Sign up",
+        "resetPasswordButton": "Send Reset Link",
+        "loginButton": "Log in",
+        "alreadyHaveAccount": "Already have an account? ",
+        "dontHaveAccount": "Don't have an account? ",
+        "signUpLink": "Sign up",
+        "loginLink": "Log in",
+        "emailHint": "Name@GesTr.net",
+        "passwordHint": "Enter your password",
+        "checkEmail": "Check your email to reset password",
+        "enterEmailToResetPass": "Enter your email to reset password"
+    },
+    "unknownRoutePage": {
+        "appBarTitle": "Unknown route",
+        "bodyText": "404\nPage not found"
+    },
+    "authFailure": {
+        "emailAlreadyInUse": "The email is already in use.",
+        "invalidCredentials": "Invalid credentials.",
+        "userNotFound": "User not found.",
+        "unknownAuthFailure": "Unknown or unclassified authentication failure.",
+        "cancelledByUser": "Login cancelled by the user."
+    }
+}
