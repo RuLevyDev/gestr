@@ -13,11 +13,19 @@ class SummaryBloc extends Bloc<SummaryEvent, SummaryState> {
       if (state is! SummaryLoaded) emit(SummaryLoading());
       final r = event.range ?? _defaultRange();
       try {
-        final summary = await useCases.fetchSummary(userId, start: r.start, end: r.end);
+        final summary = await useCases.fetchSummary(
+          userId,
+          start: r.start,
+          end: r.end,
+        );
         final diff = r.end.difference(r.start);
         final prevEnd = r.start.subtract(const Duration(milliseconds: 1));
         final prevStart = prevEnd.subtract(diff);
-        final previous = await useCases.fetchSummary(userId, start: prevStart, end: prevEnd);
+        final previous = await useCases.fetchSummary(
+          userId,
+          start: prevStart,
+          end: prevEnd,
+        );
         emit(SummaryLoaded(summary: summary, previous: previous, range: r));
       } catch (e) {
         emit(SummaryError(e.toString()));

@@ -1,7 +1,7 @@
 import 'package:equatable/equatable.dart';
 import 'package:gestr/domain/entities/invoice_model.dart';
 
-enum InvoiceEventType { fetch, refresh, create, delete, getById }
+enum InvoiceEventType { fetch, refresh, create, delete, getById, update }
 
 class InvoiceEvent extends Equatable {
   final InvoiceEventType type;
@@ -18,6 +18,8 @@ class InvoiceEvent extends Equatable {
     : this._(InvoiceEventType.create, invoice: invoice);
   const InvoiceEvent.delete(String invoiceId)
     : this._(InvoiceEventType.delete, invoiceId: invoiceId);
+  const InvoiceEvent.update(Invoice invoice)
+    : this._(InvoiceEventType.update, invoice: invoice);
 
   @override
   List<Object?> get props => [type, invoice, invoiceId];

@@ -8,6 +8,7 @@ abstract class ChartState extends Equatable {
 }
 
 class ChartInitial extends ChartState {}
+
 class ChartLoading extends ChartState {}
 
 class ChartLoaded extends ChartState {
@@ -27,7 +28,14 @@ class ChartLoaded extends ChartState {
   });
 
   @override
-  List<Object?> get props => [range, labels, income, expenses, yoyIncome, yoyExpenses];
+  List<Object?> get props => [
+    range,
+    labels,
+    income,
+    expenses,
+    yoyIncome,
+    yoyExpenses,
+  ];
 }
 
 class ChartError extends ChartState {
@@ -36,4 +44,3 @@ class ChartError extends ChartState {
   @override
   List<Object?> get props => [message];
 }
-

@@ -115,23 +115,41 @@ class _SelfEmployedProfileDialogState extends State<SelfEmployedProfileDialog>
                                     labelText: 'IVA gasto por defecto',
                                   ),
                                   initialValue: defaultExpenseVatRate,
-                                  items: const [0.0, 0.04, 0.10, 0.21]
-                                      .map((r) => DropdownMenuItem(
-                                            value: r,
-                                            child: Text('${(r * 100).toStringAsFixed(0)}%'),
-                                          ))
-                                      .toList(),
-                                  onChanged: (v) => setState(() => defaultExpenseVatRate = v ?? 0.0),
+                                  items:
+                                      const [0.0, 0.04, 0.10, 0.21]
+                                          .map(
+                                            (r) => DropdownMenuItem(
+                                              value: r,
+                                              child: Text(
+                                                '${(r * 100).toStringAsFixed(0)}%',
+                                              ),
+                                            ),
+                                          )
+                                          .toList(),
+                                  onChanged:
+                                      (v) => setState(
+                                        () => defaultExpenseVatRate = v ?? 0.0,
+                                      ),
                                 ),
                                 SwitchListTile(
-                                  title: const Text('Gasto incluye IVA por defecto'),
+                                  title: const Text(
+                                    'Gasto incluye IVA por defecto',
+                                  ),
                                   value: defaultExpenseAmountIsGross,
-                                  onChanged: (v) => setState(() => defaultExpenseAmountIsGross = v),
+                                  onChanged:
+                                      (v) => setState(
+                                        () => defaultExpenseAmountIsGross = v,
+                                      ),
                                 ),
                                 SwitchListTile(
-                                  title: const Text('Gasto deducible por defecto'),
+                                  title: const Text(
+                                    'Gasto deducible por defecto',
+                                  ),
                                   value: defaultExpenseDeductible,
-                                  onChanged: (v) => setState(() => defaultExpenseDeductible = v),
+                                  onChanged:
+                                      (v) => setState(
+                                        () => defaultExpenseDeductible = v,
+                                      ),
                                 ),
                                 SizedBox(height: 8),
                                 DropdownButtonFormField<double>(
@@ -139,23 +157,41 @@ class _SelfEmployedProfileDialogState extends State<SelfEmployedProfileDialog>
                                     labelText: 'IVA gasto por defecto',
                                   ),
                                   initialValue: defaultExpenseVatRate,
-                                  items: const [0.0, 0.04, 0.10, 0.21]
-                                      .map((r) => DropdownMenuItem(
-                                            value: r,
-                                            child: Text('${(r * 100).toStringAsFixed(0)}%'),
-                                          ))
-                                      .toList(),
-                                  onChanged: (v) => setState(() => defaultExpenseVatRate = v ?? 0.0),
+                                  items:
+                                      const [0.0, 0.04, 0.10, 0.21]
+                                          .map(
+                                            (r) => DropdownMenuItem(
+                                              value: r,
+                                              child: Text(
+                                                '${(r * 100).toStringAsFixed(0)}%',
+                                              ),
+                                            ),
+                                          )
+                                          .toList(),
+                                  onChanged:
+                                      (v) => setState(
+                                        () => defaultExpenseVatRate = v ?? 0.0,
+                                      ),
                                 ),
                                 SwitchListTile(
-                                  title: const Text('Gasto incluye IVA por defecto'),
+                                  title: const Text(
+                                    'Gasto incluye IVA por defecto',
+                                  ),
                                   value: defaultExpenseAmountIsGross,
-                                  onChanged: (v) => setState(() => defaultExpenseAmountIsGross = v),
+                                  onChanged:
+                                      (v) => setState(
+                                        () => defaultExpenseAmountIsGross = v,
+                                      ),
                                 ),
                                 SwitchListTile(
-                                  title: const Text('Gasto deducible por defecto'),
+                                  title: const Text(
+                                    'Gasto deducible por defecto',
+                                  ),
                                   value: defaultExpenseDeductible,
-                                  onChanged: (v) => setState(() => defaultExpenseDeductible = v),
+                                  onChanged:
+                                      (v) => setState(
+                                        () => defaultExpenseDeductible = v,
+                                      ),
                                 ),
                               ],
                               if (currentStep == 1) ...[

@@ -11,9 +11,8 @@ class SummaryEvent extends Equatable {
   const SummaryEvent.fetch() : this._(SummaryEventType.fetch);
   const SummaryEvent.refresh() : this._(SummaryEventType.refresh);
   const SummaryEvent.setPeriod(DateTimeRange range)
-      : this._(SummaryEventType.setPeriod, range: range);
+    : this._(SummaryEventType.setPeriod, range: range);
 
   @override
   List<Object?> get props => [type, range];
 }
-

@@ -13,4 +13,3 @@ class Income {
     this.source,
   });
 }
-

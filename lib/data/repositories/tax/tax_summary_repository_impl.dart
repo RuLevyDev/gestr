@@ -305,11 +305,12 @@ class TaxSummaryRepositoryImpl implements TaxSummaryRepository {
         totals[p.category] = (totals[p.category] ?? 0) + p.amount * count;
       }
     }
-    final list = totals.entries
-        .where((e) => e.value > 0)
-        .map((e) => CategoryTotal(e.key, e.value))
-        .toList()
-      ..sort((a, b) => b.total.compareTo(a.total));
+    final list =
+        totals.entries
+            .where((e) => e.value > 0)
+            .map((e) => CategoryTotal(e.key, e.value))
+            .toList()
+          ..sort((a, b) => b.total.compareTo(a.total));
     return list;
   }
 }

@@ -64,9 +64,10 @@ class FixedPaymentCard extends StatelessWidget {
             margin: const EdgeInsets.symmetric(vertical: 8),
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
-              color: isDark
-                  ? Colors.indigo.withValues(alpha: 0.15)
-                  : Colors.lightBlue.withValues(alpha: 0.1),
+              color:
+                  isDark
+                      ? Colors.indigo.withValues(alpha: 0.15)
+                      : Colors.lightBlue.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(20),
               border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
             ),

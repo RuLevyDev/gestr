@@ -12,7 +12,7 @@ class TopClientsEvent extends Equatable {
   const TopClientsEvent.fetch() : this._(TopClientsEventType.fetch);
   const TopClientsEvent.refresh() : this._(TopClientsEventType.refresh);
   const TopClientsEvent.setPeriod(DateTimeRange range)
-      : this._(TopClientsEventType.setPeriod, range: range);
+    : this._(TopClientsEventType.setPeriod, range: range);
 
   @override
   List<Object?> get props => [type, range];

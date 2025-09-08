@@ -8,6 +8,7 @@ abstract class IncomeState extends Equatable {
 }
 
 class IncomeInitial extends IncomeState {}
+
 class IncomeLoading extends IncomeState {}
 
 class IncomeLoaded extends IncomeState {
@@ -23,4 +24,3 @@ class IncomeError extends IncomeState {
   @override
   List<Object?> get props => [message];
 }
-

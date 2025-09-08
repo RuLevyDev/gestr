@@ -7,4 +7,3 @@ abstract class IncomeRepository {
   Future<void> updateIncome(String userId, Income income);
   Future<Income?> getIncomeById(String userId, String id);
 }
-

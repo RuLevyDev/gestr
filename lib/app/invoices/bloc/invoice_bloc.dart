@@ -1,6 +1,8 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gestr/domain/entities/invoice_model.dart';
 import 'package:gestr/domain/usecases/invoice/invoice_usecases.dart';
+import 'package:gestr/domain/entities/income.dart';
+import 'package:gestr/domain/usecases/income/income_usecases.dart';
 
 import 'invoice_event.dart';
 import 'invoice_state.dart';
@@ -27,6 +29,11 @@ class InvoiceBloc extends Bloc<InvoiceEvent, InvoiceState> {
         break;
       case InvoiceEventType.getById:
         await _handleGetById(event.invoiceId!, emit);
+        break;
+          case InvoiceEventType.update:
+        await _handleUpdate(event.invoice!, emit);
+        break;
+      default:
         break;
     }
   }
@@ -86,10 +93,47 @@ class InvoiceBloc extends Bloc<InvoiceEvent, InvoiceState> {
   ) async {
     try {
       await useCases.createInvoice(userId, invoice);
+     if (invoice.status == InvoiceStatus.sent) {
+        await incomeUseCases.create(
+          userId,
+          Income(
+            title: invoice.title,
+            date: invoice.date,
+            amount: invoice.netAmount,
+            source: invoice.receiver,
+          ),
+        );
+      }
+      }
       final invoices = await useCases.fetchInvoices(userId);
       emit(InvoiceLoaded(invoices));
     } catch (e) {
       emit(InvoiceError("No se pudo crear la factura."));
     }
   }
-}
+
+
+  Future<void> _handleUpdate(
+    Invoice invoice,
+    Emitter<InvoiceState> emit,
+  ) async {
+    try {
+      await useCases.updateInvoice(userId, invoice);
+      if (invoice.status == InvoiceStatus.sent) {
+        await incomeUseCases.create(
+          userId,
+          Income(
+            title: invoice.title,
+            date: invoice.date,
+            amount: invoice.netAmount,
+            source: invoice.receiver,
+          ),
+        );
+      }
+      final invoices = await useCases.fetchInvoices(userId);
+      emit(InvoiceLoaded(invoices));
+    } catch (e) {
+      emit(InvoiceError("No se pudo actualizar la factura."));
+    }
+  }
+

@@ -9,13 +9,18 @@ abstract class SummaryState extends Equatable {
 }
 
 class SummaryInitial extends SummaryState {}
+
 class SummaryLoading extends SummaryState {}
 
 class SummaryLoaded extends SummaryState {
   final TaxSummary summary;
   final TaxSummary previous;
   final DateTimeRange range;
-  const SummaryLoaded({required this.summary, required this.previous, required this.range});
+  const SummaryLoaded({
+    required this.summary,
+    required this.previous,
+    required this.range,
+  });
 
   @override
   List<Object?> get props => [summary, previous, range];
@@ -27,4 +32,3 @@ class SummaryError extends SummaryState {
   @override
   List<Object?> get props => [message];
 }
-

@@ -12,7 +12,9 @@ class IncomeProvider {
   static List<SingleChildWidget> get() {
     return [
       Provider<IncomeRepository>(
-        create: (context) => IncomeRepositoryImpl(context.read<FirebaseFirestore>()),
+        create:
+            (context) =>
+                IncomeRepositoryImpl(context.read<FirebaseFirestore>()),
         lazy: true,
       ),
       Provider<IncomeUseCases>(
@@ -29,4 +31,3 @@ class IncomeProvider {
     ];
   }
 }
-

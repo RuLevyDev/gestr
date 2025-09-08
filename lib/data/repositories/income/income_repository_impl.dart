@@ -64,4 +64,3 @@ class IncomeRepositoryImpl implements IncomeRepository {
     });
   }
 }
-

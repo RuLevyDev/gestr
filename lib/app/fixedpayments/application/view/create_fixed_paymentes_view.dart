@@ -22,6 +22,7 @@ class _CreateFixedPaymentPageState extends State<CreateFixedPaymentPage>
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) => loadDefaults(context));
   }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -176,25 +177,32 @@ class _CreateFixedPaymentPageState extends State<CreateFixedPaymentPage>
               DropdownButtonFormField<FixedPaymentCategory>(
                 initialValue: category,
                 decoration: const InputDecoration(labelText: 'Categoría'),
-                items: FixedPaymentCategory.values
-                    .map((c) => DropdownMenuItem(
-                          value: c,
-                          child: Text(c.nameEs),
-                        ))
-                    .toList(),
-                onChanged: (v) => setState(() => category = v ?? FixedPaymentCategory.other),
+                items:
+                    FixedPaymentCategory.values
+                        .map(
+                          (c) =>
+                              DropdownMenuItem(value: c, child: Text(c.nameEs)),
+                        )
+                        .toList(),
+                onChanged:
+                    (v) => setState(
+                      () => category = v ?? FixedPaymentCategory.other,
+                    ),
                 onSaved: (v) => category = v ?? FixedPaymentCategory.other,
               ),
               const SizedBox(height: 12),
               DropdownButtonFormField<double>(
                 initialValue: vatRate,
                 decoration: const InputDecoration(labelText: 'IVA (%)'),
-                items: const [0.0, 0.04, 0.10, 0.21]
-                    .map((r) => DropdownMenuItem(
-                          value: r,
-                          child: Text('${(r * 100).toStringAsFixed(0)}%'),
-                        ))
-                    .toList(),
+                items:
+                    const [0.0, 0.04, 0.10, 0.21]
+                        .map(
+                          (r) => DropdownMenuItem(
+                            value: r,
+                            child: Text('${(r * 100).toStringAsFixed(0)}%'),
+                          ),
+                        )
+                        .toList(),
                 onChanged: (v) => setState(() => vatRate = v ?? 0.0),
                 onSaved: (v) => vatRate = v ?? 0.0,
               ),

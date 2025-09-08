@@ -8,17 +8,19 @@ abstract class VatState extends Equatable {
 }
 
 class VatInitial extends VatState {}
+
 class VatLoading extends VatState {}
+
 class VatLoaded extends VatState {
   final VatBreakdown vat;
   const VatLoaded(this.vat);
   @override
   List<Object?> get props => [vat];
 }
+
 class VatError extends VatState {
   final String message;
   const VatError(this.message);
   @override
   List<Object?> get props => [message];
 }
-

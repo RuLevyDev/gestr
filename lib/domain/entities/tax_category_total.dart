@@ -6,4 +6,3 @@ class CategoryTotal {
 
   const CategoryTotal(this.category, this.total);
 }
-

@@ -14,11 +14,27 @@ mixin DashboardPageMixin on State<DashboardPage> {
   }
 
   String monthLabel(DateTime d) {
-    const m = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+    const m = [
+      'Ene',
+      'Feb',
+      'Mar',
+      'Abr',
+      'May',
+      'Jun',
+      'Jul',
+      'Ago',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dic',
+    ];
     return m[d.month - 1];
   }
 
-  Map<DateTime, double> sumInvoicesNetByMonth(List<Invoice> invoices, List<DateTime> months) {
+  Map<DateTime, double> sumInvoicesNetByMonth(
+    List<Invoice> invoices,
+    List<DateTime> months,
+  ) {
     final map = {for (final m in months) m: 0.0};
     for (final inv in invoices) {
       final key = DateTime(inv.date.year, inv.date.month, 1);
@@ -29,7 +45,10 @@ mixin DashboardPageMixin on State<DashboardPage> {
     return map;
   }
 
-  Map<DateTime, double> sumInvoicesIvaByMonth(List<Invoice> invoices, List<DateTime> months) {
+  Map<DateTime, double> sumInvoicesIvaByMonth(
+    List<Invoice> invoices,
+    List<DateTime> months,
+  ) {
     final map = {for (final m in months) m: 0.0};
     for (final inv in invoices) {
       final key = DateTime(inv.date.year, inv.date.month, 1);
@@ -40,7 +59,10 @@ mixin DashboardPageMixin on State<DashboardPage> {
     return map;
   }
 
-  Map<DateTime, double> sumFixedPaymentsByMonth(List<FixedPayment> payments, List<DateTime> months) {
+  Map<DateTime, double> sumFixedPaymentsByMonth(
+    List<FixedPayment> payments,
+    List<DateTime> months,
+  ) {
     // Aproximación: imputar el pago al mes de su startDate
     final map = {for (final m in months) m: 0.0};
     for (final p in payments) {
@@ -53,7 +75,9 @@ mixin DashboardPageMixin on State<DashboardPage> {
   }
 
   List<FlSpot> toSpots(List<DateTime> months, Map<DateTime, double> values) {
-    return List.generate(months.length, (i) => FlSpot(i.toDouble(), (values[months[i]] ?? 0.0)));
+    return List.generate(
+      months.length,
+      (i) => FlSpot(i.toDouble(), (values[months[i]] ?? 0.0)),
+    );
   }
 }
-

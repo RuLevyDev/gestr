@@ -10,11 +10,11 @@ class ExpensesByCategoryEvent extends Equatable {
   const ExpensesByCategoryEvent._(this.type, {this.range});
 
   const ExpensesByCategoryEvent.fetch()
-      : this._(ExpensesByCategoryEventType.fetch);
+    : this._(ExpensesByCategoryEventType.fetch);
   const ExpensesByCategoryEvent.refresh()
-      : this._(ExpensesByCategoryEventType.refresh);
+    : this._(ExpensesByCategoryEventType.refresh);
   const ExpensesByCategoryEvent.setPeriod(DateTimeRange range)
-      : this._(ExpensesByCategoryEventType.setPeriod, range: range);
+    : this._(ExpensesByCategoryEventType.setPeriod, range: range);
 
   @override
   List<Object?> get props => [type, range];

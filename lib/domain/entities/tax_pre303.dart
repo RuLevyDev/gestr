@@ -8,7 +8,8 @@ class Pre303Summary {
   final double base0;
   final double totalDevengadoBase;
   final double totalDevengadoIva;
-  final double totalSoportadoIva; // IVA soportado deducible bruto (antes de prorrata)
+  final double
+  totalSoportadoIva; // IVA soportado deducible bruto (antes de prorrata)
 
   // Prorrata estimada (0..1) y soportado ajustado
   final double prorrata;

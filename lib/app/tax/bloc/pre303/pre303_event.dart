@@ -12,7 +12,7 @@ class Pre303Event extends Equatable {
   const Pre303Event.fetch() : this._(Pre303EventType.fetch);
   const Pre303Event.refresh() : this._(Pre303EventType.refresh);
   const Pre303Event.setPeriod(DateTimeRange range)
-      : this._(Pre303EventType.setPeriod, range: range);
+    : this._(Pre303EventType.setPeriod, range: range);
 
   @override
   List<Object?> get props => [type, range];

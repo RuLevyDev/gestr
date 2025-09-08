@@ -57,6 +57,7 @@ class MyApp extends StatelessWidget {
         ...IncomeProvider.get(),
         ...FixedPaymentProvider.get(),
         ...TaxProvider.get(),
+        ...InvoiceProvider.get(),
       ],
       child: MaterialApp(
         title: 'Gestr App',

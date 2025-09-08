@@ -4,6 +4,7 @@ import 'package:gestr/app/incomes/bloc/income_bloc.dart';
 import 'package:gestr/app/incomes/bloc/income_event.dart';
 import 'package:gestr/app/incomes/bloc/income_state.dart';
 import 'package:gestr/domain/entities/income.dart';
+import '../../widgets/income_card.dart';
 
 class IncomesPage extends StatefulWidget {
   const IncomesPage({super.key});
@@ -50,24 +51,47 @@ class _IncomesPageState extends State<IncomesPage> {
                   return const SizedBox.shrink();
                 }
                 final incomes = state.incomes;
-                if (incomes.isEmpty) {
-                  return Center(
-                    child: Text('No hay ingresos todavía.'),
-                  );
-                }
-                return ListView.separated(
-                  itemCount: incomes.length,
-                  separatorBuilder: (_, __) => const Divider(height: 1),
-                  itemBuilder: (context, i) {
-                    final inc = incomes[i];
-                    return ListTile(
-                      leading: const Icon(Icons.trending_up),
-                      title: Text(inc.title),
-                      subtitle: Text(_fmtDate(inc.date) + (inc.source != null ? ' · ${inc.source}' : '')),
-                      trailing: Text('${inc.amount.toStringAsFixed(2)} EUR'),
-                      onLongPress: () => _confirmDelete(context, inc),
-                    );
-                  },
+                  final theme = Theme.of(context);
+                final isDark = theme.brightness == Brightness.dark;
+                final total = incomes.fold<double>(0, (sum, inc) => sum + inc.amount);
+                return Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    color: isDark
+                        ? Colors.deepPurple.withAlpha(25)
+                        : Colors.teal.withAlpha(25),
+                  ),
+                  child: incomes.isEmpty
+                      ? const Center(child: Text('No hay ingresos todavía.'))
+                      : Column(
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.all(16),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text('Total', style: theme.textTheme.titleMedium),
+                                  Text('${total.toStringAsFixed(2)} €',
+                                      style: theme.textTheme.titleMedium),
+                                ],
+                              ),
+                            ),
+                            const Divider(height: 1),
+                            Expanded(
+                              child: ListView.builder(
+                                padding: const EdgeInsets.all(8),
+                                itemCount: incomes.length,
+                                itemBuilder: (context, i) {
+                                  final inc = incomes[i];
+                                  return IncomeCard(
+                                    income: inc,
+                                    onDelete: () => _confirmDelete(context, inc),
+                                  );
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
                 );
               },
             ),
@@ -76,8 +100,6 @@ class _IncomesPageState extends State<IncomesPage> {
       ),
     );
   }
-
-  String _fmtDate(DateTime d) => '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}/${d.year}';
 
   void _confirmDelete(BuildContext context, Income inc) async {
     final ok = await showDialog<bool>(

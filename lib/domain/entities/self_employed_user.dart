@@ -41,8 +41,10 @@ class SelfEmployedUser {
       usesElectronicInvoicing: json['usesElectronicInvoicing'] as bool,
       taxationMethod: json['taxationMethod'] as String,
       defaultExpenseVatRate: (json['defaultExpenseVatRate'] ?? 0.0) * 1.0,
-      defaultExpenseAmountIsGross: (json['defaultExpenseAmountIsGross'] ?? true) as bool,
-      defaultExpenseDeductible: (json['defaultExpenseDeductible'] ?? true) as bool,
+      defaultExpenseAmountIsGross:
+          (json['defaultExpenseAmountIsGross'] ?? true) as bool,
+      defaultExpenseDeductible:
+          (json['defaultExpenseDeductible'] ?? true) as bool,
     );
   }
 

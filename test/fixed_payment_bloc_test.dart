@@ -17,18 +17,23 @@ class _FakeFixedRepo implements FixedPaymentRepository {
   @override
   Future<void> deleteFixedPayment(String userId, String paymentId) async {}
   @override
-  Future<FixedPayment?> getFixedPaymentById(String userId, String id) async => null;
+  Future<FixedPayment?> getFixedPaymentById(String userId, String id) async =>
+      null;
   @override
   Future<void> updateFixedPayment(String userId, FixedPayment payment) async {}
 }
 
 void main() {
-  final mate = BlocTestMate<FixedPaymentBloc, FixedPaymentState>()
-      .factory((get) => FixedPaymentBloc(get<FixedPaymentUseCases>(), 'user-1'));
+  final mate = BlocTestMate<FixedPaymentBloc, FixedPaymentState>().factory(
+    (get) => FixedPaymentBloc(get<FixedPaymentUseCases>(), 'user-1'),
+  );
 
   mate.scenario(
     'fetch fixed payments success',
-    arrange: (get) => get.register<FixedPaymentUseCases>(FixedPaymentUseCases(_FakeFixedRepo(const []))),
+    arrange:
+        (get) => get.register<FixedPaymentUseCases>(
+          FixedPaymentUseCases(_FakeFixedRepo(const [])),
+        ),
     when: (bloc) => bloc.add(const FixedPaymentEvent.fetch()),
     expectStates: [isA<FixedPaymentLoading>(), isA<FixedPaymentLoaded>()],
   );

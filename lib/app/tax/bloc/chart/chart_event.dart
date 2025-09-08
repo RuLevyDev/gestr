@@ -10,9 +10,8 @@ class ChartEvent extends Equatable {
   const ChartEvent.fetch() : this._(ChartEventType.fetch);
   const ChartEvent.refresh() : this._(ChartEventType.refresh);
   const ChartEvent.setPeriod(DateTimeRange range)
-      : this._(ChartEventType.setPeriod, range: range);
+    : this._(ChartEventType.setPeriod, range: range);
 
   @override
   List<Object?> get props => [type, range];
 }
-

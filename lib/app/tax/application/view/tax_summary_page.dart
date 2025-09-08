@@ -1,4 +1,4 @@
-﻿import 'dart:ui';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -53,9 +53,9 @@ class _TaxSummaryPageState extends State<TaxSummaryPage>
       end: DateTime(now.year, now.month + 1, 0, 23, 59, 59, 999),
     );
     context.read<VatBloc>().add(VatEvent.setPeriod(defaultRange));
-    context
-        .read<ExpensesByCategoryBloc>()
-        .add(ExpensesByCategoryEvent.setPeriod(defaultRange));
+    context.read<ExpensesByCategoryBloc>().add(
+      ExpensesByCategoryEvent.setPeriod(defaultRange),
+    );
     context.read<TopClientsBloc>().add(TopClientsEvent.setPeriod(defaultRange));
     context.read<Pre303Bloc>().add(Pre303Event.setPeriod(defaultRange));
   }
@@ -67,9 +67,10 @@ class _TaxSummaryPageState extends State<TaxSummaryPage>
       padding: const EdgeInsets.symmetric(vertical: 42.0, horizontal: 24),
       child: BlocBuilder<SummaryBloc, SummaryState>(
         builder: (context, s) {
-          final range = (s is SummaryLoaded)
-              ? s.range
-              : DateTimeRange(start: DateTime.now(), end: DateTime.now());
+          final range =
+              (s is SummaryLoaded)
+                  ? s.range
+                  : DateTimeRange(start: DateTime.now(), end: DateTime.now());
           if (s is! SummaryLoaded) {
             return const Center(child: CircularProgressIndicator());
           }
@@ -117,23 +118,28 @@ class _TaxSummaryPageState extends State<TaxSummaryPage>
                     IconButton(
                       tooltip: _overlayYoY ? 'Ocultar YoY' : 'Superponer YoY',
                       icon: Icon(
-                        _overlayYoY
-                            ? Icons.timeline
-                            : Icons.timeline_outlined,
+                        _overlayYoY ? Icons.timeline : Icons.timeline_outlined,
                       ),
-                      onPressed: () => setState(() => _overlayYoY = !_overlayYoY),
+                      onPressed:
+                          () => setState(() => _overlayYoY = !_overlayYoY),
                     ),
                     buildPeriodMenu(
                       initial: range,
                       onChanged: (r) {
-                        context.read<SummaryBloc>().add(SummaryEvent.setPeriod(r));
+                        context.read<SummaryBloc>().add(
+                          SummaryEvent.setPeriod(r),
+                        );
                         context.read<ChartBloc>().add(ChartEvent.setPeriod(r));
                         context.read<VatBloc>().add(VatEvent.setPeriod(r));
-                        context
-                            .read<ExpensesByCategoryBloc>()
-                            .add(ExpensesByCategoryEvent.setPeriod(r));
-                        context.read<TopClientsBloc>().add(TopClientsEvent.setPeriod(r));
-                        context.read<Pre303Bloc>().add(Pre303Event.setPeriod(r));
+                        context.read<ExpensesByCategoryBloc>().add(
+                          ExpensesByCategoryEvent.setPeriod(r),
+                        );
+                        context.read<TopClientsBloc>().add(
+                          TopClientsEvent.setPeriod(r),
+                        );
+                        context.read<Pre303Bloc>().add(
+                          Pre303Event.setPeriod(r),
+                        );
                       },
                     ),
                   ],
@@ -143,9 +149,10 @@ class _TaxSummaryPageState extends State<TaxSummaryPage>
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(12),
-                    color: isDark
-                        ? Colors.indigo.withAlpha(25)
-                        : Colors.teal.withAlpha(25),
+                    color:
+                        isDark
+                            ? Colors.indigo.withAlpha(25)
+                            : Colors.teal.withAlpha(25),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -227,7 +234,18 @@ class _TaxSummaryPageState extends State<TaxSummaryPage>
                   ),
                 ),
                 const SizedBox(height: 16),
-                BlocSelector<ChartBloc, ChartState, ({List<String> labels, List<double> income, List<double> expenses, List<double> yoyInc, List<double> yoyExp, DateTimeRange range})?>(
+                BlocSelector<
+                  ChartBloc,
+                  ChartState,
+                  ({
+                    List<String> labels,
+                    List<double> income,
+                    List<double> expenses,
+                    List<double> yoyInc,
+                    List<double> yoyExp,
+                    DateTimeRange range,
+                  })?
+                >(
                   selector: (cs) {
                     if (cs is! ChartLoaded) return null;
                     return (
@@ -241,7 +259,10 @@ class _TaxSummaryPageState extends State<TaxSummaryPage>
                   },
                   builder: (context, data) {
                     if (data == null) {
-                      return const SizedBox(height: 240, child: Center(child: CircularProgressIndicator()));
+                      return const SizedBox(
+                        height: 240,
+                        child: Center(child: CircularProgressIndicator()),
+                      );
                     }
                     return buildMonthlyLineChartWithYoY(
                       labels: data.labels,
@@ -252,7 +273,9 @@ class _TaxSummaryPageState extends State<TaxSummaryPage>
                       showYoY: _showYoY || _overlayYoY,
                       range: data.range,
                       cutAtToday: !_showFullMonth,
-                      onToggleCutAtToday: () => setState(() => _showFullMonth = !_showFullMonth),
+                      onToggleCutAtToday:
+                          () =>
+                              setState(() => _showFullMonth = !_showFullMonth),
                     );
                   },
                 ),
@@ -260,14 +283,22 @@ class _TaxSummaryPageState extends State<TaxSummaryPage>
                 BlocSelector<VatBloc, VatState, VatBreakdown?>(
                   selector: (s) => s is VatLoaded ? s.vat : null,
                   builder: (context, vat) {
-                    return BlocSelector<ExpensesByCategoryBloc, ExpensesByCategoryState, List<CategoryTotal>?>(
-                      selector: (s) => s is ExpensesByCategoryLoaded ? s.totals : null,
+                    return BlocSelector<
+                      ExpensesByCategoryBloc,
+                      ExpensesByCategoryState,
+                      List<CategoryTotal>?
+                    >(
+                      selector:
+                          (s) =>
+                              s is ExpensesByCategoryLoaded ? s.totals : null,
                       builder: (context, totals) {
                         if (vat != null && totals != null) {
                           return _DonutsGlassCard(
                             vat: vat,
                             expensesByCategory: totals,
-                            onTapCategory: (cat) => _showCategoryDetails(context, cat, range),
+                            onTapCategory:
+                                (cat) =>
+                                    _showCategoryDetails(context, cat, range),
                           );
                         }
                         return const SizedBox(
@@ -279,18 +310,31 @@ class _TaxSummaryPageState extends State<TaxSummaryPage>
                   },
                 ),
                 const SizedBox(height: 16),
-                BlocSelector<TopClientsBloc, TopClientsState, List<ClientTotal>?>(
+                BlocSelector<
+                  TopClientsBloc,
+                  TopClientsState,
+                  List<ClientTotal>?
+                >(
                   selector: (s) => s is TopClientsLoaded ? s.clients : null,
                   builder: (context, clients) {
-                    if (clients != null) return _TopClientsList(clients: clients);
-                    return const SizedBox(height: 80, child: Center(child: CircularProgressIndicator()));
+                    if (clients != null)
+                      return _TopClientsList(clients: clients);
+                    return const SizedBox(
+                      height: 80,
+                      child: Center(child: CircularProgressIndicator()),
+                    );
                   },
                 ),
                 if (_showYoY)
-                  BlocSelector<ChartBloc, ChartState, ({double inc, double exp, double yoyInc, double yoyExp})?>(
+                  BlocSelector<
+                    ChartBloc,
+                    ChartState,
+                    ({double inc, double exp, double yoyInc, double yoyExp})?
+                  >(
                     selector: (cs) {
                       if (cs is! ChartLoaded) return null;
-                      double sum(List<double> a) => a.isEmpty ? 0 : a.reduce((x, y) => x + y);
+                      double sum(List<double> a) =>
+                          a.isEmpty ? 0 : a.reduce((x, y) => x + y);
                       return (
                         inc: sum(cs.income),
                         exp: sum(cs.expenses),
@@ -314,9 +358,10 @@ class _TaxSummaryPageState extends State<TaxSummaryPage>
                             padding: const EdgeInsets.all(16),
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(12),
-                              color: isDark
-                                  ? Colors.blueGrey.withAlpha(25)
-                                  : Colors.blue.withAlpha(25),
+                              color:
+                                  isDark
+                                      ? Colors.blueGrey.withAlpha(25)
+                                      : Colors.blue.withAlpha(25),
                             ),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -360,7 +405,10 @@ class _TaxSummaryPageState extends State<TaxSummaryPage>
                   selector: (s) => s is Pre303Loaded ? s.pre303 : null,
                   builder: (context, pre) {
                     if (pre != null) return _Pre303Card(summary: pre);
-                    return const SizedBox(height: 140, child: Center(child: CircularProgressIndicator()));
+                    return const SizedBox(
+                      height: 140,
+                      child: Center(child: CircularProgressIndicator()),
+                    );
                   },
                 ),
                 const SizedBox(height: 80),
@@ -393,37 +441,40 @@ class _TaxSummaryPageState extends State<TaxSummaryPage>
     }
     showModalBottomSheet(
       context: context,
-      builder: (_) => Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Detalle ${cat.nameEs}',
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const SizedBox(height: 8),
-            if (details.isEmpty)
-              const Padding(
-                padding: EdgeInsets.all(8.0),
-                child: Text('No hay pagos para este periodo.'),
-              )
-            else ...details.map(
-              (d) => ListTile(
-                dense: true,
-                title: Text(d.payment.title),
-                subtitle: Text(
-                  '${d.payment.supplier ?? ''} - ${d.payment.frequency.name} - ${d.occurrences} ocurr.',
+      builder:
+          (_) => Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Detalle ${cat.nameEs}',
+                  style: Theme.of(context).textTheme.titleLarge,
                 ),
-                trailing: Text('${d.total.toStringAsFixed(2)} EUR'),
-              ),
+                const SizedBox(height: 8),
+                if (details.isEmpty)
+                  const Padding(
+                    padding: EdgeInsets.all(8.0),
+                    child: Text('No hay pagos para este periodo.'),
+                  )
+                else
+                  ...details.map(
+                    (d) => ListTile(
+                      dense: true,
+                      title: Text(d.payment.title),
+                      subtitle: Text(
+                        '${d.payment.supplier ?? ''} - ${d.payment.frequency.name} - ${d.occurrences} ocurr.',
+                      ),
+                      trailing: Text('${d.total.toStringAsFixed(2)} EUR'),
+                    ),
+                  ),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
     );
   }
+
   List<DateTime> _occurrencesWithin(FixedPayment p, DateTimeRange range) {
     final from = range.start;
     final to = range.end;
@@ -479,9 +530,10 @@ class _DonutsGlassCard extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: isDark
-                ? Colors.purpleAccent.withValues(alpha: 0.08)
-                : Colors.lightBlue.withValues(alpha: 0.1),
+            color:
+                isDark
+                    ? Colors.purpleAccent.withValues(alpha: 0.08)
+                    : Colors.lightBlue.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(20),
             border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
           ),
@@ -496,10 +548,9 @@ class _DonutsGlassCard extends StatelessWidget {
                       height: 22,
                       child: Text(
                         'IVA por tipo',
-                        style: Theme.of(context)
-                            .textTheme
-                            .titleLarge
-                            ?.copyWith(fontSize: 16),
+                        style: Theme.of(
+                          context,
+                        ).textTheme.titleLarge?.copyWith(fontSize: 16),
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -519,10 +570,9 @@ class _DonutsGlassCard extends StatelessWidget {
                       height: 22,
                       child: Text(
                         'Gasto categoría',
-                        style: Theme.of(context)
-                            .textTheme
-                            .titleLarge
-                            ?.copyWith(fontSize: 16),
+                        style: Theme.of(
+                          context,
+                        ).textTheme.titleLarge?.copyWith(fontSize: 16),
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -553,12 +603,13 @@ class _VatDonut extends StatelessWidget {
   Widget build(BuildContext context) {
     final total = breakdown.totalBase + breakdown.totalIva;
     if (total == 0) return const SizedBox.shrink();
-    final sections = [
-      _slice('21%', breakdown.base21 + breakdown.iva21, Colors.teal),
-      _slice('10%', breakdown.base10 + breakdown.iva10, Colors.orange),
-      _slice('4%', breakdown.base4 + breakdown.iva4, Colors.purple),
-      _slice('0%', breakdown.base0, Colors.grey),
-    ].where((e) => e.value > 0).toList();
+    final sections =
+        [
+          _slice('21%', breakdown.base21 + breakdown.iva21, Colors.teal),
+          _slice('10%', breakdown.base10 + breakdown.iva10, Colors.orange),
+          _slice('4%', breakdown.base4 + breakdown.iva4, Colors.purple),
+          _slice('0%', breakdown.base0, Colors.grey),
+        ].where((e) => e.value > 0).toList();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -566,20 +617,20 @@ class _VatDonut extends StatelessWidget {
           height: chartHeight,
           child: PieChart(
             PieChartData(
-              sections: sections
-                  .map(
-                    (e) => PieChartSectionData(
-                      color: e.color,
-                      value: e.value,
-                      title: e.label,
-                      radius: 18,
-                      titleStyle: Theme.of(context)
-                          .textTheme
-                          .bodySmall
-                          ?.copyWith(color: Colors.white),
-                    ),
-                  )
-                  .toList(),
+              sections:
+                  sections
+                      .map(
+                        (e) => PieChartSectionData(
+                          color: e.color,
+                          value: e.value,
+                          title: e.label,
+                          radius: 18,
+                          titleStyle: Theme.of(
+                            context,
+                          ).textTheme.bodySmall?.copyWith(color: Colors.white),
+                        ),
+                      )
+                      .toList(),
               sectionsSpace: 2,
               centerSpaceRadius: 12,
             ),
@@ -588,7 +639,9 @@ class _VatDonut extends StatelessWidget {
       ],
     );
   }
-  _Slice _slice(String label, double value, Color color) => _Slice(label, value, color);
+
+  _Slice _slice(String label, double value, Color color) =>
+      _Slice(label, value, color);
 }
 
 class _Slice {
@@ -668,7 +721,13 @@ class _Pre303Card extends StatelessWidget {
       ),
     );
   }
-  Widget _row(String label, double value, {bool bold = false, String suffix = ' EUR'}) {
+
+  Widget _row(
+    String label,
+    double value, {
+    bool bold = false,
+    String suffix = ' EUR',
+  }) {
     final style = TextStyle(fontWeight: bold ? FontWeight.bold : null);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2),
@@ -705,20 +764,20 @@ class _ExpenseByCategoryDonut extends StatelessWidget {
       FixedPaymentCategory.taxes: Colors.redAccent,
       FixedPaymentCategory.other: Colors.grey,
     };
-    final sections = totals
-        .map(
-          (t) => PieChartSectionData(
-            color: colors[t.category] ?? Colors.grey,
-            value: t.total,
-            title: t.category.nameEs,
-            radius: 20,
-            titleStyle: Theme.of(context)
-                .textTheme
-                .bodySmall
-                ?.copyWith(color: Colors.white),
-          ),
-        )
-        .toList();
+    final sections =
+        totals
+            .map(
+              (t) => PieChartSectionData(
+                color: colors[t.category] ?? Colors.grey,
+                value: t.total,
+                title: t.category.nameEs,
+                radius: 20,
+                titleStyle: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: Colors.white),
+              ),
+            )
+            .toList();
     return SizedBox(
       height: chartHeight,
       child: PieChart(
@@ -772,9 +831,10 @@ class _MetricRow extends StatelessWidget {
   });
   @override
   Widget build(BuildContext context) {
-    final textStyle = isBold
-        ? Theme.of(context).textTheme.titleLarge
-        : Theme.of(context).textTheme.titleMedium;
+    final textStyle =
+        isBold
+            ? Theme.of(context).textTheme.titleLarge
+            : Theme.of(context).textTheme.titleMedium;
     final pct = _percentDelta(previous, value);
     final deltaColor =
         pct == null ? Colors.grey : (pct >= 0 ? Colors.green : Colors.red);
@@ -797,9 +857,7 @@ class _MetricRow extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(
-                    (pct ?? 0) >= 0
-                        ? Icons.arrow_upward
-                        : Icons.arrow_downward,
+                    (pct ?? 0) >= 0 ? Icons.arrow_upward : Icons.arrow_downward,
                     size: 12,
                     color: deltaColor,
                   ),
@@ -815,6 +873,7 @@ class _MetricRow extends StatelessWidget {
       ],
     );
   }
+
   double? _percentDelta(double? prev, double current) {
     if (prev == null) return null;
     if (prev == 0) {

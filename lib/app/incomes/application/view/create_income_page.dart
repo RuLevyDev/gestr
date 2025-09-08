@@ -60,7 +60,9 @@ class _CreateIncomePageState extends State<CreateIncomePage> {
                       child: Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: theme.colorScheme.secondary.withValues(alpha: 0.1),
+                          color: theme.colorScheme.secondary.withValues(
+                            alpha: 0.1,
+                          ),
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(
                             color: Colors.tealAccent.withValues(alpha: 0.3),
@@ -83,7 +85,10 @@ class _CreateIncomePageState extends State<CreateIncomePage> {
                                 const SizedBox(width: 8),
                                 TextButton.icon(
                                   onPressed: _pickDate,
-                                  icon: const Icon(Icons.calendar_today, size: 16),
+                                  icon: const Icon(
+                                    Icons.calendar_today,
+                                    size: 16,
+                                  ),
                                   label: const Text('Cambiar'),
                                   style: TextButton.styleFrom(
                                     foregroundColor: theme.colorScheme.tertiary,
@@ -96,13 +101,19 @@ class _CreateIncomePageState extends State<CreateIncomePage> {
                               decoration: InputDecoration(
                                 labelText: 'Título',
                                 enabledBorder: UnderlineInputBorder(
-                                  borderSide: BorderSide(color: theme.colorScheme.onSurface),
+                                  borderSide: BorderSide(
+                                    color: theme.colorScheme.onSurface,
+                                  ),
                                 ),
                                 focusedBorder: const UnderlineInputBorder(
                                   borderSide: BorderSide(color: Colors.white),
                                 ),
                               ),
-                              validator: (v) => v == null || v.trim().isEmpty ? 'Requerido' : null,
+                              validator:
+                                  (v) =>
+                                      v == null || v.trim().isEmpty
+                                          ? 'Requerido'
+                                          : null,
                             ),
                             const SizedBox(height: 12),
                             TextFormField(
@@ -110,7 +121,9 @@ class _CreateIncomePageState extends State<CreateIncomePage> {
                               decoration: InputDecoration(
                                 labelText: 'Origen (opcional)',
                                 enabledBorder: UnderlineInputBorder(
-                                  borderSide: BorderSide(color: theme.colorScheme.onSurface),
+                                  borderSide: BorderSide(
+                                    color: theme.colorScheme.onSurface,
+                                  ),
                                 ),
                                 focusedBorder: const UnderlineInputBorder(
                                   borderSide: BorderSide(color: Colors.white),
@@ -123,7 +136,11 @@ class _CreateIncomePageState extends State<CreateIncomePage> {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  const Divider(color: Colors.tealAccent, thickness: 1, height: 1),
+                  const Divider(
+                    color: Colors.tealAccent,
+                    thickness: 1,
+                    height: 1,
+                  ),
                   const SizedBox(height: 8),
 
                   // Bloque 2: importe + guardar
@@ -134,7 +151,9 @@ class _CreateIncomePageState extends State<CreateIncomePage> {
                       child: Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: theme.colorScheme.secondary.withValues(alpha: 0.1),
+                          color: theme.colorScheme.secondary.withValues(
+                            alpha: 0.1,
+                          ),
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(
                             color: Colors.tealAccent.withValues(alpha: 0.3),
@@ -149,16 +168,22 @@ class _CreateIncomePageState extends State<CreateIncomePage> {
                               decoration: InputDecoration(
                                 labelText: 'Importe (EUR)',
                                 enabledBorder: UnderlineInputBorder(
-                                  borderSide: BorderSide(color: theme.colorScheme.onSurface),
+                                  borderSide: BorderSide(
+                                    color: theme.colorScheme.onSurface,
+                                  ),
                                 ),
                                 focusedBorder: const UnderlineInputBorder(
                                   borderSide: BorderSide(color: Colors.white),
                                 ),
                               ),
-                              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                              keyboardType:
+                                  const TextInputType.numberWithOptions(
+                                    decimal: true,
+                                  ),
                               validator: (v) {
                                 final d = double.tryParse(v ?? '');
-                                if (d == null || d < 0) return 'Importe inválido';
+                                if (d == null || d < 0)
+                                  return 'Importe inválido';
                                 return null;
                               },
                             ),
@@ -188,7 +213,8 @@ class _CreateIncomePageState extends State<CreateIncomePage> {
     );
   }
 
-  String _fmtDate(DateTime d) => '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}/${d.year}';
+  String _fmtDate(DateTime d) =>
+      '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}/${d.year}';
 
   Future<void> _pickDate() async {
     final picked = await showDatePicker(

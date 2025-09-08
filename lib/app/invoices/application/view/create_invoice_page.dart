@@ -290,11 +290,11 @@ class _CreateInvoicePageState extends State<CreateInvoicePage>
 
                             const SizedBox(height: 24),
 
-                              DropdownButtonFormField<InvoiceStatus>(
+                            DropdownButtonFormField<InvoiceStatus>(
                               decoration: const InputDecoration(
                                 labelText: 'Estado',
                               ),
-                                initialValue: status,
+                              initialValue: status,
 
                               dropdownColor: theme.colorScheme.secondary,
                               items:
@@ -302,7 +302,7 @@ class _CreateInvoicePageState extends State<CreateInvoicePage>
                                       .map(
                                         (e) => DropdownMenuItem(
                                           value: e,
-                                          child: Text(e.name),
+                                          child: Text(e.labelEs),
                                         ),
                                       )
                                       .toList(),

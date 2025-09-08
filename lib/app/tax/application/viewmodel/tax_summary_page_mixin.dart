@@ -10,7 +10,6 @@ import 'package:gestr/domain/entities/tax_summary_model.dart';
 import 'package:gestr/app/tax/application/view/tax_summary_page.dart';
 
 mixin TaxSummaryPageMixin on State<TaxSummaryPage> {
-
   // Variante sin TaxSummaryLoaded: piezas sueltas
   Future<void> exportCsvFromPieces({
     required DateTimeRange range,
@@ -21,21 +20,33 @@ mixin TaxSummaryPageMixin on State<TaxSummaryPage> {
     required List<double> monthlyExpenses,
   }) async {
     final buffer = StringBuffer();
-    buffer.writeln('Periodo,${range.start.toIso8601String()} - ${range.end.toIso8601String()}');
+    buffer.writeln(
+      'Periodo,${range.start.toIso8601String()} - ${range.end.toIso8601String()}',
+    );
     buffer.writeln('Metrica,Valor');
     buffer.writeln('Ingresos,${summary.totalIncome.toStringAsFixed(2)}');
     buffer.writeln('Gastos,${summary.totalExpenses.toStringAsFixed(2)}');
-    buffer.writeln('IVA repercutido,${summary.vatCollected.toStringAsFixed(2)}');
+    buffer.writeln(
+      'IVA repercutido,${summary.vatCollected.toStringAsFixed(2)}',
+    );
     buffer.writeln('IVA soportado,${summary.vatPaid.toStringAsFixed(2)}');
-    buffer.writeln('Ingreso neto,${(summary.totalIncome - summary.totalExpenses).toStringAsFixed(2)}');
+    buffer.writeln(
+      'Ingreso neto,${(summary.totalIncome - summary.totalExpenses).toStringAsFixed(2)}',
+    );
     buffer.writeln('Facturas,${summary.invoiceCount}');
     buffer.writeln('Ticket medio,${summary.averageTicket.toStringAsFixed(2)}');
     buffer.writeln('');
     buffer.writeln('Mes,Ingresos,Gastos');
     for (var i = 0; i < labels.length; i++) {
       final label = labels[i];
-      final inc = i < monthlyIncome.length ? monthlyIncome[i].toStringAsFixed(2) : '0.00';
-      final exp = i < monthlyExpenses.length ? monthlyExpenses[i].toStringAsFixed(2) : '0.00';
+      final inc =
+          i < monthlyIncome.length
+              ? monthlyIncome[i].toStringAsFixed(2)
+              : '0.00';
+      final exp =
+          i < monthlyExpenses.length
+              ? monthlyExpenses[i].toStringAsFixed(2)
+              : '0.00';
       buffer.writeln('$label,$inc,$exp');
     }
     final csv = buffer.toString();
@@ -45,7 +56,11 @@ mixin TaxSummaryPageMixin on State<TaxSummaryPage> {
         text: 'Resumen fiscal exportado',
         subject: 'Resumen fiscal (${range.start.year}-${range.start.month})',
         files: [
-          XFile.fromData(bytes, name: 'resumen_fiscal.csv', mimeType: 'text/csv'),
+          XFile.fromData(
+            bytes,
+            name: 'resumen_fiscal.csv',
+            mimeType: 'text/csv',
+          ),
         ],
       ),
     );
@@ -176,9 +191,9 @@ mixin TaxSummaryPageMixin on State<TaxSummaryPage> {
                       child: Text(
                         labels[i],
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              fontSize: 10,
-                              color: Colors.black54,
-                            ),
+                          fontSize: 10,
+                          color: Colors.black54,
+                        ),
                       ),
                     ),
                   );
@@ -250,24 +265,26 @@ mixin TaxSummaryPageMixin on State<TaxSummaryPage> {
       labels.length,
       (i) => FlSpot(i.toDouble(), i < expenses.length ? expenses[i] : 0),
     );
-    final yoyIncomeSpots = hasYoY
-        ? List.generate(
-            labels.length,
-            (i) => FlSpot(
-              i.toDouble(),
-              i < (yoyIncome?.length ?? 0) ? (yoyIncome![i]) : 0,
-            ),
-          )
-        : const <FlSpot>[];
-    final yoyExpensesSpots = hasYoY
-        ? List.generate(
-            labels.length,
-            (i) => FlSpot(
-              i.toDouble(),
-              i < (yoyExpenses?.length ?? 0) ? (yoyExpenses![i]) : 0,
-            ),
-          )
-        : const <FlSpot>[];
+    final yoyIncomeSpots =
+        hasYoY
+            ? List.generate(
+              labels.length,
+              (i) => FlSpot(
+                i.toDouble(),
+                i < (yoyIncome?.length ?? 0) ? (yoyIncome![i]) : 0,
+              ),
+            )
+            : const <FlSpot>[];
+    final yoyExpensesSpots =
+        hasYoY
+            ? List.generate(
+              labels.length,
+              (i) => FlSpot(
+                i.toDouble(),
+                i < (yoyExpenses?.length ?? 0) ? (yoyExpenses![i]) : 0,
+              ),
+            )
+            : const <FlSpot>[];
 
     final len = labels.length;
     final step = len > 10 ? 3 : (len > 6 ? 2 : 1);
@@ -300,12 +317,24 @@ mixin TaxSummaryPageMixin on State<TaxSummaryPage> {
               spacing: 16,
               crossAxisAlignment: WrapCrossAlignment.center,
               children: [
-                _legendDot(color: Colors.teal, label: "Ingresos '${yy.toString().padLeft(2, '0')}"),
-                _legendDot(color: Colors.deepOrange, label: "Gastos '${yy.toString().padLeft(2, '0')}"),
+                _legendDot(
+                  color: Colors.teal,
+                  label: "Ingresos '${yy.toString().padLeft(2, '0')}",
+                ),
+                _legendDot(
+                  color: Colors.deepOrange,
+                  label: "Gastos '${yy.toString().padLeft(2, '0')}",
+                ),
                 if (hasYoY)
-                  _legendDot(color: Colors.teal.withAlpha(160), label: "Ingresos '${yyPrev.toString().padLeft(2, '0')}"),
+                  _legendDot(
+                    color: Colors.teal.withAlpha(160),
+                    label: "Ingresos '${yyPrev.toString().padLeft(2, '0')}",
+                  ),
                 if (hasYoY)
-                  _legendDot(color: Colors.deepOrange.withAlpha(160), label: "Gastos '${yyPrev.toString().padLeft(2, '0')}"),
+                  _legendDot(
+                    color: Colors.deepOrange.withAlpha(160),
+                    label: "Gastos '${yyPrev.toString().padLeft(2, '0')}",
+                  ),
               ],
             ),
           ),
@@ -317,9 +346,18 @@ mixin TaxSummaryPageMixin on State<TaxSummaryPage> {
               onPressed: onToggleCutAtToday,
               style: TextButton.styleFrom(
                 foregroundColor: Colors.teal,
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, decoration: TextDecoration.underline),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
+                textStyle: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  decoration: TextDecoration.underline,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
               icon: const Icon(Icons.timeline, size: 14),
               label: Text(cutAtToday ? 'Hasta hoy' : 'Mes completo'),
@@ -345,7 +383,8 @@ mixin TaxSummaryPageMixin on State<TaxSummaryPage> {
                 drawVerticalLine: false,
                 horizontalInterval: _niceInterval(maxVal),
                 getDrawingHorizontalLine:
-                    (value) => const FlLine(color: Colors.black12, strokeWidth: 1),
+                    (value) =>
+                        const FlLine(color: Colors.black12, strokeWidth: 1),
               ),
               titlesData: FlTitlesData(
                 leftTitles: AxisTitles(
@@ -354,8 +393,13 @@ mixin TaxSummaryPageMixin on State<TaxSummaryPage> {
                     reservedSize: 44,
                     getTitlesWidget: (value, meta) {
                       final v = value.toInt();
-                      return Text(v == 0 ? '0' : '$v',
-                          style: const TextStyle(fontSize: 10, color: Colors.black54));
+                      return Text(
+                        v == 0 ? '0' : '$v',
+                        style: const TextStyle(
+                          fontSize: 10,
+                          color: Colors.black54,
+                        ),
+                      );
                     },
                   ),
                 ),
@@ -371,16 +415,24 @@ mixin TaxSummaryPageMixin on State<TaxSummaryPage> {
                     reservedSize: 46,
                     getTitlesWidget: (value, meta) {
                       final i = value.toInt();
-                      if (i < 0 || i >= labels.length || i % step != 0 || i.toDouble() > maxX) {
+                      if (i < 0 ||
+                          i >= labels.length ||
+                          i % step != 0 ||
+                          i.toDouble() > maxX) {
                         return const SizedBox.shrink();
                       }
                       String text;
-                      final useDaily = range != null &&
+                      final useDaily =
+                          range != null &&
                           range.start.year == range.end.year &&
                           range.start.month == range.end.month &&
                           labels.length >= 20; // heurística: diario
                       if (useDaily) {
-                        final base = DateTime(range!.start.year, range.start.month, 1);
+                        final base = DateTime(
+                          range!.start.year,
+                          range.start.month,
+                          1,
+                        );
                         final date = base.add(Duration(days: i));
                         text = '${date.day} ${_mesAbreviado(date.month)}';
                       } else {
@@ -419,8 +471,10 @@ mixin TaxSummaryPageMixin on State<TaxSummaryPage> {
                 touchSpotThreshold: 16,
                 touchTooltipData: LineTouchTooltipData(
                   tooltipBorderRadius: BorderRadius.circular(10),
-                  tooltipPadding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  tooltipPadding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
                   maxContentWidth: 260,
                   fitInsideHorizontally: true,
                   getTooltipItems: (touchedSpots) {
@@ -435,18 +489,27 @@ mixin TaxSummaryPageMixin on State<TaxSummaryPage> {
                         name = "Gastos '${yy.toString().padLeft(2, '0')}";
                       } else if (c.value == Colors.teal.withAlpha(160).value) {
                         name = "Ingresos '${yyPrev.toString().padLeft(2, '0')}";
-                      } else if (c.value == Colors.deepOrange.withAlpha(160).value) {
+                      } else if (c.value ==
+                          Colors.deepOrange.withAlpha(160).value) {
                         name = "Gastos '${yyPrev.toString().padLeft(2, '0')}";
                       } else {
                         name = '';
                       }
                       return LineTooltipItem(
                         '$name: ',
-                        TextStyle(color: c, fontSize: 12, fontWeight: FontWeight.w600),
+                        TextStyle(
+                          color: c,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
                         children: [
                           TextSpan(
                             text: '${s.y.toStringAsFixed(2)} EUR',
-                            style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                         ],
                       );
@@ -460,12 +523,14 @@ mixin TaxSummaryPageMixin on State<TaxSummaryPage> {
                           FlLine(color: Colors.black26, strokeWidth: 1),
                           FlDotData(
                             show: true,
-                            getDotPainter: (spot, percent, bar, index) => FlDotCirclePainter(
-                              radius: 4,
-                              color: bar.color ?? Colors.teal,
-                              strokeWidth: 2,
-                              strokeColor: Colors.white,
-                            ),
+                            getDotPainter:
+                                (spot, percent, bar, index) =>
+                                    FlDotCirclePainter(
+                                      radius: 4,
+                                      color: bar.color ?? Colors.teal,
+                                      strokeWidth: 2,
+                                      strokeColor: Colors.white,
+                                    ),
                           ),
                         ),
                       )
@@ -520,13 +585,17 @@ mixin TaxSummaryPageMixin on State<TaxSummaryPage> {
   }
 
   Widget _legendDot({required Color color, required String label}) => Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(width: 10, height: 10, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
-          const SizedBox(width: 6),
-          Text(label, style: const TextStyle(fontSize: 12)),
-        ],
-      );
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      Container(
+        width: 10,
+        height: 10,
+        decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+      ),
+      const SizedBox(width: 6),
+      Text(label, style: const TextStyle(fontSize: 12)),
+    ],
+  );
 
   // Gráfica mini overlay para YoY (sin ejes/leyendas)
   Widget buildMonthlyLineChartOverlay({
@@ -591,25 +660,23 @@ mixin TaxSummaryPageMixin on State<TaxSummaryPage> {
       tooltip: 'Periodo',
       position: PopupMenuPosition.under,
       icon: const Icon(Icons.tune, size: 20),
-      itemBuilder: (context) => const [
-        PopupMenuItem(
-          value: _PeriodAction.month,
-          child: Text('Mes actual'),
-        ),
-        PopupMenuItem(
-          value: _PeriodAction.quarter,
-          child: Text('Trimestre actual'),
-        ),
-        PopupMenuItem(
-          value: _PeriodAction.year,
-          child: Text('Año actual'),
-        ),
-        PopupMenuDivider(),
-        PopupMenuItem(
-          value: _PeriodAction.custom,
-          child: Text('Personalizado...'),
-        ),
-      ],
+      itemBuilder:
+          (context) => const [
+            PopupMenuItem(
+              value: _PeriodAction.month,
+              child: Text('Mes actual'),
+            ),
+            PopupMenuItem(
+              value: _PeriodAction.quarter,
+              child: Text('Trimestre actual'),
+            ),
+            PopupMenuItem(value: _PeriodAction.year, child: Text('Año actual')),
+            PopupMenuDivider(),
+            PopupMenuItem(
+              value: _PeriodAction.custom,
+              child: Text('Personalizado...'),
+            ),
+          ],
       onSelected: (value) async {
         final now = DateTime.now();
         switch (value) {
@@ -657,7 +724,8 @@ mixin TaxSummaryPageMixin on State<TaxSummaryPage> {
   }
 
   // Helpers privados de rango
-  String _mesAbreviado(int m) => const [
+  String _mesAbreviado(int m) =>
+      const [
         '',
         'Ene',
         'Feb',
@@ -670,7 +738,7 @@ mixin TaxSummaryPageMixin on State<TaxSummaryPage> {
         'Sep',
         'Oct',
         'Nov',
-        'Dic'
+        'Dic',
       ][m];
 
   bool _equals(DateTimeRange a, DateTimeRange b) =>

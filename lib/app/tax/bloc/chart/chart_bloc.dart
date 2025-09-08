@@ -17,14 +17,30 @@ class ChartBloc extends Bloc<ChartEvent, ChartState> {
         final income = <double>[];
         final expenses = <double>[];
 
-        final isSingleMonth = r.start.year == r.end.year && r.start.month == r.end.month;
+        final isSingleMonth =
+            r.start.year == r.end.year && r.start.month == r.end.month;
         if (isSingleMonth) {
           final days = _daysBetween(r.start, r.end);
-          final futures = days
-              .map((d) => useCases
-                      .fetchSummary(userId, start: DateTime(d.year, d.month, d.day), end: DateTime(d.year, d.month, d.day, 23, 59, 59, 999))
-                      .then((s) => MapEntry(d, s)))
-              .toList();
+          final futures =
+              days
+                  .map(
+                    (d) => useCases
+                        .fetchSummary(
+                          userId,
+                          start: DateTime(d.year, d.month, d.day),
+                          end: DateTime(
+                            d.year,
+                            d.month,
+                            d.day,
+                            23,
+                            59,
+                            59,
+                            999,
+                          ),
+                        )
+                        .then((s) => MapEntry(d, s)),
+                  )
+                  .toList();
           final results = await Future.wait(futures);
           for (final e in results) {
             labels.add(_labelForDay(e.key));
@@ -33,11 +49,26 @@ class ChartBloc extends Bloc<ChartEvent, ChartState> {
           }
         } else {
           final months = _monthsBetween(r.start, r.end);
-          final futures = months
-              .map((m) => useCases
-                      .fetchSummary(userId, start: DateTime(m.year, m.month, 1), end: DateTime(m.year, m.month + 1, 0, 23, 59, 59, 999))
-                      .then((s) => MapEntry(m, s)))
-              .toList();
+          final futures =
+              months
+                  .map(
+                    (m) => useCases
+                        .fetchSummary(
+                          userId,
+                          start: DateTime(m.year, m.month, 1),
+                          end: DateTime(
+                            m.year,
+                            m.month + 1,
+                            0,
+                            23,
+                            59,
+                            59,
+                            999,
+                          ),
+                        )
+                        .then((s) => MapEntry(m, s)),
+                  )
+                  .toList();
           final results = await Future.wait(futures);
           for (final e in results) {
             labels.add(_labelForMonth(e.key));
@@ -55,11 +86,26 @@ class ChartBloc extends Bloc<ChartEvent, ChartState> {
         final yoyExpenses = <double>[];
         if (isSingleMonth) {
           final days = _daysBetween(yr.start, yr.end);
-          final futures = days
-              .map((d) => useCases
-                      .fetchSummary(userId, start: DateTime(d.year, d.month, d.day), end: DateTime(d.year, d.month, d.day, 23, 59, 59, 999))
-                      .then((s) => s))
-              .toList();
+          final futures =
+              days
+                  .map(
+                    (d) => useCases
+                        .fetchSummary(
+                          userId,
+                          start: DateTime(d.year, d.month, d.day),
+                          end: DateTime(
+                            d.year,
+                            d.month,
+                            d.day,
+                            23,
+                            59,
+                            59,
+                            999,
+                          ),
+                        )
+                        .then((s) => s),
+                  )
+                  .toList();
           final results = await Future.wait(futures);
           for (final s in results) {
             yoyIncome.add(s.totalIncome);
@@ -67,11 +113,26 @@ class ChartBloc extends Bloc<ChartEvent, ChartState> {
           }
         } else {
           final months = _monthsBetween(yr.start, yr.end);
-          final futures = months
-              .map((m) => useCases
-                      .fetchSummary(userId, start: DateTime(m.year, m.month, 1), end: DateTime(m.year, m.month + 1, 0, 23, 59, 59, 999))
-                      .then((s) => s))
-              .toList();
+          final futures =
+              months
+                  .map(
+                    (m) => useCases
+                        .fetchSummary(
+                          userId,
+                          start: DateTime(m.year, m.month, 1),
+                          end: DateTime(
+                            m.year,
+                            m.month + 1,
+                            0,
+                            23,
+                            59,
+                            59,
+                            999,
+                          ),
+                        )
+                        .then((s) => s),
+                  )
+                  .toList();
           final results = await Future.wait(futures);
           for (final s in results) {
             yoyIncome.add(s.totalIncome);
@@ -79,14 +140,16 @@ class ChartBloc extends Bloc<ChartEvent, ChartState> {
           }
         }
 
-        emit(ChartLoaded(
-          range: r,
-          labels: labels,
-          income: income,
-          expenses: expenses,
-          yoyIncome: yoyIncome,
-          yoyExpenses: yoyExpenses,
-        ));
+        emit(
+          ChartLoaded(
+            range: r,
+            labels: labels,
+            income: income,
+            expenses: expenses,
+            yoyIncome: yoyIncome,
+            yoyExpenses: yoyExpenses,
+          ),
+        );
       } catch (e) {
         emit(ChartError(e.toString()));
       }
@@ -106,7 +169,8 @@ class ChartBloc extends Bloc<ChartEvent, ChartState> {
     final last = DateTime(end.year, end.month);
     final months = <DateTime>[];
     var current = first;
-    while (current.isBefore(last) || (current.year == last.year && current.month == last.month)) {
+    while (current.isBefore(last) ||
+        (current.year == last.year && current.month == last.month)) {
       months.add(current);
       current = DateTime(current.year, current.month + 1);
     }
@@ -126,12 +190,38 @@ class ChartBloc extends Bloc<ChartEvent, ChartState> {
   }
 
   String _labelForMonth(DateTime d) {
-    const months = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+    const months = [
+      'Ene',
+      'Feb',
+      'Mar',
+      'Abr',
+      'May',
+      'Jun',
+      'Jul',
+      'Ago',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dic',
+    ];
     return '${months[d.month - 1]} ${d.year % 100}'.padRight(6);
   }
 
   String _labelForDay(DateTime d) {
-    const months = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+    const months = [
+      'Ene',
+      'Feb',
+      'Mar',
+      'Abr',
+      'May',
+      'Jun',
+      'Jul',
+      'Ago',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dic',
+    ];
     return '${d.day.toString().padLeft(2, '0')} ${months[d.month - 1]}';
   }
 }

@@ -40,38 +40,71 @@ class _DashboardPageState extends State<DashboardPage> with DashboardPageMixin {
           builder: (context, fixedState) {
             return BlocBuilder<InvoiceBloc, InvoiceState>(
               builder: (context, invState) {
-                if (fixedState is FixedPaymentLoading || invState is InvoiceLoading) {
+                if (fixedState is FixedPaymentLoading ||
+                    invState is InvoiceLoading) {
                   return const Center(child: CircularProgressIndicator());
                 }
                 if (fixedState is FixedPaymentError) {
-                  return Center(child: Text('Error pagos fijos: ${fixedState.message}'));
+                  return Center(
+                    child: Text('Error pagos fijos: ${fixedState.message}'),
+                  );
                 }
                 if (invState is InvoiceError) {
-                  return Center(child: Text('Error facturas: ${invState.message}'));
+                  return Center(
+                    child: Text('Error facturas: ${invState.message}'),
+                  );
                 }
-                if (fixedState is! FixedPaymentLoaded || invState is! InvoiceLoaded) {
+                if (fixedState is! FixedPaymentLoaded ||
+                    invState is! InvoiceLoaded) {
                   return const SizedBox.shrink();
                 }
 
                 final months = lastMonths(3);
                 final monthLabels = months.map(monthLabel).toList();
 
-                final netByMonth = sumInvoicesNetByMonth(invState.invoices, months);
-                final ivaByMonth = sumInvoicesIvaByMonth(invState.invoices, months);
-                final gastosByMonth = sumFixedPaymentsByMonth(fixedState.fixedPayments, months);
+                final netByMonth = sumInvoicesNetByMonth(
+                  invState.invoices,
+                  months,
+                );
+                final ivaByMonth = sumInvoicesIvaByMonth(
+                  invState.invoices,
+                  months,
+                );
+                final gastosByMonth = sumFixedPaymentsByMonth(
+                  fixedState.fixedPayments,
+                  months,
+                );
 
-                final ingresosData = List.generate(months.length, (i) => FlSpot(i.toDouble(), netByMonth[months[i]] ?? 0.0));
-                final gastosData = List.generate(months.length, (i) => FlSpot(i.toDouble(), gastosByMonth[months[i]] ?? 0.0));
-                final ivaData = List.generate(months.length, (i) => FlSpot(i.toDouble(), ivaByMonth[months[i]] ?? 0.0));
-                final irpfData = List<FlSpot>.generate(months.length, (i) => FlSpot(i.toDouble(), 0));
+                final ingresosData = List.generate(
+                  months.length,
+                  (i) => FlSpot(i.toDouble(), netByMonth[months[i]] ?? 0.0),
+                );
+                final gastosData = List.generate(
+                  months.length,
+                  (i) => FlSpot(i.toDouble(), gastosByMonth[months[i]] ?? 0.0),
+                );
+                final ivaData = List.generate(
+                  months.length,
+                  (i) => FlSpot(i.toDouble(), ivaByMonth[months[i]] ?? 0.0),
+                );
+                final irpfData = List<FlSpot>.generate(
+                  months.length,
+                  (i) => FlSpot(i.toDouble(), 0),
+                );
 
                 final ingresosNetosData = List.generate(months.length, (i) {
-                  final neto = ingresosData[i].y - gastosData[i].y - ivaData[i].y - irpfData[i].y;
+                  final neto =
+                      ingresosData[i].y -
+                      gastosData[i].y -
+                      ivaData[i].y -
+                      irpfData[i].y;
                   return FlSpot(i.toDouble(), neto);
                 });
                 final promedioIngresosNetos =
-                    ingresosNetosData.map((e) => e.y).fold<double>(0, (a, b) => a + b) /
-                        (ingresosNetosData.isEmpty ? 1 : ingresosNetosData.length);
+                    ingresosNetosData
+                        .map((e) => e.y)
+                        .fold<double>(0, (a, b) => a + b) /
+                    (ingresosNetosData.isEmpty ? 1 : ingresosNetosData.length);
 
                 final financialStats = [
                   {
@@ -106,14 +139,18 @@ class _DashboardPageState extends State<DashboardPage> with DashboardPageMixin {
                     Wrap(
                       spacing: 12,
                       runSpacing: 12,
-                      children: financialStats
-                          .map((item) => _buildGlassCard(
-                                label: item['label'] as String,
-                                value: (item['value'] as num).toDouble(),
-                                previous: (item['previous'] as num).toDouble(),
-                                color: item['color'] as Color,
-                              ))
-                          .toList(),
+                      children:
+                          financialStats
+                              .map(
+                                (item) => _buildGlassCard(
+                                  label: item['label'] as String,
+                                  value: (item['value'] as num).toDouble(),
+                                  previous:
+                                      (item['previous'] as num).toDouble(),
+                                  color: item['color'] as Color,
+                                ),
+                              )
+                              .toList(),
                     ),
                     const SizedBox(height: 32),
                     Text(
@@ -158,29 +195,37 @@ class _DashboardPageState extends State<DashboardPage> with DashboardPageMixin {
                                   show: true,
                                   drawVerticalLine: false,
                                 ),
-                                extraLinesData: showNet && showAvg
-                                    ? ExtraLinesData(
-                                        horizontalLines: [
-                                          HorizontalLine(
-                                            y: promedioIngresosNetos,
-                                            color: const Color.fromARGB(255, 214, 7, 255)
-                                                .withValues(alpha: 0.5),
-                                            strokeWidth: 2,
-                                            dashArray: [6, 6],
-                                          ),
-                                        ],
-                                      )
-                                    : const ExtraLinesData(),
+                                extraLinesData:
+                                    showNet && showAvg
+                                        ? ExtraLinesData(
+                                          horizontalLines: [
+                                            HorizontalLine(
+                                              y: promedioIngresosNetos,
+                                              color: const Color.fromARGB(
+                                                255,
+                                                214,
+                                                7,
+                                                255,
+                                              ).withValues(alpha: 0.5),
+                                              strokeWidth: 2,
+                                              dashArray: [6, 6],
+                                            ),
+                                          ],
+                                        )
+                                        : const ExtraLinesData(),
                                 minX: 0,
                                 maxX: (monthLabels.length - 1).toDouble(),
                                 titlesData: FlTitlesData(
                                   leftTitles: AxisTitles(
                                     sideTitles: SideTitles(
                                       showTitles: true,
-                                      getTitlesWidget: (value, _) => Text(
-                                        value.toStringAsFixed(0),
-                                        style: const TextStyle(fontSize: 10),
-                                      ),
+                                      getTitlesWidget:
+                                          (value, _) => Text(
+                                            value.toStringAsFixed(0),
+                                            style: const TextStyle(
+                                              fontSize: 10,
+                                            ),
+                                          ),
                                       reservedSize: 32,
                                     ),
                                   ),
@@ -189,7 +234,8 @@ class _DashboardPageState extends State<DashboardPage> with DashboardPageMixin {
                                       showTitles: true,
                                       getTitlesWidget: (value, _) {
                                         final index = value.toInt();
-                                        if (index >= 0 && index < monthLabels.length) {
+                                        if (index >= 0 &&
+                                            index < monthLabels.length) {
                                           return Text(monthLabels[index]);
                                         }
                                         return const SizedBox();
@@ -203,47 +249,48 @@ class _DashboardPageState extends State<DashboardPage> with DashboardPageMixin {
                                     sideTitles: SideTitles(showTitles: false),
                                   ),
                                 ),
-                                lineBarsData: showNet
-                                    ? [
-                                        LineChartBarData(
-                                          spots: ingresosNetosData,
-                                          isCurved: true,
-                                          gradient: LinearGradient(
-                                            colors: [
-                                              Colors.amber.shade400,
-                                              Colors.amber.shade200,
-                                            ],
+                                lineBarsData:
+                                    showNet
+                                        ? [
+                                          LineChartBarData(
+                                            spots: ingresosNetosData,
+                                            isCurved: true,
+                                            gradient: LinearGradient(
+                                              colors: [
+                                                Colors.amber.shade400,
+                                                Colors.amber.shade200,
+                                              ],
+                                            ),
+                                            barWidth: 3,
+                                            dotData: FlDotData(show: true),
                                           ),
-                                          barWidth: 3,
-                                          dotData: FlDotData(show: true),
-                                        ),
-                                      ]
-                                    : [
-                                        LineChartBarData(
-                                          spots: ingresosData,
-                                          isCurved: true,
-                                          gradient: LinearGradient(
-                                            colors: [
-                                              Colors.tealAccent.shade400,
-                                              Colors.tealAccent.shade100,
-                                            ],
+                                        ]
+                                        : [
+                                          LineChartBarData(
+                                            spots: ingresosData,
+                                            isCurved: true,
+                                            gradient: LinearGradient(
+                                              colors: [
+                                                Colors.tealAccent.shade400,
+                                                Colors.tealAccent.shade100,
+                                              ],
+                                            ),
+                                            barWidth: 3,
+                                            dotData: FlDotData(show: true),
                                           ),
-                                          barWidth: 3,
-                                          dotData: FlDotData(show: true),
-                                        ),
-                                        LineChartBarData(
-                                          spots: gastosData,
-                                          isCurved: true,
-                                          gradient: LinearGradient(
-                                            colors: [
-                                              Colors.pinkAccent.shade400,
-                                              Colors.pinkAccent.shade100,
-                                            ],
+                                          LineChartBarData(
+                                            spots: gastosData,
+                                            isCurved: true,
+                                            gradient: LinearGradient(
+                                              colors: [
+                                                Colors.pinkAccent.shade400,
+                                                Colors.pinkAccent.shade100,
+                                              ],
+                                            ),
+                                            barWidth: 3,
+                                            dotData: FlDotData(show: false),
                                           ),
-                                          barWidth: 3,
-                                          dotData: FlDotData(show: false),
-                                        ),
-                                      ],
+                                        ],
                               ),
                             ),
                             if (showNet)
@@ -258,9 +305,14 @@ class _DashboardPageState extends State<DashboardPage> with DashboardPageMixin {
                                     'avg',
                                     style: TextStyle(
                                       fontSize: 12,
-                                      color: isDark
-                                          ? Colors.tealAccent.withValues(alpha: 0.8)
-                                          : Colors.purpleAccent.withValues(alpha: 0.8),
+                                      color:
+                                          isDark
+                                              ? Colors.tealAccent.withValues(
+                                                alpha: 0.8,
+                                              )
+                                              : Colors.purpleAccent.withValues(
+                                                alpha: 0.8,
+                                              ),
                                     ),
                                   ),
                                 ),
@@ -290,7 +342,8 @@ class _DashboardPageState extends State<DashboardPage> with DashboardPageMixin {
     final diff = value - previous;
     final theme = Theme.of(context);
     final isIncrease = diff >= 0;
-    final isPositiveChange = positiveLabels.contains(label) ? isIncrease : !isIncrease;
+    final isPositiveChange =
+        positiveLabels.contains(label) ? isIncrease : !isIncrease;
     final arrow = isIncrease ? Icons.arrow_upward : Icons.arrow_downward;
     final diffColor = isPositiveChange ? Colors.greenAccent : Colors.redAccent;
 
@@ -302,9 +355,10 @@ class _DashboardPageState extends State<DashboardPage> with DashboardPageMixin {
           width: 160,
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: theme.brightness == Brightness.dark
-                ? Colors.purpleAccent.withValues(alpha: 0.08)
-                : Colors.lightBlue.withValues(alpha: 0.1),
+            color:
+                theme.brightness == Brightness.dark
+                    ? Colors.purpleAccent.withValues(alpha: 0.08)
+                    : Colors.lightBlue.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(20),
             border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
           ),

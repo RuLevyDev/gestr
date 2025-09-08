@@ -22,13 +22,32 @@ class _FakeInvoiceRepo implements InvoiceRepository {
   Future<void> updateInvoice(String userId, Invoice invoice) async {}
 }
 
+class _FakeIncomeRepo implements IncomeRepository {
+  @override
+  Future<List<Income>> getIncomes(String userId) async => [];
+  @override
+  Future<void> createIncome(String userId, Income income) async {}
+  @override
+  Future<void> deleteIncome(String userId, String incomeId) async {}
+  @override
+  Future<void> updateIncome(String userId, Income income) async {}
+  @override
+  Future<Income?> getIncomeById(String userId, String id) async => null;
+}
+
 void main() {
-  final mate = BlocTestMate<InvoiceBloc, InvoiceState>()
-      .factory((get) => InvoiceBloc(get<InvoiceUseCases>(), 'user-1'));
+  final mate = BlocTestMate<InvoiceBloc, InvoiceState>().factory(
+    (get) =>
+        InvoiceBloc(get<InvoiceUseCases>(), get<IncomeUseCases>(), 'user-1'),
+  );
 
   mate.scenario(
     'fetch invoices success',
-    arrange: (get) => get.register<InvoiceUseCases>(InvoiceUseCases(_FakeInvoiceRepo(const []))),
+    arrange: (get) {
+      get
+        ..register<InvoiceUseCases>(InvoiceUseCases(_FakeInvoiceRepo(const [])))
+        ..register<IncomeUseCases>(IncomeUseCases(_FakeIncomeRepo()));
+    },
     when: (bloc) => bloc.add(const InvoiceEvent.fetch()),
     expectStates: [isA<InvoiceLoading>(), isA<InvoiceLoaded>()],
   );

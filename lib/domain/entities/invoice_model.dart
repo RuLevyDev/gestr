@@ -1,6 +1,6 @@
 import 'dart:io';
 
-enum InvoiceStatus { pending, paid, sent, overdue }
+enum InvoiceStatus { pending, paid, sent, overdue, paidByMe }
 
 extension InvoiceStatusExtension on InvoiceStatus {
   String get name {
@@ -13,6 +13,8 @@ extension InvoiceStatusExtension on InvoiceStatus {
         return 'sent';
       case InvoiceStatus.overdue:
         return 'overdue';
+      case InvoiceStatus.paidByMe:
+        return 'paidByMe';
     }
   }
 }
@@ -28,6 +30,8 @@ extension InvoiceStatusTranslation on InvoiceStatus {
         return 'enviada';
       case InvoiceStatus.overdue:
         return 'vencida';
+      case InvoiceStatus.paidByMe:
+        return 'pagada por mí';
     }
   }
 }
@@ -60,4 +64,31 @@ class Invoice {
   });
 
   double get total => netAmount + iva;
+  Invoice copyWith({
+    String? id,
+    String? title,
+    DateTime? date,
+    double? netAmount,
+    double? iva,
+    InvoiceStatus? status,
+    String? issuer,
+    String? receiver,
+    String? concept,
+    File? image,
+    String? imageUrl,
+  }) {
+    return Invoice(
+      id: id ?? this.id,
+      title: title ?? this.title,
+      date: date ?? this.date,
+      netAmount: netAmount ?? this.netAmount,
+      iva: iva ?? this.iva,
+      status: status ?? this.status,
+      issuer: issuer ?? this.issuer,
+      receiver: receiver ?? this.receiver,
+      concept: concept ?? this.concept,
+      image: image ?? this.image,
+      imageUrl: imageUrl ?? this.imageUrl,
+    );
+  }
 }

@@ -1,4 +1,4 @@
-﻿import 'dart:io';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -7,10 +7,24 @@ import 'package:gestr/app/invoices/bloc/invoice_state.dart';
 import 'package:gestr/core/utils/background_light.dart';
 import 'package:gestr/core/utils/dialog_background.dart';
 import 'package:gestr/domain/entities/invoice_model.dart';
+import 'package:gestr/app/invoices/bloc/invoice_event.dart';
 
-class InvoiceDetailPage extends StatelessWidget {
+class InvoiceDetailPage extends StatefulWidget {
   final Invoice invoice;
   const InvoiceDetailPage({super.key, required this.invoice});
+
+  @override
+  State<InvoiceDetailPage> createState() => _InvoiceDetailPageState();
+}
+
+class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
+  late Invoice invoice;
+
+  @override
+  void initState() {
+    super.initState();
+    invoice = widget.invoice;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -26,9 +40,31 @@ class InvoiceDetailPage extends StatelessWidget {
           backgroundColor: Colors.transparent,
           appBar: AppBar(
             backgroundColor: Colors.transparent,
-            title: Text('Detalle de factura', style: theme.textTheme.titleLarge),
+            title: Text(
+              'Detalle de factura',
+              style: theme.textTheme.titleLarge,
+            ),
             actions: [
-              _StatusChip(status: invoice.status),
+              PopupMenuButton<InvoiceStatus>(
+                tooltip: 'Cambiar estado',
+                initialValue: invoice.status,
+                onSelected: (status) {
+                  final updated = invoice.copyWith(status: status);
+                  setState(() => invoice = updated);
+                  context.read<InvoiceBloc>().add(InvoiceEvent.update(updated));
+                },
+                itemBuilder:
+                    (context) =>
+                        InvoiceStatus.values
+                            .map(
+                              (s) => PopupMenuItem(
+                                value: s,
+                                child: Text(s.labelEs),
+                              ),
+                            )
+                            .toList(),
+                child: _StatusChip(status: invoice.status),
+              ),
               const SizedBox(width: 8),
             ],
           ),
@@ -65,14 +101,16 @@ class InvoiceDetailPage extends StatelessWidget {
                               children: [
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text(
                                         'FACTURA',
-                                        style: theme.textTheme.headlineSmall?.copyWith(
-                                          letterSpacing: 3,
-                                          fontWeight: FontWeight.w700,
-                                        ),
+                                        style: theme.textTheme.headlineSmall
+                                            ?.copyWith(
+                                              letterSpacing: 3,
+                                              fontWeight: FontWeight.w700,
+                                            ),
                                       ),
                                       const SizedBox(height: 8),
                                       Wrap(
@@ -80,7 +118,11 @@ class InvoiceDetailPage extends StatelessWidget {
                                         runSpacing: 6,
                                         children: [
                                           _kv('N.º', invoice.id ?? '—', theme),
-                                          _kv('Fecha', _formatDate(invoice.date), theme),
+                                          _kv(
+                                            'Fecha',
+                                            _formatDate(invoice.date),
+                                            theme,
+                                          ),
                                         ],
                                       ),
                                     ],
@@ -90,10 +132,15 @@ class InvoiceDetailPage extends StatelessWidget {
                                   width: 64,
                                   height: 64,
                                   decoration: BoxDecoration(
-                                    color: theme.colorScheme.primary.withValues(alpha: .12),
+                                    color: theme.colorScheme.primary.withValues(
+                                      alpha: .12,
+                                    ),
                                     borderRadius: BorderRadius.circular(12),
                                   ),
-                                  child: Icon(Icons.receipt_long, color: theme.colorScheme.primary),
+                                  child: Icon(
+                                    Icons.receipt_long,
+                                    color: theme.colorScheme.primary,
+                                  ),
                                 ),
                               ],
                             ),
@@ -107,24 +154,39 @@ class InvoiceDetailPage extends StatelessWidget {
                                 final isWide = c.maxWidth > 560;
                                 final children = <Widget>[
                                   if (invoice.issuer != null)
-                                    _PartyBox(title: 'Emisor', value: invoice.issuer!),
+                                    _PartyBox(
+                                      title: 'Emisor',
+                                      value: invoice.issuer!,
+                                    ),
                                   if (invoice.receiver != null)
-                                    _PartyBox(title: 'Receptor', value: invoice.receiver!),
+                                    _PartyBox(
+                                      title: 'Receptor',
+                                      value: invoice.receiver!,
+                                    ),
                                 ];
                                 if (!isWide) {
                                   return Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      ...children,
-                                    ],
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [...children],
                                   );
                                 }
                                 return Row(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Expanded(child: children.isNotEmpty ? children[0] : const SizedBox()),
+                                    Expanded(
+                                      child:
+                                          children.isNotEmpty
+                                              ? children[0]
+                                              : const SizedBox(),
+                                    ),
                                     const SizedBox(width: 16),
-                                    Expanded(child: children.length > 1 ? children[1] : const SizedBox()),
+                                    Expanded(
+                                      child:
+                                          children.length > 1
+                                              ? children[1]
+                                              : const SizedBox(),
+                                    ),
                                   ],
                                 );
                               },
@@ -132,13 +194,17 @@ class InvoiceDetailPage extends StatelessWidget {
 
                             if (invoice.concept != null) ...[
                               const SizedBox(height: 20),
-                              Text('Concepto', style: theme.textTheme.titleMedium),
+                              Text(
+                                'Concepto',
+                                style: theme.textTheme.titleMedium,
+                              ),
                               const SizedBox(height: 6),
                               Container(
                                 width: double.infinity,
                                 padding: const EdgeInsets.all(12),
                                 decoration: BoxDecoration(
-                                  color: theme.colorScheme.surfaceVariant.withValues(alpha: .25),
+                                  color: theme.colorScheme.surfaceVariant
+                                      .withValues(alpha: .25),
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: SelectableText(
@@ -152,7 +218,9 @@ class InvoiceDetailPage extends StatelessWidget {
                             Align(
                               alignment: Alignment.centerRight,
                               child: ConstrainedBox(
-                                constraints: const BoxConstraints(maxWidth: 420),
+                                constraints: const BoxConstraints(
+                                  maxWidth: 420,
+                                ),
                                 child: _TotalsTable(invoice: invoice),
                               ),
                             ),
@@ -160,18 +228,26 @@ class InvoiceDetailPage extends StatelessWidget {
                             const SizedBox(height: 16),
                             Divider(color: Colors.black12),
 
-                            if (invoice.imageUrl != null || invoice.image != null) ...[
+                            if (invoice.imageUrl != null ||
+                                invoice.image != null) ...[
                               const SizedBox(height: 16),
-                              Text('Adjuntos', style: theme.textTheme.titleMedium),
+                              Text(
+                                'Adjuntos',
+                                style: theme.textTheme.titleMedium,
+                              ),
                               const SizedBox(height: 8),
                               Wrap(
                                 spacing: 12,
                                 runSpacing: 12,
                                 children: [
                                   if (invoice.imageUrl != null)
-                                    _AttachmentCard.network(url: invoice.imageUrl!),
+                                    _AttachmentCard.network(
+                                      url: invoice.imageUrl!,
+                                    ),
                                   if (invoice.image != null)
-                                    _AttachmentCard.file(path: invoice.image!.path),
+                                    _AttachmentCard.file(
+                                      path: invoice.image!.path,
+                                    ),
                                 ],
                               ),
                             ],
@@ -197,13 +273,16 @@ class InvoiceDetailPage extends StatelessWidget {
 
   // Small key/value for header
   Widget _kv(String k, String v, ThemeData theme) => Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(k, style: theme.textTheme.labelMedium?.copyWith(color: Colors.black54)),
-          const SizedBox(width: 6),
-          SelectableText(v, style: theme.textTheme.bodyMedium),
-        ],
-      );
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      Text(
+        k,
+        style: theme.textTheme.labelMedium?.copyWith(color: Colors.black54),
+      ),
+      const SizedBox(width: 6),
+      SelectableText(v, style: theme.textTheme.bodyMedium),
+    ],
+  );
 }
 
 class _PartyBox extends StatelessWidget {
@@ -224,7 +303,12 @@ class _PartyBox extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title, style: theme.textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w600)),
+          Text(
+            title,
+            style: theme.textTheme.labelLarge?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
+          ),
           const SizedBox(height: 8),
           SelectableText(value, style: theme.textTheme.bodyMedium),
         ],
@@ -260,26 +344,40 @@ class _TotalsTable extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
               decoration: BoxDecoration(
-                color: i == rows.length - 1
-                    ? theme.colorScheme.primary.withValues(alpha: .06)
-                    : null,
-                borderRadius: i == 0
-                    ? const BorderRadius.vertical(top: Radius.circular(12))
-                    : i == rows.length - 1
-                        ? const BorderRadius.vertical(bottom: Radius.circular(12))
+                color:
+                    i == rows.length - 1
+                        ? theme.colorScheme.primary.withValues(alpha: .06)
+                        : null,
+                borderRadius:
+                    i == 0
+                        ? const BorderRadius.vertical(top: Radius.circular(12))
+                        : i == rows.length - 1
+                        ? const BorderRadius.vertical(
+                          bottom: Radius.circular(12),
+                        )
                         : null,
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(rows[i].label,
-                      style: rows[i].bold
-                          ? text.titleMedium?.copyWith(fontWeight: FontWeight.w700)
-                          : text.bodyMedium),
-                  Text(_money(rows[i].value),
-                      style: rows[i].bold
-                          ? text.titleMedium?.copyWith(fontWeight: FontWeight.w700)
-                          : text.bodyMedium),
+                  Text(
+                    rows[i].label,
+                    style:
+                        rows[i].bold
+                            ? text.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w700,
+                            )
+                            : text.bodyMedium,
+                  ),
+                  Text(
+                    _money(rows[i].value),
+                    style:
+                        rows[i].bold
+                            ? text.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w700,
+                            )
+                            : text.bodyMedium,
+                  ),
                 ],
               ),
             ),
@@ -305,7 +403,9 @@ class _AttachmentCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final border = RoundedRectangleBorder(borderRadius: BorderRadius.circular(12));
+    final border = RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(12),
+    );
     return SizedBox(
       width: 280,
       child: Card(
@@ -316,7 +416,12 @@ class _AttachmentCard extends StatelessWidget {
           child: Stack(
             children: [
               if (url != null)
-                Image.network(url!, fit: BoxFit.cover, height: 180, width: double.infinity)
+                Image.network(
+                  url!,
+                  fit: BoxFit.cover,
+                  height: 180,
+                  width: double.infinity,
+                )
               else if (path != null)
                 Image.file(
                   File(path!),
@@ -328,15 +433,20 @@ class _AttachmentCard extends StatelessWidget {
                 right: 8,
                 top: 8,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: theme.colorScheme.surface.withValues(alpha: .75),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Text(url != null ? 'Adjunto (red)' : 'Adjunto (local)',
-                      style: theme.textTheme.labelSmall),
+                  child: Text(
+                    url != null ? 'Adjunto (red)' : 'Adjunto (local)',
+                    style: theme.textTheme.labelSmall,
+                  ),
                 ),
-              )
+              ),
             ],
           ),
         ),
@@ -356,19 +466,40 @@ class _StatusChip extends StatelessWidget {
     Color fg;
     switch (status) {
       case InvoiceStatus.paid:
-        bg = Colors.green.withAlpha(32); fg = Colors.green.shade700; break;
+        bg = Colors.green.withAlpha(32);
+        fg = Colors.green.shade700;
+        break;
       case InvoiceStatus.pending:
-        bg = Colors.orange.withAlpha(32); fg = Colors.orange.shade800; break;
+        bg = Colors.orange.withAlpha(32);
+        fg = Colors.orange.shade800;
+        break;
       case InvoiceStatus.sent:
-        bg = Colors.blue.withAlpha(32); fg = Colors.blue.shade800; break;
+        bg = Colors.blue.withAlpha(32);
+        fg = Colors.blue.shade800;
+        break;
       case InvoiceStatus.overdue:
-        bg = Colors.red.withAlpha(32); fg = Colors.red.shade800; break;
+        bg = Colors.red.withAlpha(32);
+        fg = Colors.red.shade800;
+        break;
+      case InvoiceStatus.paidByMe:
+        bg = Colors.purple.withAlpha(32);
+        fg = Colors.purple.shade800;
+        break;
     }
     return Container(
       margin: const EdgeInsets.only(right: 12),
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(999)),
-      child: Text(status.labelEs.toUpperCase(), style: theme.textTheme.labelSmall?.copyWith(color: fg, fontWeight: FontWeight.w700)),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        status.labelEs.toUpperCase(),
+        style: theme.textTheme.labelSmall?.copyWith(
+          color: fg,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
     );
   }
 }

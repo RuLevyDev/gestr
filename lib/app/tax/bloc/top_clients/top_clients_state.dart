@@ -8,17 +8,19 @@ abstract class TopClientsState extends Equatable {
 }
 
 class TopClientsInitial extends TopClientsState {}
+
 class TopClientsLoading extends TopClientsState {}
+
 class TopClientsLoaded extends TopClientsState {
   final List<ClientTotal> clients;
   const TopClientsLoaded(this.clients);
   @override
   List<Object?> get props => [clients];
 }
+
 class TopClientsError extends TopClientsState {
   final String message;
   const TopClientsError(this.message);
   @override
   List<Object?> get props => [message];
 }
-

@@ -12,15 +12,19 @@ class _FakeSelfRepo implements SelfEmployedUserRepository {
   final bool ok;
   _FakeSelfRepo(this.ok);
   @override
-  Future<Either<UserProfileFailure, SelfEmployedUser>> getUser(String uid) async => Left(UserNotFound());
+  Future<Either<UserProfileFailure, SelfEmployedUser>> getUser(
+    String uid,
+  ) async => Left(UserNotFound());
   @override
-  Future<Either<UserProfileFailure, Unit>> saveUser(SelfEmployedUser user) async =>
-      ok ? const Right(unit) : Left(UnknownUserProfileFailure('fail'));
+  Future<Either<UserProfileFailure, Unit>> saveUser(
+    SelfEmployedUser user,
+  ) async => ok ? const Right(unit) : Left(UnknownUserProfileFailure('fail'));
 }
 
 void main() {
-  final mate = BlocTestMate<SelfEmployedBloc, SelfEmployedState>()
-      .factory((get) => SelfEmployedBloc(get<SelfEmployedUserUseCases>()));
+  final mate = BlocTestMate<SelfEmployedBloc, SelfEmployedState>().factory(
+    (get) => SelfEmployedBloc(get<SelfEmployedUserUseCases>()),
+  );
 
   final sample = SelfEmployedUser(
     uid: 'u',
@@ -36,14 +40,20 @@ void main() {
 
   mate.scenario(
     'save success',
-    arrange: (get) => get.register<SelfEmployedUserUseCases>(SelfEmployedUserUseCases(_FakeSelfRepo(true))),
+    arrange:
+        (get) => get.register<SelfEmployedUserUseCases>(
+          SelfEmployedUserUseCases(_FakeSelfRepo(true)),
+        ),
     when: (bloc) => bloc.add(SaveSelfEmployedUser(sample)),
     expectStates: [isA<SelfEmployedLoading>(), isA<SelfEmployedSaved>()],
   );
 
   mate.scenario(
     'save error',
-    arrange: (get) => get.register<SelfEmployedUserUseCases>(SelfEmployedUserUseCases(_FakeSelfRepo(false))),
+    arrange:
+        (get) => get.register<SelfEmployedUserUseCases>(
+          SelfEmployedUserUseCases(_FakeSelfRepo(false)),
+        ),
     when: (bloc) => bloc.add(SaveSelfEmployedUser(sample)),
     expectStates: [isA<SelfEmployedLoading>(), isA<SelfEmployedError>()],
   );

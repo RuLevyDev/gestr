@@ -21,53 +21,67 @@ class TaxProvider {
     return [
       // Repositorio de TaxSummary calculado a partir de invoices y pagos fijos
       Provider<TaxSummaryRepository>(
-        create: (context) => TaxSummaryRepositoryImpl(
-          context.read<InvoiceRepository>(),
-          context.read<FixedPaymentRepository>(),
-          context.read<IncomeRepository>(),
-        ),
+        create:
+            (context) => TaxSummaryRepositoryImpl(
+              context.read<InvoiceRepository>(),
+              context.read<FixedPaymentRepository>(),
+              context.read<IncomeRepository>(),
+            ),
         lazy: true,
       ),
       // Casos de uso
       Provider<TaxSummaryUseCases>(
-        create: (context) =>
-            TaxSummaryUseCases(context.read<TaxSummaryRepository>()),
+        create:
+            (context) =>
+                TaxSummaryUseCases(context.read<TaxSummaryRepository>()),
         lazy: true,
       ),
       BlocProvider<SummaryBloc>(
-        create: (context) => SummaryBloc(
-          context.read<TaxSummaryUseCases>(),
-          FirebaseAuth.instance.currentUser!.uid,
-        ),
+        create:
+            (context) => SummaryBloc(
+              context.read<TaxSummaryUseCases>(),
+              FirebaseAuth.instance.currentUser!.uid,
+            ),
         lazy: true,
       ),
       BlocProvider<ChartBloc>(
-        create: (context) => ChartBloc(
-          context.read<TaxSummaryUseCases>(),
-          FirebaseAuth.instance.currentUser!.uid,
-        ),
+        create:
+            (context) => ChartBloc(
+              context.read<TaxSummaryUseCases>(),
+              FirebaseAuth.instance.currentUser!.uid,
+            ),
         lazy: true,
       ),
       BlocProvider<VatBloc>(
-        create: (context) =>
-            VatBloc(context.read<TaxSummaryUseCases>(), FirebaseAuth.instance.currentUser!.uid),
+        create:
+            (context) => VatBloc(
+              context.read<TaxSummaryUseCases>(),
+              FirebaseAuth.instance.currentUser!.uid,
+            ),
         lazy: true,
       ),
       BlocProvider<ExpensesByCategoryBloc>(
-        create: (context) => ExpensesByCategoryBloc(
-          context.read<TaxSummaryUseCases>(),
-          FirebaseAuth.instance.currentUser!.uid,
-        ),
+        create:
+            (context) => ExpensesByCategoryBloc(
+              context.read<TaxSummaryUseCases>(),
+              FirebaseAuth.instance.currentUser!.uid,
+            ),
         lazy: true,
       ),
       BlocProvider<TopClientsBloc>(
-        create: (context) =>
-            TopClientsBloc(context.read<TaxSummaryUseCases>(), FirebaseAuth.instance.currentUser!.uid),
+        create:
+            (context) => TopClientsBloc(
+              context.read<TaxSummaryUseCases>(),
+              FirebaseAuth.instance.currentUser!.uid,
+            ),
         lazy: true,
       ),
       BlocProvider<Pre303Bloc>(
-        create: (context) =>
-            Pre303Bloc(context.read<TaxSummaryUseCases>(), FirebaseAuth.instance.currentUser!.uid),
+        create:
+            (context) => Pre303Bloc(
+              context.read<TaxSummaryUseCases>(),
+              FirebaseAuth.instance.currentUser!.uid,
+            ),
         lazy: true,
       ),
     ];

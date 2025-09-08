@@ -4,4 +4,3 @@ class ClientTotal {
 
   const ClientTotal({required this.client, required this.total});
 }
-

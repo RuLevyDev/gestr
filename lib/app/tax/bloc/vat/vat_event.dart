@@ -12,7 +12,7 @@ class VatEvent extends Equatable {
   const VatEvent.fetch() : this._(VatEventType.fetch);
   const VatEvent.refresh() : this._(VatEventType.refresh);
   const VatEvent.setPeriod(DateTimeRange range)
-      : this._(VatEventType.setPeriod, range: range);
+    : this._(VatEventType.setPeriod, range: range);
 
   @override
   List<Object?> get props => [type, range];

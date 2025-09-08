@@ -168,6 +168,8 @@ class InvoiceCard extends StatelessWidget {
         return Colors.orangeAccent;
       case InvoiceStatus.overdue:
         return Colors.redAccent;
+      case InvoiceStatus.paidByMe:
+        return Colors.purpleAccent;
     }
   }
 }

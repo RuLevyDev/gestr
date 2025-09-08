@@ -183,6 +183,8 @@ class InvoiceRepositoryImpl implements InvoiceRepository {
         return InvoiceStatus.sent;
       case 'overdue':
         return InvoiceStatus.overdue;
+      case 'paidByMe':
+        return InvoiceStatus.paidByMe;
       default:
         return InvoiceStatus.pending;
     }

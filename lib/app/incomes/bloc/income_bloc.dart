@@ -85,4 +85,3 @@ class IncomeBloc extends Bloc<IncomeEvent, IncomeState> {
     }
   }
 }
-

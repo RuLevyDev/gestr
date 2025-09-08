@@ -20,4 +20,3 @@ class VatBreakdown {
   double get totalBase => base21 + base10 + base4 + base0;
   double get totalIva => iva21 + iva10 + iva4;
 }
-
