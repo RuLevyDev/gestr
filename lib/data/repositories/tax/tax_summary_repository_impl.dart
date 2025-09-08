@@ -1,5 +1,6 @@
 import 'package:gestr/domain/entities/tax_summary_model.dart';
 import 'package:gestr/domain/repositories/invoice/invoice_reposiroty.dart';
+import 'package:gestr/domain/repositories/income/income_repository.dart';
 import 'package:gestr/domain/repositories/fixedpayments/fixed_payments_repository.dart';
 import 'package:gestr/domain/repositories/tax/tax_summary_repository.dart';
 import 'package:gestr/domain/entities/tax_vat_breakdown.dart';
@@ -10,9 +11,14 @@ import 'package:gestr/domain/entities/tax_category_total.dart';
 
 class TaxSummaryRepositoryImpl implements TaxSummaryRepository {
   final InvoiceRepository invoiceRepository;
+  final IncomeRepository incomeRepository;
   final FixedPaymentRepository fixedPaymentRepository;
 
-  TaxSummaryRepositoryImpl(this.invoiceRepository, this.fixedPaymentRepository);
+  TaxSummaryRepositoryImpl(
+    this.invoiceRepository,
+    this.fixedPaymentRepository,
+    this.incomeRepository,
+  );
 
   @override
   Future<TaxSummary> getSummary(
@@ -21,6 +27,7 @@ class TaxSummaryRepositoryImpl implements TaxSummaryRepository {
     DateTime? end,
   }) async {
     final invoices = await invoiceRepository.getInvoices(userId);
+    final incomes = await incomeRepository.getIncomes(userId);
     final fixedPayments = await fixedPaymentRepository.getFixedPayments(userId);
 
     bool inRange(DateTime d) {
@@ -34,11 +41,20 @@ class TaxSummaryRepositoryImpl implements TaxSummaryRepository {
             ? invoices
             : invoices.where((i) => inRange(i.date)).toList();
     final filteredFixedPayments = fixedPayments;
+    final filteredIncomes =
+        (start == null && end == null)
+            ? incomes
+            : incomes.where((i) => inRange(i.date)).toList();
 
-    final totalIncome = filteredInvoices.fold<double>(
+    final totalIncomeFromInvoices = filteredInvoices.fold<double>(
       0,
       (sum, i) => sum + i.netAmount,
     );
+    final totalIncomeFromIncomes = filteredIncomes.fold<double>(
+      0,
+      (sum, inc) => sum + inc.amount,
+    );
+    final totalIncome = totalIncomeFromInvoices + totalIncomeFromIncomes;
     final vatCollected = filteredInvoices.fold<double>(
       0,
       (sum, i) => sum + i.iva,

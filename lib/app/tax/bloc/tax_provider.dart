@@ -13,6 +13,7 @@ import 'package:gestr/data/repositories/tax/tax_summary_repository_impl.dart';
 import 'package:gestr/domain/repositories/fixedpayments/fixed_payments_repository.dart';
 import 'package:gestr/domain/repositories/invoice/invoice_reposiroty.dart';
 import 'package:gestr/domain/repositories/tax/tax_summary_repository.dart';
+import 'package:gestr/domain/repositories/income/income_repository.dart';
 import 'package:gestr/domain/usecases/tax/tax_summary_usecases.dart';
 
 class TaxProvider {
@@ -23,6 +24,7 @@ class TaxProvider {
         create: (context) => TaxSummaryRepositoryImpl(
           context.read<InvoiceRepository>(),
           context.read<FixedPaymentRepository>(),
+          context.read<IncomeRepository>(),
         ),
         lazy: true,
       ),

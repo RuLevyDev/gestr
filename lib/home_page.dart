@@ -6,6 +6,7 @@ import 'package:gestr/app/dashboard/dasboard_page.dart';
 import 'package:gestr/core/auth/application/viewmodels/profile_completion_viewmodel.dart';
 import 'package:gestr/core/auth/application/widgets/custom_bottom_navbar.dart';
 import 'package:gestr/app/invoices/application/view/invoices_page.dart';
+import 'package:gestr/app/incomes/application/view/incomes_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -20,20 +21,20 @@ class _HomePageState extends State<HomePage>
 
   final List<Widget> _pages = [
     DashboardPage(),
+    const IncomesPage(),
     const InvoicesPage(),
     const TaxSummaryPage(),
-    const ClientsPage(),
     const SettingsPage(),
   ];
 
   final List<IconData> _icons = [
     Icons.dashboard,
+    Icons.trending_up,
     Icons.receipt_long,
     Icons.pie_chart,
-    Icons.people,
   ];
 
-  final List<String> _labels = ['Inicio', 'Facturas', 'Fiscalidad', 'Clientes'];
+  final List<String> _labels = ['Inicio', 'Ingresos', 'Facturas', 'Fiscalidad'];
 
   @override
   Widget build(BuildContext context) {
