@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gestr/data/repositories/user/self_employed_repository_impl.dart';
 import 'package:gestr/domain/repositories/user/self_employed_repository.dart';
 import 'package:gestr/domain/usecases/user/self_employed_user_usecases.dart';
-import 'package:gestr/app/auth/bloc/auth_bloc.dart';
+import 'package:gestr/core/auth/bloc/auth_bloc.dart';
 import 'package:gestr/data/repositories/user/auth_repository_impl.dart';
 import 'package:gestr/data/services/auth_service.dart';
 import 'package:gestr/domain/repositories/user/auth_repository.dart';

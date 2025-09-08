@@ -5,10 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gestr/core/utils/animate_background.dart';
 
-import 'package:gestr/app/auth/bloc/auth_bloc.dart';
+import 'package:gestr/core/auth/bloc/auth_bloc.dart';
 
-import 'package:gestr/app/auth/bloc/auth_state.dart';
-import 'package:gestr/app/auth/application/viewmodels/auth_viewmodel.dart';
+import 'package:gestr/core/auth/bloc/auth_state.dart';
+import 'package:gestr/core/auth/application/viewmodels/auth_viewmodel.dart';
 import 'package:gestr/core/utils/app_strings.dart';
 import 'package:gestr/core/utils/images.dart';
 

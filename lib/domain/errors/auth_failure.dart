@@ -28,7 +28,7 @@ class UserNotFound extends AuthFailure {
 
 /// Falla desconocida o no clasificada de autenticación.
 class UnknownAuthFailure extends AuthFailure {
-  const UnknownAuthFailure(super.msg);
+  const UnknownAuthFailure(super.message);
 }
 
 /// El usuario canceló manualmente el inicio de sesión (por ejemplo, en Google Sign-In).

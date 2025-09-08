@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gestr/core/utils/app_strings.dart';
-import 'package:gestr/app/auth/bloc/auth_bloc.dart';
-import 'package:gestr/app/auth/bloc/auth_event.dart';
+import 'package:gestr/core/auth/bloc/auth_bloc.dart';
+import 'package:gestr/core/auth/bloc/auth_event.dart';
 
 mixin AuthViewModelMixin<T extends StatefulWidget> on State<T> {
   final emailController = TextEditingController();

@@ -3,9 +3,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gestr/domain/entities/self_employed_user.dart';
 import 'package:gestr/core/utils/dialog_background.dart';
 
-import 'package:gestr/app/auth/application/viewmodels/self_employed_profile_viewmodel.dart';
-import 'package:gestr/app/auth/bloc/self_employed_bloc.dart';
-import 'package:gestr/app/auth/bloc/self_employed_state.dart';
+import 'package:gestr/core/auth/application/viewmodels/self_employed_profile_viewmodel.dart';
+import 'package:gestr/core/auth/bloc/self_employed_bloc.dart';
+import 'package:gestr/core/auth/bloc/self_employed_state.dart';
 
 class SelfEmployedProfileDialog extends StatefulWidget {
   final void Function(SelfEmployedUser user) onSave;
@@ -109,6 +109,54 @@ class _SelfEmployedProfileDialogState extends State<SelfEmployedProfileDialog>
                                               ? 'Selecciona una fecha de inicio'
                                               : null,
                                 ),
+                                SizedBox(height: 8),
+                                DropdownButtonFormField<double>(
+                                  decoration: const InputDecoration(
+                                    labelText: 'IVA gasto por defecto',
+                                  ),
+                                  initialValue: defaultExpenseVatRate,
+                                  items: const [0.0, 0.04, 0.10, 0.21]
+                                      .map((r) => DropdownMenuItem(
+                                            value: r,
+                                            child: Text('${(r * 100).toStringAsFixed(0)}%'),
+                                          ))
+                                      .toList(),
+                                  onChanged: (v) => setState(() => defaultExpenseVatRate = v ?? 0.0),
+                                ),
+                                SwitchListTile(
+                                  title: const Text('Gasto incluye IVA por defecto'),
+                                  value: defaultExpenseAmountIsGross,
+                                  onChanged: (v) => setState(() => defaultExpenseAmountIsGross = v),
+                                ),
+                                SwitchListTile(
+                                  title: const Text('Gasto deducible por defecto'),
+                                  value: defaultExpenseDeductible,
+                                  onChanged: (v) => setState(() => defaultExpenseDeductible = v),
+                                ),
+                                SizedBox(height: 8),
+                                DropdownButtonFormField<double>(
+                                  decoration: const InputDecoration(
+                                    labelText: 'IVA gasto por defecto',
+                                  ),
+                                  initialValue: defaultExpenseVatRate,
+                                  items: const [0.0, 0.04, 0.10, 0.21]
+                                      .map((r) => DropdownMenuItem(
+                                            value: r,
+                                            child: Text('${(r * 100).toStringAsFixed(0)}%'),
+                                          ))
+                                      .toList(),
+                                  onChanged: (v) => setState(() => defaultExpenseVatRate = v ?? 0.0),
+                                ),
+                                SwitchListTile(
+                                  title: const Text('Gasto incluye IVA por defecto'),
+                                  value: defaultExpenseAmountIsGross,
+                                  onChanged: (v) => setState(() => defaultExpenseAmountIsGross = v),
+                                ),
+                                SwitchListTile(
+                                  title: const Text('Gasto deducible por defecto'),
+                                  value: defaultExpenseDeductible,
+                                  onChanged: (v) => setState(() => defaultExpenseDeductible = v),
+                                ),
                               ],
                               if (currentStep == 1) ...[
                                 // Campos del segundo paso
@@ -131,7 +179,7 @@ class _SelfEmployedProfileDialogState extends State<SelfEmployedProfileDialog>
                                   decoration: InputDecoration(
                                     labelText: 'Método de tributación',
                                   ),
-                                  value: taxationMethod,
+                                  initialValue: taxationMethod,
                                   items: [
                                     DropdownMenuItem(
                                       value: 'Estimación directa',

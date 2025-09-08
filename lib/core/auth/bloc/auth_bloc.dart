@@ -1,5 +1,5 @@
-import 'package:gestr/app/auth/bloc/auth_event.dart';
-import 'package:gestr/app/auth/bloc/auth_state.dart';
+import 'package:gestr/core/auth/bloc/auth_event.dart';
+import 'package:gestr/core/auth/bloc/auth_state.dart';
 import 'package:gestr/domain/usecases/user/user_usecases.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 

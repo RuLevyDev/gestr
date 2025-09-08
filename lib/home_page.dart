@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:gestr/app/tax/application/view/tax_summary_page.dart';
 import 'package:gestr/core/utils/background_light.dart';
 import 'package:gestr/core/utils/dialog_background.dart';
 import 'package:gestr/app/dashboard/dasboard_page.dart';
-import 'package:gestr/app/auth/application/viewmodels/profile_completion_viewmodel.dart';
-import 'package:gestr/app/auth/application/widgets/custom_bottom_navbar.dart';
+import 'package:gestr/core/auth/application/viewmodels/profile_completion_viewmodel.dart';
+import 'package:gestr/core/auth/application/widgets/custom_bottom_navbar.dart';
 import 'package:gestr/app/invoices/application/view/invoices_page.dart';
 
 class HomePage extends StatefulWidget {
@@ -78,13 +79,13 @@ class _HomePageState extends State<HomePage>
   }
 }
 
-class TaxSummaryPage extends StatelessWidget {
-  const TaxSummaryPage({super.key});
+// class TaxSummaryPage extends StatelessWidget {
+//   const TaxSummaryPage({super.key});
 
-  @override
-  Widget build(BuildContext context) =>
-      const Center(child: Text('Resumen Fiscal'));
-}
+//   @override
+//   Widget build(BuildContext context) =>
+//       const Center(child: Text('Resumen Fiscal'));
+// }
 
 class ClientsPage extends StatelessWidget {
   const ClientsPage({super.key});

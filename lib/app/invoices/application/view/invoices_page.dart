@@ -10,7 +10,6 @@ import 'package:gestr/app/invoices/bloc/invoice_event.dart';
 import 'package:gestr/app/invoices/bloc/invoice_state.dart';
 import 'package:gestr/app/invoices/widgets/fixed_payments_card.dart';
 import 'package:gestr/app/invoices/widgets/invoice_card.dart';
-import 'package:gestr/domain/entities/fixed_payments_model.dart';
 
 class InvoicesPage extends StatefulWidget {
   const InvoicesPage({super.key});
@@ -124,7 +123,7 @@ class _InvoicesPageState extends State<InvoicesPage> with InvoicesPageMixin {
                                     itemBuilder: (context, index) {
                                       final entry = upcomingPayments[index];
                                       final payment = entry.key;
-                                      final date = entry.value;
+                                      // final date = entry.value;
 
                                       return FixedPaymentCard(
                                         payment: payment,

@@ -103,7 +103,7 @@ class _CreateInvoicePageState extends State<CreateInvoicePage>
                                   showAdvancedFields = val;
                                 });
                               },
-                              activeColor: theme.colorScheme.tertiary,
+                              activeThumbColor: theme.colorScheme.tertiary,
                             ),
                             if (showAdvancedFields) ...[
                               TextFormField(
@@ -196,7 +196,7 @@ class _CreateInvoicePageState extends State<CreateInvoicePage>
                                   updateIva();
                                 });
                               },
-                              activeColor: theme.colorScheme.tertiary,
+                              activeThumbColor: theme.colorScheme.tertiary,
                             ),
                             // Campo importe neto
                             TextFormField(
@@ -290,11 +290,11 @@ class _CreateInvoicePageState extends State<CreateInvoicePage>
 
                             const SizedBox(height: 24),
 
-                            DropdownButtonFormField<InvoiceStatus>(
+                              DropdownButtonFormField<InvoiceStatus>(
                               decoration: const InputDecoration(
                                 labelText: 'Estado',
                               ),
-                              value: status,
+                                initialValue: status,
 
                               dropdownColor: theme.colorScheme.secondary,
                               items:

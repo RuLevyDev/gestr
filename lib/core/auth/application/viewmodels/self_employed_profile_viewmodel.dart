@@ -2,8 +2,8 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gestr/domain/entities/self_employed_user.dart';
-import 'package:gestr/app/auth/bloc/self_employed_bloc.dart';
-import 'package:gestr/app/auth/bloc/self_employed_event.dart';
+import 'package:gestr/core/auth/bloc/self_employed_bloc.dart';
+import 'package:gestr/core/auth/bloc/self_employed_event.dart';
 
 mixin SelfEmployedProfileDialogViewModelMixin<T extends StatefulWidget>
     on State<T> {
@@ -19,6 +19,10 @@ mixin SelfEmployedProfileDialogViewModelMixin<T extends StatefulWidget>
   DateTime? selectedStartDate;
   final formKey = GlobalKey<FormState>();
   int currentStep = 0;
+  // Defaults para gastos fijos
+  double defaultExpenseVatRate = 0.0; // 0, 0.04, 0.10, 0.21
+  bool defaultExpenseAmountIsGross = true;
+  bool defaultExpenseDeductible = true;
 
   void pickStartDate(BuildContext context) async {
     final picked = await showDatePicker(
@@ -82,6 +86,9 @@ mixin SelfEmployedProfileDialogViewModelMixin<T extends StatefulWidget>
         iban: ibanController.text.trim(),
         usesElectronicInvoicing: usesElectronicInvoicing,
         taxationMethod: taxationMethod,
+        defaultExpenseVatRate: defaultExpenseVatRate,
+        defaultExpenseAmountIsGross: defaultExpenseAmountIsGross,
+        defaultExpenseDeductible: defaultExpenseDeductible,
       );
       context.read<SelfEmployedBloc>().add(SaveSelfEmployedUser(user));
     }

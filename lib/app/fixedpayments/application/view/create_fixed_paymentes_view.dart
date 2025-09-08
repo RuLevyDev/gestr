@@ -18,6 +18,11 @@ class CreateFixedPaymentPage extends StatefulWidget {
 class _CreateFixedPaymentPageState extends State<CreateFixedPaymentPage>
     with CreateFixedPaymentViewModelMixin {
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => loadDefaults(context));
+  }
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
@@ -163,8 +168,50 @@ class _CreateFixedPaymentPageState extends State<CreateFixedPaymentPage>
                 onSaved: (val) => amount = double.tryParse(val ?? '0') ?? 0,
               ),
               const SizedBox(height: 12),
+              TextFormField(
+                decoration: const InputDecoration(labelText: 'Proveedor'),
+                onSaved: (val) => supplier = val,
+              ),
+              const SizedBox(height: 12),
+              DropdownButtonFormField<FixedPaymentCategory>(
+                initialValue: category,
+                decoration: const InputDecoration(labelText: 'Categoría'),
+                items: FixedPaymentCategory.values
+                    .map((c) => DropdownMenuItem(
+                          value: c,
+                          child: Text(c.nameEs),
+                        ))
+                    .toList(),
+                onChanged: (v) => setState(() => category = v ?? FixedPaymentCategory.other),
+                onSaved: (v) => category = v ?? FixedPaymentCategory.other,
+              ),
+              const SizedBox(height: 12),
+              DropdownButtonFormField<double>(
+                initialValue: vatRate,
+                decoration: const InputDecoration(labelText: 'IVA (%)'),
+                items: const [0.0, 0.04, 0.10, 0.21]
+                    .map((r) => DropdownMenuItem(
+                          value: r,
+                          child: Text('${(r * 100).toStringAsFixed(0)}%'),
+                        ))
+                    .toList(),
+                onChanged: (v) => setState(() => vatRate = v ?? 0.0),
+                onSaved: (v) => vatRate = v ?? 0.0,
+              ),
+              const SizedBox(height: 8),
+              SwitchListTile(
+                title: const Text('Importe incluye IVA'),
+                value: amountIsGross,
+                onChanged: (v) => setState(() => amountIsGross = v),
+              ),
+              SwitchListTile(
+                title: const Text('Gasto deducible'),
+                value: deductible,
+                onChanged: (v) => setState(() => deductible = v),
+              ),
+              const SizedBox(height: 12),
               DropdownButtonFormField<FixedPaymentFrequency>(
-                value: frequency,
+                initialValue: frequency,
                 decoration: const InputDecoration(labelText: 'Frecuencia'),
                 items:
                     FixedPaymentFrequency.values.map((f) {

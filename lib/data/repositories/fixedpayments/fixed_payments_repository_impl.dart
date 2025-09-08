@@ -30,6 +30,11 @@ class FixedPaymentRepositoryImpl implements FixedPaymentRepository {
           startDate: (data['startDate'] as Timestamp).toDate(),
           frequency: _parseStatus(data['frequency']),
           description: data['description'],
+          supplier: data['supplier'],
+          vatRate: ((data['vatRate'] ?? 0.0) as num).toDouble(),
+          amountIsGross: (data['amountIsGross'] ?? true) as bool,
+          deductible: (data['deductible'] ?? true) as bool,
+          category: _parseCategory(data['category']),
           imageUrl: data['imageUrl'],
         );
       }).toList();
@@ -60,6 +65,11 @@ class FixedPaymentRepositoryImpl implements FixedPaymentRepository {
             'startDate': payment.startDate,
             'frequency': payment.frequency.name, // Ej: "monthly"
             'description': payment.description,
+            'supplier': payment.supplier,
+            'vatRate': payment.vatRate,
+            'amountIsGross': payment.amountIsGross,
+            'deductible': payment.deductible,
+            'category': payment.category.name,
             'imageUrl': imageUrl,
           });
     } catch (e) {
@@ -98,6 +108,11 @@ class FixedPaymentRepositoryImpl implements FixedPaymentRepository {
         'startDate': payment.startDate,
         'frequency': payment.frequency.name,
         'description': payment.description,
+        'supplier': payment.supplier,
+        'vatRate': payment.vatRate,
+        'amountIsGross': payment.amountIsGross,
+        'deductible': payment.deductible,
+        'category': payment.category.name,
         'imageUrl': imageUrl,
       });
     } catch (e) {
@@ -149,6 +164,11 @@ class FixedPaymentRepositoryImpl implements FixedPaymentRepository {
         startDate: (data['startDate'] as Timestamp).toDate(),
         frequency: _parseStatus(data['frequency']),
         description: data['description'],
+        supplier: data['supplier'],
+        vatRate: ((data['vatRate'] ?? 0.0) as num).toDouble(),
+        amountIsGross: (data['amountIsGross'] ?? true) as bool,
+        deductible: (data['deductible'] ?? true) as bool,
+        category: _parseCategory(data['category']),
         imageUrl: data['imageUrl'],
       );
     } catch (e) {
@@ -168,5 +188,26 @@ class FixedPaymentRepositoryImpl implements FixedPaymentRepository {
     };
 
     return mapping[status?.toLowerCase()] ?? FixedPaymentFrequency.monthly;
+  }
+
+  FixedPaymentCategory _parseCategory(String? cat) {
+    switch ((cat ?? '').toLowerCase()) {
+      case 'utilities':
+        return FixedPaymentCategory.utilities;
+      case 'rent':
+        return FixedPaymentCategory.rent;
+      case 'vehicle':
+        return FixedPaymentCategory.vehicle;
+      case 'food':
+        return FixedPaymentCategory.food;
+      case 'tools':
+        return FixedPaymentCategory.tools;
+      case 'services':
+        return FixedPaymentCategory.services;
+      case 'taxes':
+        return FixedPaymentCategory.taxes;
+      default:
+        return FixedPaymentCategory.other;
+    }
   }
 }

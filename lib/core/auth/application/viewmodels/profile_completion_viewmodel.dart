@@ -4,8 +4,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gestr/domain/entities/self_employed_user.dart';
 import 'package:gestr/domain/errors/user_profile_failures.dart';
 import 'package:gestr/domain/usecases/user/self_employed_user_usecases.dart';
-import 'package:gestr/app/auth/application/widgets/self_employed_profile_dialog.dart';
-import 'package:gestr/app/auth/bloc/self_employed_bloc.dart';
+import 'package:gestr/core/auth/application/widgets/self_employed_profile_dialog.dart';
+import 'package:gestr/core/auth/bloc/self_employed_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 mixin ProfileCompletionViewmodelMixin<T extends StatefulWidget> on State<T> {

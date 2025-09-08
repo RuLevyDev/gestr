@@ -7,6 +7,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gestr/app/fixedpayments/bloc/fixed_payment_event.dart';
 import 'package:gestr/app/fixedpayments/bloc/fixed_payment_state.dart';
 import 'package:gestr/app/fixedpayments/bloc/fixed_payments_bloc.dart';
+import 'package:gestr/domain/usecases/user/self_employed_user_usecases.dart';
 import 'package:gestr/domain/entities/fixed_payments_model.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:pdf/widgets.dart' as pw;
@@ -22,6 +23,11 @@ mixin CreateFixedPaymentViewModelMixin<T extends StatefulWidget> on State<T> {
   DateTime startDate = DateTime.now();
   FixedPaymentFrequency frequency = FixedPaymentFrequency.monthly;
   String? description;
+  String? supplier;
+  double vatRate = 0.0; // 0, 0.04, 0.10, 0.21
+  bool amountIsGross = true;
+  bool deductible = true;
+  FixedPaymentCategory category = FixedPaymentCategory.other;
   File? proofImage;
   final ImagePicker picker = ImagePicker();
 
@@ -39,8 +45,31 @@ mixin CreateFixedPaymentViewModelMixin<T extends StatefulWidget> on State<T> {
       startDate: startDate,
       frequency: frequency,
       description: description,
+      supplier: supplier,
+      vatRate: vatRate,
+      amountIsGross: amountIsGross,
+      deductible: deductible,
+      category: category,
       image: proofImage,
     );
+  }
+
+  Future<void> loadDefaults(BuildContext context) async {
+    try {
+      final uid = FirebaseAuth.instance.currentUser?.uid;
+      if (uid == null) return;
+      final useCases = context.read<SelfEmployedUserUseCases>();
+      final res = await useCases.getUser(uid);
+      res.fold((_) {}, (user) {
+        setState(() {
+          vatRate = user.defaultExpenseVatRate;
+          amountIsGross = user.defaultExpenseAmountIsGross;
+          deductible = user.defaultExpenseDeductible;
+        });
+      });
+    } catch (_) {
+      // ignore errors, keep defaults
+    }
   }
 
   Future<void> submitFixedPayment() async {
@@ -64,7 +93,9 @@ mixin CreateFixedPaymentViewModelMixin<T extends StatefulWidget> on State<T> {
 
     try {
       await completer.future;
-      ScaffoldMessenger.of(context).showSnackBar(
+      if (!mounted) return;
+      final messenger = ScaffoldMessenger.of(context);
+      messenger.showSnackBar(
         const SnackBar(content: Text("Pago fijo creado correctamente")),
       );
       formKey.currentState?.reset();
@@ -77,9 +108,11 @@ mixin CreateFixedPaymentViewModelMixin<T extends StatefulWidget> on State<T> {
         startDate = DateTime.now();
       });
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("Error al guardar el pago: $e")));
+      if (!mounted) return;
+      final messenger = ScaffoldMessenger.of(context);
+      messenger.showSnackBar(
+        SnackBar(content: Text("Error al guardar el pago: $e")),
+      );
     } finally {
       await subscription.cancel();
     }
@@ -87,6 +120,7 @@ mixin CreateFixedPaymentViewModelMixin<T extends StatefulWidget> on State<T> {
 
   Future<void> pickImage({ImageSource source = ImageSource.camera}) async {
     final pickedFile = await picker.pickImage(source: source);
+    if (!mounted) return;
     if (pickedFile != null) {
       setState(() {
         proofImage = File(pickedFile.path);
@@ -108,6 +142,7 @@ mixin CreateFixedPaymentViewModelMixin<T extends StatefulWidget> on State<T> {
       lastDate: DateTime(2100),
     );
 
+    if (!mounted) return;
     if (picked != null && picked != startDate) {
       setState(() {
         startDate = picked;

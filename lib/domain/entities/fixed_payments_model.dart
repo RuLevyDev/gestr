@@ -59,6 +59,11 @@ class FixedPayment {
   final DateTime startDate;
   final FixedPaymentFrequency frequency;
   final String? description;
+  final String? supplier;
+  final double vatRate; // 0, 0.04, 0.10, 0.21
+  final bool amountIsGross; // true: amount = base+IVA; false: amount = base
+  final bool deductible; // si puede deducirse el IVA
+  final FixedPaymentCategory category;
   final File? image;
   final String? imageUrl;
 
@@ -69,7 +74,46 @@ class FixedPayment {
     required this.startDate,
     required this.frequency,
     this.description,
+    this.supplier,
+    this.vatRate = 0.0,
+    this.amountIsGross = true,
+    this.deductible = true,
+    this.category = FixedPaymentCategory.other,
     this.image,
     this.imageUrl,
   });
+}
+
+enum FixedPaymentCategory {
+  utilities,
+  rent,
+  vehicle,
+  food,
+  tools,
+  services,
+  taxes,
+  other,
+}
+
+extension FixedPaymentCategoryName on FixedPaymentCategory {
+  String get nameEs {
+    switch (this) {
+      case FixedPaymentCategory.utilities:
+        return 'Suministros';
+      case FixedPaymentCategory.rent:
+        return 'Alquiler';
+      case FixedPaymentCategory.vehicle:
+        return 'Vehículo';
+      case FixedPaymentCategory.food:
+        return 'Dietas';
+      case FixedPaymentCategory.tools:
+        return 'Herramientas';
+      case FixedPaymentCategory.services:
+        return 'Servicios';
+      case FixedPaymentCategory.taxes:
+        return 'Impuestos';
+      case FixedPaymentCategory.other:
+        return 'Otros';
+    }
+  }
 }

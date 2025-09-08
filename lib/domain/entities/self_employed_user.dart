@@ -10,6 +10,9 @@ class SelfEmployedUser {
   final String iban;
   final bool usesElectronicInvoicing;
   final String taxationMethod;
+  final double defaultExpenseVatRate; // 0-0.21
+  final bool defaultExpenseAmountIsGross;
+  final bool defaultExpenseDeductible;
 
   SelfEmployedUser({
     required this.uid,
@@ -21,6 +24,9 @@ class SelfEmployedUser {
     required this.iban,
     required this.usesElectronicInvoicing,
     required this.taxationMethod,
+    this.defaultExpenseVatRate = 0.0,
+    this.defaultExpenseAmountIsGross = true,
+    this.defaultExpenseDeductible = true,
   });
 
   factory SelfEmployedUser.fromJson(Map<String, dynamic> json) {
@@ -34,6 +40,9 @@ class SelfEmployedUser {
       iban: json['iban'] as String,
       usesElectronicInvoicing: json['usesElectronicInvoicing'] as bool,
       taxationMethod: json['taxationMethod'] as String,
+      defaultExpenseVatRate: (json['defaultExpenseVatRate'] ?? 0.0) * 1.0,
+      defaultExpenseAmountIsGross: (json['defaultExpenseAmountIsGross'] ?? true) as bool,
+      defaultExpenseDeductible: (json['defaultExpenseDeductible'] ?? true) as bool,
     );
   }
 
@@ -48,6 +57,9 @@ class SelfEmployedUser {
       'iban': iban,
       'usesElectronicInvoicing': usesElectronicInvoicing,
       'taxationMethod': taxationMethod,
+      'defaultExpenseVatRate': defaultExpenseVatRate,
+      'defaultExpenseAmountIsGross': defaultExpenseAmountIsGross,
+      'defaultExpenseDeductible': defaultExpenseDeductible,
     };
   }
 }
