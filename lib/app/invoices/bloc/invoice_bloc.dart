@@ -9,8 +9,13 @@ import 'invoice_state.dart';
 
 class InvoiceBloc extends Bloc<InvoiceEvent, InvoiceState> {
   final InvoiceUseCases useCases;
+   final IncomeUseCases incomeUseCases;
   final String userId;
-  InvoiceBloc(this.useCases, this.userId) : super(InvoiceInitial()) {
+   InvoiceBloc(
+    this.useCases,
+    this.incomeUseCases,
+    this.userId,
+  ) : super(InvoiceInitial()) {
     on<InvoiceEvent>(_onEvent);
   }
   Future<void> _onEvent(InvoiceEvent event, Emitter<InvoiceState> emit) async {
@@ -104,7 +109,7 @@ class InvoiceBloc extends Bloc<InvoiceEvent, InvoiceState> {
           ),
         );
       }
-      }
+      
       final invoices = await useCases.fetchInvoices(userId);
       emit(InvoiceLoaded(invoices));
     } catch (e) {
@@ -135,5 +140,5 @@ class InvoiceBloc extends Bloc<InvoiceEvent, InvoiceState> {
     } catch (e) {
       emit(InvoiceError("No se pudo actualizar la factura."));
     }
-  }
+  }}
 
