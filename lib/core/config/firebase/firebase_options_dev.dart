@@ -47,7 +47,7 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyAXSLrNqmflkFC4eSmPoaKnb9cliX-76u8',
+    apiKey: String.fromEnvironment('GOOGLE_API_KEY_DEV_WEB'),
     appId: '1:663748995058:web:a8a2179d4ddceffe89ad6b',
     messagingSenderId: '663748995058',
     projectId: 'gestr-dev',
@@ -57,7 +57,7 @@ class DefaultFirebaseOptions {
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyDP9PNLbIewAHg6l-fRRAZKRz39xtNzvkw',
+    apiKey: String.fromEnvironment('GOOGLE_API_KEY_DEV_ANDROID'),
     appId: '1:663748995058:android:d3834c037dffc08e89ad6b',
     messagingSenderId: '663748995058',
     projectId: 'gestr-dev',
@@ -65,7 +65,7 @@ class DefaultFirebaseOptions {
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyDUu1oLNTRkXRnt1OSAHu8kU5WmqKbzPes',
+    apiKey: String.fromEnvironment('GOOGLE_API_KEY_DEV_IOS'),
     appId: '1:663748995058:ios:8485adf9f09c0c2089ad6b',
     messagingSenderId: '663748995058',
     projectId: 'gestr-dev',

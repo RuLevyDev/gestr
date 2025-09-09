@@ -39,6 +39,7 @@ class AppEnvironment {
   AppEnvironment._internal();
 
   late final ReleaseType releaseType;
+  static Future<FirebaseApp>? _firebaseInitFuture;
 
   Future<void> init() async {
     releaseType = await _detectReleaseType();
@@ -65,6 +66,15 @@ class AppEnvironment {
   }
 
   Future<void> _initFirebase() async {
+    if (_firebaseInitFuture != null) {
+      await _firebaseInitFuture;
+      return;
+    }
+
+    if (Firebase.apps.isNotEmpty) {
+      return;
+    }
+
     final options = switch (releaseType) {
       ReleaseType.local => dev.DefaultFirebaseOptions.currentPlatform,
       ReleaseType.dev => dev.DefaultFirebaseOptions.currentPlatform,
@@ -72,6 +82,7 @@ class AppEnvironment {
       ReleaseType.prod => prod.DefaultFirebaseOptions.currentPlatform,
     };
 
-    await Firebase.initializeApp(options: options);
+    _firebaseInitFuture = Firebase.initializeApp(options: options);
+    await _firebaseInitFuture;
   }
 }

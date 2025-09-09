@@ -9,9 +9,7 @@ Aplicación Flutter para la gestión de ingresos y gastos de autónomos y pymes.
 - **Módulos activos por usuario**: promedio de módulos habilitados por tipo de negocio.
 
 ## Roadmap
-1. **Automatización de ingresos** mediante conexión directa con cuentas bancarias.
-2. **Maximizar la automatización** del usuario: escaneo de recibos, cálculo de impuestos, kilometraje y recordatorios de gastos incompletos.
-3. **Modularización según el tipo de negocio** (autónomo o pyme) con módulos opcionales para gestionar clientes, proveedores, productos, servicios, citas, empleados y suscripciones.
+1. **Automatización de ingresos** mediante conexión directa con cuentas bancarias.dulos opcionales para gestionar clientes, proveedores, productos, servicios, citas, empleados y suscripciones.
 4. **Integraciones externas** con software de contabilidad y ERPs mediante API y exportaciones estándar.
 5. **Soporte multiplataforma** con aplicaciones móviles y web sincronizadas.
 
@@ -31,11 +29,11 @@ N2F se orienta a organizaciones con múltiples usuarios (empleados y administrad
 - Arquitectura Flutter modular con capas `app`, `core`, `data` y `domain`.
 - Registro manual de ingresos y gastos.
 - Base para habilitar módulos de clientes, proveedores y productos.
+- Escaneo de facturas con OCR que extrae título, importe, fecha, emisor, receptor y concepto.
 
 ### Lo que falta
 - modulo de proveedores, productos, clientes, servicios , citas,empleados, analytics , opciones , subcripcion
 - Conexión bancaria automática para importar movimientos y comprobantes.
-- Escaneo inteligente de recibos con OCR.
 - Exportaciones contables e integración con ERPs.
 
 ### Ideas adicionales
