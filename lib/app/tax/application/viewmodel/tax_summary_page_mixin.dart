@@ -271,7 +271,7 @@ mixin TaxSummaryPageMixin on State<TaxSummaryPage> {
               labels.length,
               (i) => FlSpot(
                 i.toDouble(),
-                i < (yoyIncome?.length ?? 0) ? (yoyIncome![i]) : 0,
+                i < (yoyIncome.length) ? (yoyIncome[i]) : 0,
               ),
             )
             : const <FlSpot>[];
@@ -281,7 +281,7 @@ mixin TaxSummaryPageMixin on State<TaxSummaryPage> {
               labels.length,
               (i) => FlSpot(
                 i.toDouble(),
-                i < (yoyExpenses?.length ?? 0) ? (yoyExpenses![i]) : 0,
+                i < (yoyExpenses.length) ? (yoyExpenses[i]) : 0,
               ),
             )
             : const <FlSpot>[];
@@ -429,7 +429,7 @@ mixin TaxSummaryPageMixin on State<TaxSummaryPage> {
                           labels.length >= 20; // heurística: diario
                       if (useDaily) {
                         final base = DateTime(
-                          range!.start.year,
+                          range.start.year,
                           range.start.month,
                           1,
                         );
@@ -487,10 +487,10 @@ mixin TaxSummaryPageMixin on State<TaxSummaryPage> {
                         name = "Ingresos '${yy.toString().padLeft(2, '0')}";
                       } else if (c == Colors.deepOrange) {
                         name = "Gastos '${yy.toString().padLeft(2, '0')}";
-                      } else if (c.value == Colors.teal.withAlpha(160).value) {
-                        name = "Ingresos '${yyPrev.toString().padLeft(2, '0')}";
-                      } else if (c.value ==
-                          Colors.deepOrange.withAlpha(160).value) {
+                      } else if (c == Colors.teal.withAlpha(160)) {
+                        name =
+                            "Ingresos '${yyPrev.toString().padLeft(2, '0')}'";
+                      } else if (c == Colors.deepOrange.withAlpha(160)) {
                         name = "Gastos '${yyPrev.toString().padLeft(2, '0')}";
                       } else {
                         name = '';

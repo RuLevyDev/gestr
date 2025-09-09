@@ -317,8 +317,9 @@ class _TaxSummaryPageState extends State<TaxSummaryPage>
                 >(
                   selector: (s) => s is TopClientsLoaded ? s.clients : null,
                   builder: (context, clients) {
-                    if (clients != null)
+                    if (clients != null) {
                       return _TopClientsList(clients: clients);
+                    }
                     return const SizedBox(
                       height: 80,
                       child: Center(child: CircularProgressIndicator()),

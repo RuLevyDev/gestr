@@ -107,6 +107,7 @@ class _CreateInvoicePageState extends State<CreateInvoicePage>
                             ),
                             if (showAdvancedFields) ...[
                               TextFormField(
+                                controller: issuerController,
                                 decoration: InputDecoration(
                                   labelText: 'Emisor',
                                   enabledBorder: UnderlineInputBorder(
@@ -122,6 +123,7 @@ class _CreateInvoicePageState extends State<CreateInvoicePage>
                               ),
                               const SizedBox(height: 12),
                               TextFormField(
+                                controller: receiverController,
                                 decoration: InputDecoration(
                                   labelText: 'Receptor',
                                   enabledBorder: UnderlineInputBorder(
@@ -137,6 +139,7 @@ class _CreateInvoicePageState extends State<CreateInvoicePage>
                               ),
                               const SizedBox(height: 12),
                               TextFormField(
+                                controller: conceptController,
                                 decoration: InputDecoration(
                                   labelText: 'Concepto',
                                   enabledBorder: UnderlineInputBorder(
@@ -296,21 +299,27 @@ class _CreateInvoicePageState extends State<CreateInvoicePage>
                               ),
                               initialValue: status,
                               dropdownColor: theme.colorScheme.secondary,
-                               items: [
-                                InvoiceStatus.pending,
-                                InvoiceStatus.sent,
-                              ]
-                                  .map(
-                                    (e) => DropdownMenuItem(
-                                      value: e,
-                                      child: Text(e.labelEs),
-                                    ),
-                                  )
-                                  .toList(),
+                              items:
+                                  [InvoiceStatus.pending, InvoiceStatus.sent]
+                                      .map(
+                                        (e) => DropdownMenuItem(
+                                          value: e,
+                                          child: Text(e.labelEs),
+                                        ),
+                                      )
+                                      .toList(),
                               onChanged: (value) {
                                 if (value != null) {
                                   setState(() {
                                     status = value;
+                                    if (status == InvoiceStatus.sent) {
+                                      showAdvancedFields = true;
+                                      if (selfEmployedUser != null) {
+                                        issuerController.text =
+                                            selfEmployedUser!.fullName;
+                                        issuer = selfEmployedUser!.fullName;
+                                      }
+                                    }
                                   });
                                 }
                               },

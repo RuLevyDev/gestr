@@ -29,7 +29,10 @@ class _IncomesPageState extends State<IncomesPage> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Ingresos', style: Theme.of(context).textTheme.headlineMedium),
+              Text(
+                'Ingresos',
+                style: Theme.of(context).textTheme.headlineMedium,
+              ),
               IconButton(
                 icon: const Icon(Icons.add_circle_outline, size: 28),
                 tooltip: 'Crear ingreso',
@@ -51,47 +54,60 @@ class _IncomesPageState extends State<IncomesPage> {
                   return const SizedBox.shrink();
                 }
                 final incomes = state.incomes;
-                  final theme = Theme.of(context);
+                final theme = Theme.of(context);
                 final isDark = theme.brightness == Brightness.dark;
-                final total = incomes.fold<double>(0, (sum, inc) => sum + inc.amount);
+                final total = incomes.fold<double>(
+                  0,
+                  (sum, inc) => sum + inc.amount,
+                );
                 return Container(
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(12),
-                    color: isDark
-                        ? Colors.deepPurple.withAlpha(25)
-                        : Colors.teal.withAlpha(25),
+                    color:
+                        isDark
+                            ? Colors.deepPurple.withAlpha(25)
+                            : Colors.teal.withAlpha(25),
                   ),
-                  child: incomes.isEmpty
-                      ? const Center(child: Text('No hay ingresos todavía.'))
-                      : Column(
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.all(16),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text('Total', style: theme.textTheme.titleMedium),
-                                  Text('${total.toStringAsFixed(2)} €',
-                                      style: theme.textTheme.titleMedium),
-                                ],
+                  child:
+                      incomes.isEmpty
+                          ? const Center(
+                            child: Text('No hay ingresos todavía.'),
+                          )
+                          : Column(
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.all(16),
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      'Total',
+                                      style: theme.textTheme.titleMedium,
+                                    ),
+                                    Text(
+                                      '${total.toStringAsFixed(2)} €',
+                                      style: theme.textTheme.titleMedium,
+                                    ),
+                                  ],
+                                ),
                               ),
-                            ),
-                            const Divider(height: 1),
-                            Expanded(
-                              child: ListView.builder(
-                                padding: const EdgeInsets.all(8),
-                                itemCount: incomes.length,
-                                itemBuilder: (context, i) {
-                                  final inc = incomes[i];
-                                  return IncomeCard(
-                                    income: inc,
-                                    onDelete: () => _confirmDelete(context, inc),
-                                  );
-                                },
+                              const Divider(height: 1),
+                              Expanded(
+                                child: ListView.builder(
+                                  padding: const EdgeInsets.all(8),
+                                  itemCount: incomes.length,
+                                  itemBuilder: (context, i) {
+                                    final inc = incomes[i];
+                                    return IncomeCard(
+                                      income: inc,
+                                      onDelete: () => _confirmDelete(inc),
+                                    );
+                                  },
+                                ),
                               ),
-                            ),
-                          ],
-                        ),
+                            ],
+                          ),
                 );
               },
             ),
@@ -101,22 +117,32 @@ class _IncomesPageState extends State<IncomesPage> {
     );
   }
 
-  void _confirmDelete(BuildContext context, Income inc) async {
-    final ok = await showDialog<bool>(
+  void _confirmDelete(Income inc) async {
+    final ok =
+        await showDialog<bool>(
           context: context,
-          builder: (_) => AlertDialog(
-            title: const Text('Eliminar ingreso'),
-            content: Text('¿Eliminar "${inc.title}"?'),
-            actions: [
-              TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancelar')),
-              FilledButton(onPressed: () => Navigator.pop(context, true), child: const Text('Eliminar')),
-            ],
-          ),
+          builder:
+              (dialogContext) => AlertDialog(
+                title: const Text('Eliminar ingreso'),
+                content: Text('¿Eliminar "${inc.title}"?'),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(dialogContext, false),
+                    child: const Text('Cancelar'),
+                  ),
+                  FilledButton(
+                    onPressed: () => Navigator.pop(dialogContext, true),
+                    child: const Text('Eliminar'),
+                  ),
+                ],
+              ),
         ) ??
         false;
+    if (!mounted) {
+      return;
+    }
     if (ok && inc.id != null) {
       context.read<IncomeBloc>().add(IncomeEvent.delete(inc.id!));
     }
   }
 }
-

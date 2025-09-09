@@ -182,8 +182,9 @@ class _CreateIncomePageState extends State<CreateIncomePage> {
                                   ),
                               validator: (v) {
                                 final d = double.tryParse(v ?? '');
-                                if (d == null || d < 0)
+                                if (d == null || d < 0) {
                                   return 'Importe inválido';
+                                }
                                 return null;
                               },
                             ),
@@ -213,9 +214,6 @@ class _CreateIncomePageState extends State<CreateIncomePage> {
     );
   }
 
-  String _fmtDate(DateTime d) =>
-      '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}/${d.year}';
-
   Future<void> _pickDate() async {
     final picked = await showDatePicker(
       context: context,
@@ -229,7 +227,9 @@ class _CreateIncomePageState extends State<CreateIncomePage> {
   }
 
   void _save() {
-    if (!_formKey.currentState!.validate()) return;
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
     final amount = double.parse(_amountCtrl.text.trim());
     final inc = Income(
       title: _titleCtrl.text.trim(),

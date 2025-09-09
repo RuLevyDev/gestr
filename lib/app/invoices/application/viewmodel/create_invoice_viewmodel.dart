@@ -6,6 +6,8 @@ import 'package:gestr/app/invoices/bloc/invoice_bloc.dart';
 import 'package:gestr/app/invoices/bloc/invoice_event.dart';
 import 'package:gestr/domain/entities/invoice_model.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:gestr/domain/entities/self_employed_user.dart';
+import 'package:gestr/domain/usecases/user/self_employed_user_usecases.dart';
 
 import 'package:pdf/widgets.dart' as pw;
 import 'package:share_plus/share_plus.dart';
@@ -25,6 +27,14 @@ mixin CreateInvoiceViewModelMixin<T extends StatefulWidget> on State<T> {
   File? invoiceImage;
   final ImagePicker picker = ImagePicker();
 
+  // User profile
+  SelfEmployedUser? selfEmployedUser;
+
+  // Controllers for advanced fields
+  final TextEditingController issuerController = TextEditingController();
+  final TextEditingController receiverController = TextEditingController();
+  final TextEditingController conceptController = TextEditingController();
+
   // Campos adicionales
   String? issuer;
   String? receiver;
@@ -42,6 +52,23 @@ mixin CreateInvoiceViewModelMixin<T extends StatefulWidget> on State<T> {
     }
 
     return isValid;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUser();
+  }
+
+  Future<void> _loadUser() async {
+    final result = await context.read<SelfEmployedUserUseCases>().getUser(
+      userId,
+    );
+    result.fold((_) {}, (user) {
+      setState(() {
+        selfEmployedUser = user;
+      });
+    });
   }
 
   void updateIva() {
@@ -91,6 +118,9 @@ mixin CreateInvoiceViewModelMixin<T extends StatefulWidget> on State<T> {
       issuer = null;
       receiver = null;
       concept = null;
+      issuerController.clear();
+      receiverController.clear();
+      conceptController.clear();
       invoiceDate = DateTime.now();
     });
   }
@@ -109,6 +139,14 @@ mixin CreateInvoiceViewModelMixin<T extends StatefulWidget> on State<T> {
     setState(() {
       invoiceImage = null;
     });
+  }
+
+  @override
+  void dispose() {
+    issuerController.dispose();
+    receiverController.dispose();
+    conceptController.dispose();
+    super.dispose();
   }
 
   // Selección de fecha

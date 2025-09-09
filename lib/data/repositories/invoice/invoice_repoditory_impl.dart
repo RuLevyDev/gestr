@@ -13,38 +13,43 @@ class InvoiceRepositoryImpl implements InvoiceRepository {
   @override
   Future<List<Invoice>> getInvoices(String userId) async {
     try {
-       final snapshot = await firestore
-          .collection('users')
-          .doc(userId)
-          .collection('invoices')
-          .orderBy('date', descending: true)
-          .get();
+      final snapshot =
+          await firestore
+              .collection('users')
+              .doc(userId)
+              .collection('invoices')
+              .orderBy('date', descending: true)
+              .get();
 
       final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
 
-   final invoices = await Future.wait(snapshot.docs.map((doc) async {
-        final data = doc.data();
-         var status = _parseStatus(data['status']);
-        final date = (data['date'] as Timestamp).toDate();
+      final invoices = await Future.wait(
+        snapshot.docs.map((doc) async {
+          final data = doc.data();
+          var status = _parseStatus(data['status']);
+          final date = (data['date'] as Timestamp).toDate();
+          final invoiceDate = DateTime(date.year, date.month, date.day);
 
-        if (status == InvoiceStatus.sent && date.isBefore(now)) {
-          await doc.reference.update({'status': InvoiceStatus.overdue.name});
-          status = InvoiceStatus.overdue;
-        }
+          if (status == InvoiceStatus.sent && invoiceDate.isBefore(today)) {
+            await doc.reference.update({'status': InvoiceStatus.overdue.name});
+            status = InvoiceStatus.overdue;
+          }
 
-        return Invoice(
-          id: doc.id,
-          title: data['title'],
-          date: date,
-          netAmount: (data['netAmount'] ?? 0).toDouble(),
-          iva: (data['iva'] ?? 0).toDouble(),
-          status: status,
-          issuer: data['issuer'],
-          receiver: data['receiver'],
-          concept: data['concept'],
-          imageUrl: data['imageUrl'],
-        );
-         }));
+          return Invoice(
+            id: doc.id,
+            title: data['title'],
+            date: date,
+            netAmount: (data['netAmount'] ?? 0).toDouble(),
+            iva: (data['iva'] ?? 0).toDouble(),
+            status: status,
+            issuer: data['issuer'],
+            receiver: data['receiver'],
+            concept: data['concept'],
+            imageUrl: data['imageUrl'],
+          );
+        }),
+      );
 
       return invoices;
     } catch (e) {

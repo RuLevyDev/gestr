@@ -9,13 +9,10 @@ import 'invoice_state.dart';
 
 class InvoiceBloc extends Bloc<InvoiceEvent, InvoiceState> {
   final InvoiceUseCases useCases;
-   final IncomeUseCases incomeUseCases;
+  final IncomeUseCases incomeUseCases;
   final String userId;
-   InvoiceBloc(
-    this.useCases,
-    this.incomeUseCases,
-    this.userId,
-  ) : super(InvoiceInitial()) {
+  InvoiceBloc(this.useCases, this.incomeUseCases, this.userId)
+    : super(InvoiceInitial()) {
     on<InvoiceEvent>(_onEvent);
   }
   Future<void> _onEvent(InvoiceEvent event, Emitter<InvoiceState> emit) async {
@@ -35,10 +32,8 @@ class InvoiceBloc extends Bloc<InvoiceEvent, InvoiceState> {
       case InvoiceEventType.getById:
         await _handleGetById(event.invoiceId!, emit);
         break;
-          case InvoiceEventType.update:
+      case InvoiceEventType.update:
         await _handleUpdate(event.invoice!, emit);
-        break;
-      default:
         break;
     }
   }
@@ -98,7 +93,7 @@ class InvoiceBloc extends Bloc<InvoiceEvent, InvoiceState> {
   ) async {
     try {
       await useCases.createInvoice(userId, invoice);
-     if (invoice.status == InvoiceStatus.sent) {
+      if (invoice.status == InvoiceStatus.sent) {
         await incomeUseCases.create(
           userId,
           Income(
@@ -109,14 +104,13 @@ class InvoiceBloc extends Bloc<InvoiceEvent, InvoiceState> {
           ),
         );
       }
-      
+
       final invoices = await useCases.fetchInvoices(userId);
       emit(InvoiceLoaded(invoices));
     } catch (e) {
       emit(InvoiceError("No se pudo crear la factura."));
     }
   }
-
 
   Future<void> _handleUpdate(
     Invoice invoice,
@@ -140,5 +134,5 @@ class InvoiceBloc extends Bloc<InvoiceEvent, InvoiceState> {
     } catch (e) {
       emit(InvoiceError("No se pudo actualizar la factura."));
     }
-  }}
-
+  }
+}

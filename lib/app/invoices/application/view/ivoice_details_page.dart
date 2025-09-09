@@ -59,20 +59,22 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
               PopupMenuButton<InvoiceStatus>(
                 tooltip: 'Cambiar estado',
                 initialValue: invoice.status,
-                   enabled: _availableStatuses.isNotEmpty,
+                enabled: _availableStatuses.isNotEmpty,
                 onSelected: (status) {
                   final updated = invoice.copyWith(status: status);
                   setState(() => invoice = updated);
                   context.read<InvoiceBloc>().add(InvoiceEvent.update(updated));
                 },
-                itemBuilder: (context) => _availableStatuses
-                    .map(
-                      (s) => PopupMenuItem(
-                        value: s,
-                        child: Text(s.labelEs),
-                      ),
-                    )
-                    .toList(),
+                itemBuilder:
+                    (context) =>
+                        _availableStatuses
+                            .map(
+                              (s) => PopupMenuItem(
+                                value: s,
+                                child: Text(s.labelEs),
+                              ),
+                            )
+                            .toList(),
                 child: _StatusChip(status: invoice.status),
               ),
               const SizedBox(width: 8),
@@ -213,7 +215,7 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
                                 width: double.infinity,
                                 padding: const EdgeInsets.all(12),
                                 decoration: BoxDecoration(
-                                  color: theme.colorScheme.surfaceVariant
+                                  color: theme.colorScheme.onSurfaceVariant
                                       .withValues(alpha: .25),
                                   borderRadius: BorderRadius.circular(12),
                                 ),
