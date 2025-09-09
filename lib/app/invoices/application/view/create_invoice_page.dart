@@ -295,17 +295,18 @@ class _CreateInvoicePageState extends State<CreateInvoicePage>
                                 labelText: 'Estado',
                               ),
                               initialValue: status,
-
                               dropdownColor: theme.colorScheme.secondary,
-                              items:
-                                  InvoiceStatus.values
-                                      .map(
-                                        (e) => DropdownMenuItem(
-                                          value: e,
-                                          child: Text(e.labelEs),
-                                        ),
-                                      )
-                                      .toList(),
+                               items: [
+                                InvoiceStatus.pending,
+                                InvoiceStatus.sent,
+                              ]
+                                  .map(
+                                    (e) => DropdownMenuItem(
+                                      value: e,
+                                      child: Text(e.labelEs),
+                                    ),
+                                  )
+                                  .toList(),
                               onChanged: (value) {
                                 if (value != null) {
                                   setState(() {

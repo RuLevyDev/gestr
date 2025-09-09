@@ -385,10 +385,13 @@ class _DashboardPageState extends State<DashboardPage> with DashboardPageMixin {
                 children: [
                   Icon(arrow, size: 16, color: diffColor),
                   const SizedBox(width: 4),
-                  Text(
-                    '${diff.abs().toStringAsFixed(0)} € mes anterior',
-                    style: TextStyle(color: diffColor, fontSize: 11),
-                  ),
+                  Expanded(
+                    child: Text(
+                      '${diff.abs().toStringAsFixed(0)} € mes anterior',
+                      style: TextStyle(color: diffColor, fontSize: 11),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),),
                 ],
               ),
             ],

@@ -26,6 +26,17 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
     invoice = widget.invoice;
   }
 
+  List<InvoiceStatus> get _availableStatuses {
+    switch (invoice.status) {
+      case InvoiceStatus.sent:
+        return const [InvoiceStatus.paid];
+      case InvoiceStatus.pending:
+        return const [InvoiceStatus.paidByMe];
+      default:
+        return const [];
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -48,21 +59,20 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
               PopupMenuButton<InvoiceStatus>(
                 tooltip: 'Cambiar estado',
                 initialValue: invoice.status,
+                   enabled: _availableStatuses.isNotEmpty,
                 onSelected: (status) {
                   final updated = invoice.copyWith(status: status);
                   setState(() => invoice = updated);
                   context.read<InvoiceBloc>().add(InvoiceEvent.update(updated));
                 },
-                itemBuilder:
-                    (context) =>
-                        InvoiceStatus.values
-                            .map(
-                              (s) => PopupMenuItem(
-                                value: s,
-                                child: Text(s.labelEs),
-                              ),
-                            )
-                            .toList(),
+                itemBuilder: (context) => _availableStatuses
+                    .map(
+                      (s) => PopupMenuItem(
+                        value: s,
+                        child: Text(s.labelEs),
+                      ),
+                    )
+                    .toList(),
                 child: _StatusChip(status: invoice.status),
               ),
               const SizedBox(width: 8),
