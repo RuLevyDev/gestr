@@ -71,10 +71,6 @@ class AppEnvironment {
       return;
     }
 
-    if (Firebase.apps.isNotEmpty) {
-      return;
-    }
-
     final options = switch (releaseType) {
       ReleaseType.local => dev.DefaultFirebaseOptions.currentPlatform,
       ReleaseType.dev => dev.DefaultFirebaseOptions.currentPlatform,
@@ -82,7 +78,49 @@ class AppEnvironment {
       ReleaseType.prod => prod.DefaultFirebaseOptions.currentPlatform,
     };
 
-    _firebaseInitFuture = Firebase.initializeApp(options: options);
-    await _firebaseInitFuture;
+    if (Firebase.apps.isNotEmpty) {
+      final defaultApp = Firebase.app();
+      if (_optionsMismatch(defaultApp.options, options)) {
+        debugPrint(
+          '⚠️ Firebase default app already initialized with different options; using existing instance.',
+        );
+      }
+      _firebaseInitFuture = Future.value(defaultApp);
+      await _firebaseInitFuture;
+      return;
+    }
+
+    try {
+      _firebaseInitFuture = Firebase.initializeApp(options: options);
+      await _firebaseInitFuture;
+    } on FirebaseException catch (e) {
+      if (e.code == 'duplicate-app') {
+        final defaultApp = Firebase.app();
+        if (_optionsMismatch(defaultApp.options, options)) {
+          debugPrint(
+            '⚠️ Firebase default app already initialized with different options; using existing instance.',
+          );
+        }
+        _firebaseInitFuture = Future.value(defaultApp);
+      } else {
+        rethrow;
+      }
+    }
+  }
+
+  bool _optionsMismatch(
+    FirebaseOptions defaultOptions,
+    FirebaseOptions options,
+  ) {
+    if (options.projectId.startsWith('demo-')) return false;
+
+    bool differs(String? opt, String? def) {
+      if (opt == null || opt.isEmpty) return false;
+      return opt != def;
+    }
+
+    return differs(options.apiKey, defaultOptions.apiKey) ||
+        differs(options.databaseURL, defaultOptions.databaseURL) ||
+        differs(options.storageBucket, defaultOptions.storageBucket);
   }
 }
