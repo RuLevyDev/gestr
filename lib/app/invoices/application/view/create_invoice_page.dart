@@ -376,7 +376,7 @@ class _CreateInvoicePageState extends State<CreateInvoicePage>
                                     onPressed: pickImage,
                                     icon: const Icon(Icons.camera_alt),
                                     label: const Text(
-                                      'Foto ',
+                                      'Escaner',
                                       style: TextStyle(fontSize: 16),
                                     ),
                                     style: ElevatedButton.styleFrom(

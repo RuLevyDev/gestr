@@ -33,6 +33,7 @@ N2F se orienta a organizaciones con múltiples usuarios (empleados y administrad
 - Base para habilitar módulos de clientes, proveedores y productos.
 
 ### Lo que falta
+- modulo de proveedores, productos, clientes, servicios , citas,empleados, analytics , opciones , subcripcion
 - Conexión bancaria automática para importar movimientos y comprobantes.
 - Escaneo inteligente de recibos con OCR.
 - Exportaciones contables e integración con ERPs.

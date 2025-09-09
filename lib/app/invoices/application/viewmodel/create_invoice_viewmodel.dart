@@ -8,6 +8,9 @@ import 'package:gestr/domain/entities/invoice_model.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:gestr/domain/entities/self_employed_user.dart';
 import 'package:gestr/domain/usecases/user/self_employed_user_usecases.dart';
+import 'package:gestr/data/ocr/ocr_service.dart';
+import 'package:gestr/data/repositories/ocr/ocr_repository_impl.dart';
+import 'package:gestr/domain/usecases/ocr/ocr_usecases.dart';
 
 import 'package:pdf/widgets.dart' as pw;
 import 'package:share_plus/share_plus.dart';
@@ -26,6 +29,8 @@ mixin CreateInvoiceViewModelMixin<T extends StatefulWidget> on State<T> {
   InvoiceStatus status = InvoiceStatus.pending;
   File? invoiceImage;
   final ImagePicker picker = ImagePicker();
+  late final OcrUseCases ocrUseCases;
+  late final OcrService _ocrService;
 
   // User profile
   SelfEmployedUser? selfEmployedUser;
@@ -57,6 +62,8 @@ mixin CreateInvoiceViewModelMixin<T extends StatefulWidget> on State<T> {
   @override
   void initState() {
     super.initState();
+    _ocrService = OcrService();
+    ocrUseCases = OcrUseCases(OcrRepositoryImpl(_ocrService));
     _loadUser();
   }
 
@@ -129,8 +136,31 @@ mixin CreateInvoiceViewModelMixin<T extends StatefulWidget> on State<T> {
   Future<void> pickImage({ImageSource source = ImageSource.camera}) async {
     final pickedFile = await picker.pickImage(source: source);
     if (pickedFile != null) {
+      final file = File(pickedFile.path);
       setState(() {
-        invoiceImage = File(pickedFile.path);
+        invoiceImage = file;
+      });
+      final data = await ocrUseCases.parseInvoice(file);
+      setState(() {
+        title ??= data.title;
+        if (data.amount != null) {
+          amount = data.amount!;
+        }
+        if (data.date != null) {
+          invoiceDate = data.date!;
+        }
+        if (data.issuer != null) {
+          issuerController.text = data.issuer!;
+          issuer = data.issuer;
+        }
+        if (data.receiver != null) {
+          receiverController.text = data.receiver!;
+          receiver = data.receiver;
+        }
+        if (data.concept != null) {
+          conceptController.text = data.concept!;
+          concept = data.concept;
+        }
       });
     }
   }
@@ -146,6 +176,7 @@ mixin CreateInvoiceViewModelMixin<T extends StatefulWidget> on State<T> {
     issuerController.dispose();
     receiverController.dispose();
     conceptController.dispose();
+    _ocrService.dispose();
     super.dispose();
   }
 
