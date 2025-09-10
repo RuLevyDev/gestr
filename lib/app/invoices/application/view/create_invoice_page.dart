@@ -1,10 +1,15 @@
+import 'dart:async';
 import 'dart:ui';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:gestr/app/invoices/application/viewmodel/create_invoice_viewmodel.dart';
+import 'package:gestr/app/relationships/clients/application/view/create_client_sheet.dart';
 import 'package:gestr/core/utils/background_light.dart';
 import 'package:gestr/core/utils/dialog_background.dart';
+import 'package:gestr/domain/entities/client.dart';
 import 'package:gestr/domain/entities/invoice_model.dart';
+import 'package:gestr/domain/usecases/client/client_usecases.dart';
+import 'package:provider/provider.dart';
 
 class CreateInvoicePage extends StatefulWidget {
   const CreateInvoicePage({super.key});
@@ -15,6 +20,104 @@ class CreateInvoicePage extends StatefulWidget {
 
 class _CreateInvoicePageState extends State<CreateInvoicePage>
     with CreateInvoiceViewModelMixin {
+  late final ClientUseCases _clientUseCases;
+  List<Client> _clients = [];
+  List<Client> _filteredClients = [];
+  Timer? _debounce;
+
+  @override
+  void initState() {
+    super.initState();
+    _clientUseCases = context.read<ClientUseCases>();
+    _loadClients();
+  }
+
+  Future<void> _loadClients() async {
+    final list = await _clientUseCases.fetch(userId);
+    setState(() {
+      _clients = list;
+    });
+  }
+
+  void _onClientChanged(String value) {
+    _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 300), () {
+      final q = value.toLowerCase();
+      setState(() {
+        receiver = value;
+        _filteredClients =
+            _clients.where((c) => c.name.toLowerCase().contains(q)).toList();
+      });
+    });
+  }
+
+  void _selectClient(Client c) {
+    setState(() {
+      receiverController.text = c.name;
+      receiver = c.name;
+      receiverTaxId = c.taxId;
+      receiverAddress = c.fiscalAddress;
+      _filteredClients = [];
+    });
+  }
+
+  Future<void> _onClientSubmitted(String value) async {
+    final match = _clients.firstWhere(
+      (c) => c.name.toLowerCase() == value.toLowerCase(),
+      orElse: () => const Client(name: ''),
+    );
+    if (match.id == null || match.name.isEmpty) {
+      final should = await showDialog<bool>(
+        context: context,
+        builder:
+            (context) => AlertDialog(
+              title: const Text('Cliente no encontrado'),
+              content: Text('¿Deseas registrar "$value" como nuevo cliente?'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  child: const Text('No'),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.pop(context, true),
+                  child: const Text('Sí'),
+                ),
+              ],
+            ),
+      );
+      if (!mounted) return;
+      if (should == true) {
+        await showModalBottomSheet(
+          context: context,
+          isScrollControlled: true,
+          builder: (_) => CreateClientSheet(initialName: value),
+        );
+        await _loadClients();
+        final created = _clients.firstWhere(
+          (c) => c.name.toLowerCase() == value.toLowerCase(),
+          orElse: () => const Client(name: ''),
+        );
+        if (created.id != null) {
+          _selectClient(created);
+        }
+      } else {
+        setState(() {
+          receiver = value;
+          receiverTaxId = null;
+          receiverAddress = null;
+        });
+      }
+    } else {
+      _selectClient(match);
+    }
+  }
+
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -105,6 +208,54 @@ class _CreateInvoicePageState extends State<CreateInvoicePage>
                               },
                               activeThumbColor: theme.colorScheme.tertiary,
                             ),
+                            TextFormField(
+                              controller: receiverController,
+                              decoration: const InputDecoration(
+                                labelText: 'Receptor',
+                              ),
+                              onChanged: _onClientChanged,
+                              onFieldSubmitted: _onClientSubmitted,
+                            ),
+                            if (_filteredClients.isNotEmpty)
+                              Container(
+                                constraints: const BoxConstraints(
+                                  maxHeight: 150,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: theme.colorScheme.surface,
+                                  border: Border.all(
+                                    color: theme.colorScheme.primary,
+                                    width: 0.5,
+                                  ),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: ListView(
+                                  shrinkWrap: true,
+                                  children:
+                                      _filteredClients
+                                          .map(
+                                            (c) => ListTile(
+                                              title: Text(c.name),
+                                              onTap: () => _selectClient(c),
+                                            ),
+                                          )
+                                          .toList(),
+                                ),
+                              ),
+                            if (receiverTaxId != null ||
+                                receiverAddress != null) ...[
+                              const SizedBox(height: 8),
+                              if (receiverTaxId != null)
+                                Text(
+                                  'NIF: $receiverTaxId',
+                                  style: const TextStyle(fontSize: 12),
+                                ),
+                              if (receiverAddress != null)
+                                Text(
+                                  receiverAddress!,
+                                  style: const TextStyle(fontSize: 12),
+                                ),
+                            ],
                             if (showAdvancedFields) ...[
                               TextFormField(
                                 controller: issuerController,
@@ -122,21 +273,7 @@ class _CreateInvoicePageState extends State<CreateInvoicePage>
                                 onSaved: (value) => issuer = value,
                               ),
                               const SizedBox(height: 12),
-                              TextFormField(
-                                controller: receiverController,
-                                decoration: InputDecoration(
-                                  labelText: 'Receptor',
-                                  enabledBorder: UnderlineInputBorder(
-                                    borderSide: BorderSide(
-                                      color: theme.colorScheme.onSurface,
-                                    ),
-                                  ),
-                                  focusedBorder: UnderlineInputBorder(
-                                    borderSide: BorderSide(color: Colors.white),
-                                  ),
-                                ),
-                                onSaved: (value) => receiver = value,
-                              ),
+
                               const SizedBox(height: 12),
                               TextFormField(
                                 controller: conceptController,

@@ -19,15 +19,21 @@ class ClientRepositoryImpl implements ClientRepository {
         name: m['name'] ?? '',
         email: m['email'],
         phone: m['phone'],
+        taxId: m['taxId'],
+        fiscalAddress: m['fiscalAddress'],
       );
     }).toList();
   }
 
   @override
   Future<void> createClient(String userId, Client client) async {
-    await _col(
-      userId,
-    ).add({'name': client.name, 'email': client.email, 'phone': client.phone});
+    await _col(userId).add({
+      'name': client.name,
+      'email': client.email,
+      'phone': client.phone,
+      'taxId': client.taxId,
+      'fiscalAddress': client.fiscalAddress,
+    });
   }
 
   @override
@@ -37,6 +43,8 @@ class ClientRepositoryImpl implements ClientRepository {
       'name': client.name,
       'email': client.email,
       'phone': client.phone,
+      'taxId': client.taxId,
+      'fiscalAddress': client.fiscalAddress,
     });
   }
 
@@ -55,6 +63,8 @@ class ClientRepositoryImpl implements ClientRepository {
       name: m['name'] ?? '',
       email: m['email'],
       phone: m['phone'],
+      taxId: m['taxId'],
+      fiscalAddress: m['fiscalAddress'],
     );
   }
 }

@@ -173,7 +173,13 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
                                   if (invoice.receiver != null)
                                     _PartyBox(
                                       title: 'Receptor',
-                                      value: invoice.receiver!,
+                                      value: [
+                                        invoice.receiver!,
+                                        if (invoice.receiverTaxId != null)
+                                          'NIF: ${invoice.receiverTaxId}',
+                                        if (invoice.receiverAddress != null)
+                                          invoice.receiverAddress!,
+                                      ].join('\n'),
                                     ),
                                 ];
                                 if (!isWide) {

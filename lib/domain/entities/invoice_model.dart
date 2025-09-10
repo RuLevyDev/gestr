@@ -45,6 +45,8 @@ class Invoice {
   final InvoiceStatus status;
   final String? issuer;
   final String? receiver;
+  final String? receiverTaxId;
+  final String? receiverAddress;
   final String? concept;
   final File? image; // Solo para carga
   final String? imageUrl; // Para mostrar desde la red
@@ -58,6 +60,8 @@ class Invoice {
     required this.status,
     this.issuer,
     this.receiver,
+    this.receiverTaxId,
+    this.receiverAddress,
     this.concept,
     this.image,
     this.imageUrl,
@@ -73,6 +77,8 @@ class Invoice {
     InvoiceStatus? status,
     String? issuer,
     String? receiver,
+    String? receiverTaxId,
+    String? receiverAddress,
     String? concept,
     File? image,
     String? imageUrl,
@@ -86,6 +92,8 @@ class Invoice {
       status: status ?? this.status,
       issuer: issuer ?? this.issuer,
       receiver: receiver ?? this.receiver,
+      receiverTaxId: receiverTaxId ?? this.receiverTaxId,
+      receiverAddress: receiverAddress ?? this.receiverAddress,
       concept: concept ?? this.concept,
       image: image ?? this.image,
       imageUrl: imageUrl ?? this.imageUrl,

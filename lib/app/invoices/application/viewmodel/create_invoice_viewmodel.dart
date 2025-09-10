@@ -44,6 +44,8 @@ mixin CreateInvoiceViewModelMixin<T extends StatefulWidget> on State<T> {
   String? issuer;
   String? receiver;
   String? concept;
+  String? receiverTaxId;
+  String? receiverAddress;
 
   // Getters
   double get total => amount + iva;
@@ -97,6 +99,8 @@ mixin CreateInvoiceViewModelMixin<T extends StatefulWidget> on State<T> {
       status: status,
       issuer: issuer,
       receiver: receiver,
+      receiverTaxId: receiverTaxId,
+      receiverAddress: receiverAddress,
       concept: concept,
       image: invoiceImage,
     );
@@ -125,6 +129,8 @@ mixin CreateInvoiceViewModelMixin<T extends StatefulWidget> on State<T> {
       issuer = null;
       receiver = null;
       concept = null;
+      receiverTaxId = null;
+      receiverAddress = null;
       issuerController.clear();
       receiverController.clear();
       conceptController.clear();

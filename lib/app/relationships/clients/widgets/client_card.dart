@@ -38,6 +38,16 @@ class ClientCard extends StatelessWidget {
                       fontSize: 16,
                     ),
                   ),
+                  if (client.taxId != null) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      'NIF: ${client.taxId!}',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.tertiary,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
                   if (client.email != null) ...[
                     const SizedBox(height: 4),
                     Text(

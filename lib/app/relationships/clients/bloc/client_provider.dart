@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:gestr/app/clients/bloc/client_bloc.dart';
+import 'package:gestr/app/relationships/clients/bloc/client_bloc.dart';
 import 'package:gestr/data/repositories/client/client_repository_impl.dart';
 import 'package:gestr/domain/repositories/client/client_repository.dart';
 import 'package:gestr/domain/usecases/client/client_usecases.dart';

@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:gestr/app/clients/bloc/client_bloc.dart';
-import 'package:gestr/app/clients/bloc/client_event.dart';
-import 'package:gestr/app/clients/bloc/client_state.dart';
+
+import 'package:gestr/app/relationships/clients/bloc/client_bloc.dart';
+import 'package:gestr/app/relationships/clients/bloc/client_event.dart';
+import 'package:gestr/app/relationships/clients/bloc/client_state.dart';
 import 'package:gestr/domain/entities/client.dart';
 
 import '../../widgets/client_card.dart';
