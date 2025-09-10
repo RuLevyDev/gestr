@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:gestr/app/relationships/clients/application/view/client_detail_dialog.dart';
 
 import 'package:gestr/app/relationships/clients/bloc/client_bloc.dart';
 import 'package:gestr/app/relationships/clients/bloc/client_event.dart';
 import 'package:gestr/app/relationships/clients/bloc/client_state.dart';
 import 'package:gestr/domain/entities/client.dart';
-import 'client_detail_page.dart';
 
 import '../../widgets/client_card.dart';
 import 'create_client_sheet.dart';
@@ -87,16 +87,14 @@ class _ClientsSectionState extends State<ClientsSection> {
   }
 
   void _openDetail(Client client) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder:
-            (_) => ClientDetailPage(
-              client: client,
-              onEdit: () => _editClient(client),
-              onDelete: () => _confirmDelete(client),
-            ),
-      ),
+    showDialog(
+      context: context,
+      builder:
+          (_) => ClientDetailDialog(
+            client: client,
+            onEdit: () => _editClient(client),
+            onDelete: () => _confirmDelete(client),
+          ),
     );
   }
 
