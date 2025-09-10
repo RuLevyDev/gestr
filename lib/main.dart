@@ -12,6 +12,7 @@ import 'package:gestr/home_page.dart';
 import 'package:gestr/app/tax/bloc/tax_provider.dart';
 import 'package:gestr/domain/errors/unknown_route_page.dart';
 import 'package:provider/provider.dart';
+import 'package:gestr/app/clients/bloc/client_provider.dart';
 
 import 'package:gestr/core/auth/bloc/user_provider.dart';
 import 'package:gestr/core/config/remote/app_enviroment.dart';
@@ -55,6 +56,7 @@ class MyApp extends StatelessWidget {
         ...UserProvider.get(),
         ...InvoiceProvider.get(),
         ...IncomeProvider.get(),
+        ...ClientProvider.get(),
         ...FixedPaymentProvider.get(),
         ...TaxProvider.get(),
         ...InvoiceProvider.get(),
@@ -73,6 +75,7 @@ class MyApp extends StatelessWidget {
           '/login': (context) => const AuthView(),
           '/create-invoice': (context) => const CreateInvoicePage(),
           '/create-income': (context) => const CreateIncomePage(),
+
           '/create-fixed-payment': (context) => const CreateFixedPaymentPage(),
           // '/profile': (context) => const ProfileScreen(),
         },

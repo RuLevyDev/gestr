@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import 'package:gestr/app/clients/application/view/clients_section.dart';
 import 'package:gestr/app/tax/application/view/tax_summary_page.dart';
 import 'package:gestr/core/utils/background_light.dart';
 import 'package:gestr/core/utils/dialog_background.dart';
@@ -24,6 +26,7 @@ class _HomePageState extends State<HomePage>
     const IncomesPage(),
     const InvoicesPage(),
     const TaxSummaryPage(),
+    const ClientsSection(),
     const SettingsPage(),
   ];
 
@@ -32,9 +35,16 @@ class _HomePageState extends State<HomePage>
     Icons.trending_up,
     Icons.receipt_long,
     Icons.pie_chart,
+    Icons.people,
   ];
 
-  final List<String> _labels = ['Inicio', 'Ingresos', 'Facturas', 'Fiscalidad'];
+  final List<String> _labels = [
+    'Inicio',
+    'Ingresos',
+    'Facturas',
+    'Fiscalidad',
+    'Relaciones',
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -88,12 +98,12 @@ class _HomePageState extends State<HomePage>
 //       const Center(child: Text('Resumen Fiscal'));
 // }
 
-class ClientsPage extends StatelessWidget {
-  const ClientsPage({super.key});
+// class ClientsPage extends StatelessWidget {
+//   const ClientsPage({super.key});
 
-  @override
-  Widget build(BuildContext context) => const Center(child: Text('Clientes'));
-}
+//   @override
+//   Widget build(BuildContext context) => const Center(child: Text('Clientes'));
+// }
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
