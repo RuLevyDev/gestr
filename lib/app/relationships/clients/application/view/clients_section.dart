@@ -10,14 +10,14 @@ import 'package:gestr/domain/entities/client.dart';
 import '../../widgets/client_card.dart';
 import 'create_client_sheet.dart';
 
-class ClientsSection extends StatefulWidget {
-  const ClientsSection({super.key});
+class RelationsSection extends StatefulWidget {
+  const RelationsSection({super.key});
 
   @override
-  State<ClientsSection> createState() => _ClientsSectionState();
+  State<RelationsSection> createState() => _RelationsSectionState();
 }
 
-class _ClientsSectionState extends State<ClientsSection> {
+class _RelationsSectionState extends State<RelationsSection> {
   @override
   void initState() {
     super.initState();

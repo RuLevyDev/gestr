@@ -26,7 +26,7 @@ class _HomePageState extends State<HomePage>
     const IncomesPage(),
     const InvoicesPage(),
     const TaxSummaryPage(),
-    const ClientsSection(),
+    const RelationsSection(),
     const SettingsPage(),
   ];
 
