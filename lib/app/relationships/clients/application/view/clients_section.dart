@@ -5,6 +5,7 @@ import 'package:gestr/app/relationships/clients/bloc/client_bloc.dart';
 import 'package:gestr/app/relationships/clients/bloc/client_event.dart';
 import 'package:gestr/app/relationships/clients/bloc/client_state.dart';
 import 'package:gestr/domain/entities/client.dart';
+import 'client_detail_page.dart';
 
 import '../../widgets/client_card.dart';
 import 'create_client_sheet.dart';
@@ -72,6 +73,7 @@ class _ClientsSectionState extends State<ClientsSection> {
                         final cl = clients[i];
                         return ClientCard(
                           client: cl,
+                          onTap: () => _openDetail(cl),
                           onDelete: () => _confirmDelete(cl),
                         );
                       },
@@ -81,6 +83,28 @@ class _ClientsSectionState extends State<ClientsSection> {
           ),
         ],
       ),
+    );
+  }
+
+  void _openDetail(Client client) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder:
+            (_) => ClientDetailPage(
+              client: client,
+              onEdit: () => _editClient(client),
+              onDelete: () => _confirmDelete(client),
+            ),
+      ),
+    );
+  }
+
+  void _editClient(Client client) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) => CreateClientSheet(initialName: client.name),
     );
   }
 

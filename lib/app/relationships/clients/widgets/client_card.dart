@@ -4,13 +4,20 @@ import 'package:gestr/domain/entities/client.dart';
 class ClientCard extends StatelessWidget {
   final Client client;
   final VoidCallback? onDelete;
+  final VoidCallback? onTap;
 
-  const ClientCard({super.key, required this.client, this.onDelete});
+  const ClientCard({
+    super.key,
+    required this.client,
+    this.onDelete,
+    this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return InkWell(
+      onTap: onTap,
       onLongPress: onDelete,
       child: Container(
         margin: const EdgeInsets.symmetric(vertical: 8),
@@ -38,26 +45,23 @@ class ClientCard extends StatelessWidget {
                       fontSize: 16,
                     ),
                   ),
-                  if (client.taxId != null) ...[
-                    const SizedBox(height: 4),
-                    Text(
-                      'NIF: ${client.taxId!}',
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.tertiary,
-                        fontSize: 12,
-                      ),
+
+                  const SizedBox(height: 4),
+                  Text(
+                    'Tlf: ${client.phone ?? '-'}',
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.tertiary,
+                      fontSize: 12,
                     ),
-                  ],
-                  if (client.email != null) ...[
-                    const SizedBox(height: 4),
-                    Text(
-                      client.email!,
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.tertiary,
-                        fontSize: 12,
-                      ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    client.email ?? 'Correo no disponible',
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.tertiary,
+                      fontSize: 12,
                     ),
-                  ],
+                  ),
                 ],
               ),
             ),

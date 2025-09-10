@@ -72,8 +72,14 @@
 	</array>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
-	<key>UIApplicationSupportsIndirectInputEvents</key>
-	<true/>
+	  <key>UIApplicationSupportsIndirectInputEvents</key>
+        <true/>
+
+        <key>LSApplicationQueriesSchemes</key>
+        <array>
+                <string>tel</string>
+                <string>mailto</string>
+        </array>
 	
 </dict>
 </plist>
