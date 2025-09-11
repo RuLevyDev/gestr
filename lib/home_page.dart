@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'package:gestr/app/relationships/clients/application/view/clients_section.dart';
+import 'package:gestr/app/relationships/relationships_page.dart';
 import 'package:gestr/app/tax/application/view/tax_summary_page.dart';
 import 'package:gestr/core/utils/background_light.dart';
 import 'package:gestr/core/utils/dialog_background.dart';
@@ -26,7 +26,7 @@ class _HomePageState extends State<HomePage>
     const IncomesPage(),
     const InvoicesPage(),
     const TaxSummaryPage(),
-    const RelationsSection(),
+    const RelationshipsPage(),
     const SettingsPage(),
   ];
 

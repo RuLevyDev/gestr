@@ -2,11 +2,16 @@ import 'dart:ui';
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gestr/app/fixedpayments/application/viewmodel/fixed_payments_viewmodel.dart';
 import 'package:gestr/core/utils/background_light.dart';
 import 'package:gestr/core/utils/dialog_background.dart';
 import 'package:gestr/domain/entities/fixed_payments_model.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:gestr/domain/usecases/supplier/supplier_usecases.dart';
+import 'package:gestr/domain/entities/supplier.dart';
+import 'package:gestr/app/relationships/suppliers/application/view/create_supplier_sheet.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class CreateFixedPaymentPage extends StatefulWidget {
   const CreateFixedPaymentPage({super.key});
@@ -17,10 +22,71 @@ class CreateFixedPaymentPage extends StatefulWidget {
 
 class _CreateFixedPaymentPageState extends State<CreateFixedPaymentPage>
     with CreateFixedPaymentViewModelMixin {
+  late final SupplierUseCases _supplierUseCases;
+  final TextEditingController _supplierCtrl = TextEditingController();
+  List<Supplier> _suppliers = [];
+  List<Supplier> _filteredSuppliers = [];
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) => loadDefaults(context));
+    _supplierUseCases = context.read<SupplierUseCases>();
+    _loadSuppliers();
+  }
+
+  @override
+  void dispose() {
+    _supplierCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadSuppliers() async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return;
+    final list = await _supplierUseCases.fetch(uid);
+    setState(() {
+      _suppliers = list;
+    });
+  }
+
+  void _onSupplierChanged(String value) {
+    setState(() {
+      _filteredSuppliers =
+          _suppliers
+              .where((s) => s.name.toLowerCase().contains(value.toLowerCase()))
+              .toList();
+    });
+  }
+
+  void _selectSupplier(Supplier s) {
+    setState(() {
+      _supplierCtrl.text = s.name;
+      supplier = s.name;
+      _filteredSuppliers = [];
+    });
+  }
+
+  Future<void> _onSupplierSubmitted(String value) async {
+    supplier = value;
+    final match = _suppliers.firstWhere(
+      (s) => s.name.toLowerCase() == value.toLowerCase(),
+      orElse: () => const Supplier(name: ''),
+    );
+    if (match.id == null) {
+      await showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        builder: (_) => CreateSupplierSheet(initialName: value),
+      );
+      await _loadSuppliers();
+      final created = _suppliers.firstWhere(
+        (s) => s.name.toLowerCase() == value.toLowerCase(),
+        orElse: () => match,
+      );
+      _selectSupplier(created);
+    } else {
+      _selectSupplier(match);
+    }
   }
 
   @override
@@ -170,9 +236,28 @@ class _CreateFixedPaymentPageState extends State<CreateFixedPaymentPage>
               ),
               const SizedBox(height: 12),
               TextFormField(
+                controller: _supplierCtrl,
                 decoration: const InputDecoration(labelText: 'Proveedor'),
+                onChanged: _onSupplierChanged,
+                onFieldSubmitted: _onSupplierSubmitted,
                 onSaved: (val) => supplier = val,
               ),
+              if (_filteredSuppliers.isNotEmpty)
+                Container(
+                  height: 150,
+                  padding: const EdgeInsets.only(top: 8),
+                  child: ListView(
+                    children:
+                        _filteredSuppliers
+                            .map(
+                              (s) => ListTile(
+                                title: Text(s.name),
+                                onTap: () => _selectSupplier(s),
+                              ),
+                            )
+                            .toList(),
+                  ),
+                ),
               const SizedBox(height: 12),
               DropdownButtonFormField<FixedPaymentCategory>(
                 initialValue: category,

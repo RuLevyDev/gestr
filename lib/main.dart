@@ -13,6 +13,7 @@ import 'package:gestr/app/tax/bloc/tax_provider.dart';
 import 'package:gestr/domain/errors/unknown_route_page.dart';
 import 'package:provider/provider.dart';
 import 'package:gestr/app/relationships/clients/bloc/client_provider.dart';
+import 'package:gestr/app/relationships/suppliers/bloc/supplier_provider.dart';
 
 import 'package:gestr/core/auth/bloc/user_provider.dart';
 import 'package:gestr/core/config/remote/app_enviroment.dart';
@@ -57,6 +58,7 @@ class MyApp extends StatelessWidget {
         ...InvoiceProvider.get(),
         ...IncomeProvider.get(),
         ...ClientProvider.get(),
+        ...SupplierProvider.get(),
         ...FixedPaymentProvider.get(),
         ...TaxProvider.get(),
         ...InvoiceProvider.get(),

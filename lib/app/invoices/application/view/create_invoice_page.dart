@@ -10,6 +10,10 @@ import 'package:gestr/domain/entities/client.dart';
 import 'package:gestr/domain/entities/invoice_model.dart';
 import 'package:gestr/domain/usecases/client/client_usecases.dart';
 import 'package:provider/provider.dart';
+import 'package:gestr/domain/entities/supplier.dart';
+import 'package:gestr/domain/usecases/supplier/supplier_usecases.dart';
+import 'package:gestr/app/relationships/suppliers/application/view/create_supplier_sheet.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class CreateInvoicePage extends StatefulWidget {
   const CreateInvoicePage({super.key});
@@ -24,18 +28,32 @@ class _CreateInvoicePageState extends State<CreateInvoicePage>
   List<Client> _clients = [];
   List<Client> _filteredClients = [];
   Timer? _debounce;
+  late final SupplierUseCases _supplierUseCases;
+  List<Supplier> _suppliers = [];
+  List<Supplier> _filteredSuppliers = [];
 
   @override
   void initState() {
     super.initState();
     _clientUseCases = context.read<ClientUseCases>();
     _loadClients();
+    _supplierUseCases = context.read<SupplierUseCases>();
+    _loadSuppliers();
   }
 
   Future<void> _loadClients() async {
     final list = await _clientUseCases.fetch(userId);
     setState(() {
       _clients = list;
+    });
+  }
+
+  Future<void> _loadSuppliers() async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return;
+    final list = await _supplierUseCases.fetch(uid);
+    setState(() {
+      _suppliers = list;
     });
   }
 
@@ -109,6 +127,73 @@ class _CreateInvoicePageState extends State<CreateInvoicePage>
       }
     } else {
       _selectClient(match);
+    }
+  }
+
+  void _onSupplierChanged(String value) {
+    setState(() {
+      issuer = value;
+      _filteredSuppliers =
+          _suppliers
+              .where((s) => s.name.toLowerCase().contains(value.toLowerCase()))
+              .toList();
+    });
+  }
+
+  void _selectSupplier(Supplier s) {
+    setState(() {
+      issuerController.text = s.name;
+      issuer = s.name;
+      _filteredSuppliers = [];
+    });
+  }
+
+  Future<void> _onSupplierSubmitted(String value) async {
+    final match = _suppliers.firstWhere(
+      (s) => s.name.toLowerCase() == value.toLowerCase(),
+      orElse: () => const Supplier(name: ''),
+    );
+    if (match.id == null || match.name.isEmpty) {
+      final should = await showDialog<bool>(
+        context: context,
+        builder:
+            (context) => AlertDialog(
+              title: const Text('Proveedor no encontrado'),
+              content: Text('¿Deseas registrar "$value" como nuevo proveedor?'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  child: const Text('No'),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.pop(context, true),
+                  child: const Text('Sí'),
+                ),
+              ],
+            ),
+      );
+      if (!mounted) return;
+      if (should == true) {
+        await showModalBottomSheet(
+          context: context,
+          isScrollControlled: true,
+          builder: (_) => CreateSupplierSheet(initialName: value),
+        );
+        await _loadSuppliers();
+        final created = _suppliers.firstWhere(
+          (s) => s.name.toLowerCase() == value.toLowerCase(),
+          orElse: () => const Supplier(name: ''),
+        );
+        if (created.id != null) {
+          _selectSupplier(created);
+        }
+      } else {
+        setState(() {
+          issuer = value;
+        });
+      }
+    } else {
+      _selectSupplier(match);
     }
   }
 
@@ -266,12 +351,30 @@ class _CreateInvoicePageState extends State<CreateInvoicePage>
                                       color: theme.colorScheme.onSurface,
                                     ),
                                   ),
-                                  focusedBorder: UnderlineInputBorder(
+                                  focusedBorder: const UnderlineInputBorder(
                                     borderSide: BorderSide(color: Colors.white),
                                   ),
                                 ),
+                                onChanged: _onSupplierChanged,
+                                onFieldSubmitted: _onSupplierSubmitted,
                                 onSaved: (value) => issuer = value,
                               ),
+                              if (_filteredSuppliers.isNotEmpty)
+                                Container(
+                                  height: 150,
+                                  padding: const EdgeInsets.only(top: 8),
+                                  child: ListView(
+                                    children:
+                                        _filteredSuppliers
+                                            .map(
+                                              (s) => ListTile(
+                                                title: Text(s.name),
+                                                onTap: () => _selectSupplier(s),
+                                              ),
+                                            )
+                                            .toList(),
+                                  ),
+                                ),
                               const SizedBox(height: 12),
 
                               const SizedBox(height: 12),
