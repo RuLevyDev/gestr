@@ -59,8 +59,12 @@ class _RelationshipsPageState extends State<RelationshipsPage>
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             const Text('Clientes'),
-                            if (showAddClient)
-                              IconButton(
+                            Visibility(
+                              visible: showAddClient,
+                              maintainSize: true,
+                              maintainAnimation: true,
+                              maintainState: true,
+                              child: IconButton(
                                 padding: EdgeInsets.zero,
                                 icon: const Icon(
                                   Icons.add_circle_outline,
@@ -74,6 +78,7 @@ class _RelationshipsPageState extends State<RelationshipsPage>
                                       builder: (_) => const CreateClientSheet(),
                                     ),
                               ),
+                            ),
                           ],
                         ),
                       ),
@@ -82,8 +87,13 @@ class _RelationshipsPageState extends State<RelationshipsPage>
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             const Text('Proveedores'),
-                            if (showAddSupplier)
-                              IconButton(
+                            Visibility(
+                              visible: showAddSupplier,
+
+                              maintainSize: true,
+                              maintainAnimation: true,
+                              maintainState: true,
+                              child: IconButton(
                                 padding: EdgeInsets.zero,
                                 icon: const Icon(
                                   Icons.add_circle_outline,
@@ -98,6 +108,7 @@ class _RelationshipsPageState extends State<RelationshipsPage>
                                           (_) => const CreateSupplierSheet(),
                                     ),
                               ),
+                            ),
                           ],
                         ),
                       ),

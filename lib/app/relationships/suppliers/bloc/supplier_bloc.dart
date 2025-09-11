@@ -32,6 +32,9 @@ class SupplierBloc extends Bloc<SupplierEvent, SupplierState> {
       case SupplierEventType.getById:
         await _getById(event.id!, emit);
         break;
+      case SupplierEventType.update:
+        await _update(event.supplier!, emit);
+        break;
     }
   }
 
@@ -71,6 +74,16 @@ class SupplierBloc extends Bloc<SupplierEvent, SupplierState> {
       emit(SupplierLoaded(list));
     } catch (_) {
       emit(const SupplierError('No se pudo eliminar el proveedor.'));
+    }
+  }
+
+  Future<void> _update(Supplier supplier, Emitter<SupplierState> emit) async {
+    try {
+      await useCases.update(userId, supplier);
+      final list = await useCases.fetch(userId);
+      emit(SupplierLoaded(list));
+    } catch (_) {
+      emit(const SupplierError('No se pudo actualizar el proveedor.'));
     }
   }
 

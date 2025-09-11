@@ -1,7 +1,7 @@
 import 'package:equatable/equatable.dart';
 import 'package:gestr/domain/entities/supplier.dart';
 
-enum SupplierEventType { fetch, refresh, create, delete, getById }
+enum SupplierEventType { fetch, refresh, create, delete, getById, update }
 
 class SupplierEvent extends Equatable {
   final SupplierEventType type;
@@ -17,6 +17,8 @@ class SupplierEvent extends Equatable {
     : this._(SupplierEventType.delete, id: id);
   const SupplierEvent.getById(String id)
     : this._(SupplierEventType.getById, id: id);
+  const SupplierEvent.update(Supplier supplier)
+    : this._(SupplierEventType.update, supplier: supplier);
 
   @override
   List<Object?> get props => [type, supplier, id];

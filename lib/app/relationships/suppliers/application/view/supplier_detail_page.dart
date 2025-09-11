@@ -1,18 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:gestr/app/relationships/suppliers/bloc/supplier_bloc.dart';
+import 'package:gestr/app/relationships/suppliers/bloc/supplier_event.dart';
+import 'package:gestr/app/relationships/suppliers/bloc/supplier_state.dart';
 import 'package:gestr/core/utils/background_light.dart';
 import 'package:gestr/core/utils/dialog_background.dart';
+import 'package:gestr/domain/entities/fixed_payments_model.dart';
 import 'package:gestr/domain/entities/supplier.dart';
+import 'package:gestr/domain/entities/supplier_order_item.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gestr/app/fixedpayments/bloc/fixed_payment_event.dart';
 import 'package:gestr/app/fixedpayments/bloc/fixed_payment_state.dart';
 import 'package:gestr/app/fixedpayments/bloc/fixed_payments_bloc.dart';
 import 'package:gestr/app/invoices/bloc/invoice_bloc.dart';
-import 'package:gestr/app/invoices/bloc/invoice_event.dart';
 import 'package:gestr/app/invoices/bloc/invoice_state.dart';
 import 'package:gestr/app/invoices/widgets/fixed_payments_card.dart';
 import 'package:gestr/app/invoices/widgets/invoice_card.dart';
 import 'package:gestr/app/invoices/application/view/ivoice_details_page.dart';
+
+import 'dart:async';
 
 class SupplierDetailPage extends StatefulWidget {
   final Supplier supplier;
@@ -32,15 +38,32 @@ class SupplierDetailPage extends StatefulWidget {
 
 class _SupplierDetailPageState extends State<SupplierDetailPage> {
   final List<_OrderItem> _items = [];
+  StreamSubscription<SupplierState>? _subscription;
 
-  double get _total => _items.fold(0, (sum, item) => sum + item.price);
+  double get _total => _items.fold(0, (sum, item) => sum + item.totalPrice);
+
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<FixedPaymentBloc>().add(const FixedPaymentEvent.fetch());
-      context.read<InvoiceBloc>().add(const InvoiceEvent.fetch());
-    });
+    final id = widget.supplier.id;
+    if (id != null) {
+      final bloc = context.read<SupplierBloc>();
+      _subscription = bloc.stream.listen((state) {
+        if (state is SupplierLoaded && state.suppliers.isNotEmpty) {
+          final supplier = state.suppliers.first;
+          _items.clear();
+          for (final it in supplier.orderItems) {
+            final oi = _OrderItem();
+            oi.productController.text = it.product;
+            oi.priceController.text = it.price.toStringAsFixed(2);
+            oi.quantityController.text = it.quantity.toString();
+            _items.add(oi);
+          }
+          if (mounted) setState(() {});
+        }
+      });
+      bloc.add(SupplierEvent.getById(id));
+    }
   }
 
   void _addItem() {
@@ -58,10 +81,68 @@ class _SupplierDetailPageState extends State<SupplierDetailPage> {
 
   @override
   void dispose() {
+    _persistOrder();
+    _subscription?.cancel();
     for (final item in _items) {
       item.dispose();
     }
     super.dispose();
+  }
+
+  void _persistOrder() {
+    final id = widget.supplier.id;
+    if (id == null) return;
+    final updated = Supplier(
+      id: id,
+      name: widget.supplier.name,
+      email: widget.supplier.email,
+      phone: widget.supplier.phone,
+      taxId: widget.supplier.taxId,
+      fiscalAddress: widget.supplier.fiscalAddress,
+      orderItems:
+          _items
+              .map(
+                (e) => SupplierOrderItem(
+                  product: e.productController.text,
+                  price: e.unitPrice,
+                  quantity: e.quantity,
+                ),
+              )
+              .toList(),
+    );
+    context.read<SupplierBloc>().add(SupplierEvent.update(updated));
+  }
+
+  void _saveOrder() {
+    _persistOrder();
+    if (mounted) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Pedido guardado')));
+    }
+  }
+
+  void _saveAsFixedPayment() {
+    final description = _items
+        .map(
+          (e) =>
+              '${e.productController.text} x${e.quantityController.text} (${e.priceController.text})',
+        )
+        .join(', ');
+    final payment = FixedPayment(
+      title: 'Pedido ${widget.supplier.name}',
+      amount: _total,
+      startDate: DateTime.now(),
+      frequency: FixedPaymentFrequency.monthly,
+      description: description.isEmpty ? null : description,
+      supplier: widget.supplier.name,
+    );
+    context.read<FixedPaymentBloc>().add(FixedPaymentEvent.create(payment));
+    if (mounted) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Añadido a pagos fijos')));
+    }
   }
 
   Widget _buildFixedPaymentsSection() {
@@ -267,13 +348,9 @@ class _SupplierDetailPageState extends State<SupplierDetailPage> {
                           ? supplier.fiscalAddress!
                           : 'Dirección fiscal no disponible',
                 ),
-                const SizedBox(height: 24),
-                _buildFixedPaymentsSection(),
-                const SizedBox(height: 24),
-                _buildInvoicesSection(),
-                const SizedBox(height: 24),
+                const SizedBox(height: 16),
                 Text(
-                  'Desglose del pedido',
+                  'Producto / Pedidos',
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
                 const SizedBox(height: 8),
@@ -294,8 +371,27 @@ class _SupplierDetailPageState extends State<SupplierDetailPage> {
                 if (_items.isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.only(top: 16),
-                    child: Text('Total: €${_total.toStringAsFixed(2)}'),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Text('Total: €${_total.toStringAsFixed(2)}'),
+                        const SizedBox(height: 8),
+                        ElevatedButton(
+                          onPressed: _saveOrder,
+                          child: const Text('Guardar pedido'),
+                        ),
+                        TextButton(
+                          onPressed: _saveAsFixedPayment,
+                          child: const Text('Guardar como pago fijo'),
+                        ),
+                      ],
+                    ),
                   ),
+                const SizedBox(height: 16),
+                _buildFixedPaymentsSection(),
+                const SizedBox(height: 16),
+                _buildInvoicesSection(),
+                const SizedBox(height: 24),
               ],
             ),
           ),
@@ -330,6 +426,16 @@ class _ItemRow extends StatelessWidget {
           ),
           const SizedBox(width: 8),
           SizedBox(
+            width: 60,
+            child: TextField(
+              controller: item.quantityController,
+              decoration: const InputDecoration(labelText: 'Cant.'),
+              keyboardType: TextInputType.number,
+              onChanged: (_) => onChanged(),
+            ),
+          ),
+          const SizedBox(width: 8),
+          SizedBox(
             width: 100,
             child: TextField(
               controller: item.priceController,
@@ -350,13 +456,20 @@ class _ItemRow extends StatelessWidget {
 class _OrderItem {
   final TextEditingController productController = TextEditingController();
   final TextEditingController priceController = TextEditingController();
+  final TextEditingController quantityController = TextEditingController(
+    text: '1',
+  );
 
-  double get price =>
+  double get unitPrice =>
       double.tryParse(priceController.text.replaceAll(',', '.')) ?? 0.0;
+  int get quantity => int.tryParse(quantityController.text) ?? 1;
+
+  double get totalPrice => unitPrice * quantity;
 
   void dispose() {
     productController.dispose();
     priceController.dispose();
+    quantityController.dispose();
   }
 }
 
@@ -370,7 +483,7 @@ class _EmptyMessage extends StatelessWidget {
   Widget build(BuildContext context) {
     final color = Theme.of(
       context,
-    ).textTheme.bodyMedium?.color?.withOpacity(0.6);
+    ).textTheme.bodyMedium?.color?.withValues(alpha: 0.6);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 24),
       child: Center(
