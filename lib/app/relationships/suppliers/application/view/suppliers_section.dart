@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gestr/app/relationships/suppliers/application/view/supplier_detail_page.dart';
+
 import 'package:gestr/app/relationships/suppliers/bloc/supplier_bloc.dart';
 import 'package:gestr/app/relationships/suppliers/bloc/supplier_event.dart';
 import 'package:gestr/app/relationships/suppliers/bloc/supplier_state.dart';
@@ -30,26 +31,6 @@ class _SuppliersSectionState extends State<SuppliersSection> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Proveedores',
-                style: Theme.of(context).textTheme.headlineMedium,
-              ),
-              IconButton(
-                icon: const Icon(Icons.add_circle_outline, size: 28),
-                tooltip: 'Crear proveedor',
-                onPressed:
-                    () => showModalBottomSheet(
-                      context: context,
-                      isScrollControlled: true,
-                      builder: (_) => const CreateSupplierSheet(),
-                    ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
           Expanded(
             child: BlocBuilder<SupplierBloc, SupplierState>(
               builder: (context, state) {
@@ -64,7 +45,7 @@ class _SuppliersSectionState extends State<SuppliersSection> {
                 }
                 final suppliers = state.suppliers;
                 return suppliers.isEmpty
-                    ? const Center(child: Text('No hay proveedores todavía.'))
+                    ? _buildEmptyMessage()
                     : ListView.builder(
                       padding: const EdgeInsets.all(8),
                       itemCount: suppliers.length,
@@ -81,6 +62,59 @@ class _SuppliersSectionState extends State<SuppliersSection> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyMessage() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final color = isDark ? Colors.lightGreenAccent : Colors.green;
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.storefront_outlined, size: 48, color: color),
+            const SizedBox(height: 12),
+            Text(
+              'No hay proveedores todavía.',
+              style: TextStyle(
+                fontSize: 16,
+                color: color,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Crea tu primer proveedor para comenzar a gestionarlos.',
+              style: TextStyle(fontSize: 14, color: color.withAlpha(180)),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton.icon(
+              onPressed:
+                  () => showModalBottomSheet(
+                    context: context,
+                    isScrollControlled: true,
+                    builder: (_) => const CreateSupplierSheet(),
+                  ),
+              icon: const Icon(Icons.add),
+              label: const Text('Crear proveedor'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: color,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 10,
+                ),
+                textStyle: const TextStyle(fontSize: 14),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

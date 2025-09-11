@@ -67,23 +67,49 @@ class _CreateFixedPaymentPageState extends State<CreateFixedPaymentPage>
   }
 
   Future<void> _onSupplierSubmitted(String value) async {
-    supplier = value;
     final match = _suppliers.firstWhere(
       (s) => s.name.toLowerCase() == value.toLowerCase(),
       orElse: () => const Supplier(name: ''),
     );
-    if (match.id == null) {
-      await showModalBottomSheet(
+    if (match.id == null || match.name.isEmpty) {
+      final should = await showDialog<bool>(
         context: context,
-        isScrollControlled: true,
-        builder: (_) => CreateSupplierSheet(initialName: value),
+        builder:
+            (context) => AlertDialog(
+              title: const Text('Proveedor no encontrado'),
+              content: Text('¿Deseas registrar "$value" como nuevo proveedor?'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  child: const Text('No'),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.pop(context, true),
+                  child: const Text('Sí'),
+                ),
+              ],
+            ),
       );
-      await _loadSuppliers();
-      final created = _suppliers.firstWhere(
-        (s) => s.name.toLowerCase() == value.toLowerCase(),
-        orElse: () => match,
-      );
-      _selectSupplier(created);
+      if (!mounted) return;
+      if (should == true) {
+        await showModalBottomSheet(
+          context: context,
+          isScrollControlled: true,
+          builder: (_) => CreateSupplierSheet(initialName: value),
+        );
+        await _loadSuppliers();
+        final created = _suppliers.firstWhere(
+          (s) => s.name.toLowerCase() == value.toLowerCase(),
+          orElse: () => const Supplier(name: ''),
+        );
+        if (created.id != null) {
+          _selectSupplier(created);
+        }
+      } else {
+        setState(() {
+          supplier = value;
+        });
+      }
     } else {
       _selectSupplier(match);
     }

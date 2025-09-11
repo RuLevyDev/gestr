@@ -72,8 +72,7 @@ class _SupplierDetailPageState extends State<SupplierDetailPage> {
                       break;
                     case _SupplierMenuOption.delete:
                       final deleted = await widget.onDelete();
-                      if (!mounted) return;
-                      if (deleted && mounted) {
+                      if (deleted && context.mounted) {
                         Navigator.pop(context);
                       }
                       break;

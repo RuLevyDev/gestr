@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:gestr/core/utils/background_light.dart';
 import 'package:gestr/domain/entities/self_employed_user.dart';
 import 'package:gestr/core/utils/dialog_background.dart';
 
@@ -38,7 +39,7 @@ class _SelfEmployedProfileDialogState extends State<SelfEmployedProfileDialog>
       },
       builder: (context, state) {
         final isLoading = state is SelfEmployedLoading;
-
+        final isDark = Theme.of(context).brightness == Brightness.dark;
         return Dialog(
           insetPadding: EdgeInsets.all(12),
           backgroundColor: Colors.transparent,
@@ -48,7 +49,10 @@ class _SelfEmployedProfileDialogState extends State<SelfEmployedProfileDialog>
               child: Stack(
                 children: [
                   Positioned.fill(
-                    child: DialogBackground(), // El fondo animado
+                    child:
+                        isDark
+                            ? const DialogBackground()
+                            : const BackgroundLight(), // El fondo animado
                   ),
                   AlertDialog(
                     backgroundColor: Colors.transparent,
@@ -110,48 +114,7 @@ class _SelfEmployedProfileDialogState extends State<SelfEmployedProfileDialog>
                                               : null,
                                 ),
                                 SizedBox(height: 8),
-                                DropdownButtonFormField<double>(
-                                  decoration: const InputDecoration(
-                                    labelText: 'IVA gasto por defecto',
-                                  ),
-                                  initialValue: defaultExpenseVatRate,
-                                  items:
-                                      const [0.0, 0.04, 0.10, 0.21]
-                                          .map(
-                                            (r) => DropdownMenuItem(
-                                              value: r,
-                                              child: Text(
-                                                '${(r * 100).toStringAsFixed(0)}%',
-                                              ),
-                                            ),
-                                          )
-                                          .toList(),
-                                  onChanged:
-                                      (v) => setState(
-                                        () => defaultExpenseVatRate = v ?? 0.0,
-                                      ),
-                                ),
-                                SwitchListTile(
-                                  title: const Text(
-                                    'Gasto incluye IVA por defecto',
-                                  ),
-                                  value: defaultExpenseAmountIsGross,
-                                  onChanged:
-                                      (v) => setState(
-                                        () => defaultExpenseAmountIsGross = v,
-                                      ),
-                                ),
-                                SwitchListTile(
-                                  title: const Text(
-                                    'Gasto deducible por defecto',
-                                  ),
-                                  value: defaultExpenseDeductible,
-                                  onChanged:
-                                      (v) => setState(
-                                        () => defaultExpenseDeductible = v,
-                                      ),
-                                ),
-                                SizedBox(height: 8),
+
                                 DropdownButtonFormField<double>(
                                   decoration: const InputDecoration(
                                     labelText: 'IVA gasto por defecto',
