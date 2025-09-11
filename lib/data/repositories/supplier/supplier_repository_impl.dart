@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:gestr/domain/entities/supplier.dart';
+import 'package:gestr/domain/entities/supplier_order_item.dart';
 import 'package:gestr/domain/repositories/supplier/supplier_repository.dart';
 
 class SupplierRepositoryImpl implements SupplierRepository {
@@ -21,6 +22,14 @@ class SupplierRepositoryImpl implements SupplierRepository {
         phone: m['phone'],
         taxId: m['taxId'],
         fiscalAddress: m['fiscalAddress'],
+        orderItems:
+            (m['orderItems'] as List<dynamic>?)
+                ?.map(
+                  (e) =>
+                      SupplierOrderItem.fromMap(Map<String, dynamic>.from(e)),
+                )
+                .toList() ??
+            const [],
       );
     }).toList();
   }
@@ -33,6 +42,7 @@ class SupplierRepositoryImpl implements SupplierRepository {
       'phone': supplier.phone,
       'taxId': supplier.taxId,
       'fiscalAddress': supplier.fiscalAddress,
+      'orderItems': supplier.orderItems.map((i) => i.toMap()).toList(),
     });
   }
 
@@ -45,6 +55,7 @@ class SupplierRepositoryImpl implements SupplierRepository {
       'phone': supplier.phone,
       'taxId': supplier.taxId,
       'fiscalAddress': supplier.fiscalAddress,
+      'orderItems': supplier.orderItems.map((i) => i.toMap()).toList(),
     });
   }
 
@@ -65,6 +76,13 @@ class SupplierRepositoryImpl implements SupplierRepository {
       phone: m['phone'],
       taxId: m['taxId'],
       fiscalAddress: m['fiscalAddress'],
+      orderItems:
+          (m['orderItems'] as List<dynamic>?)
+              ?.map(
+                (e) => SupplierOrderItem.fromMap(Map<String, dynamic>.from(e)),
+              )
+              .toList() ??
+          const [],
     );
   }
 }

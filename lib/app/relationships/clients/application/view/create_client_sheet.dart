@@ -1,8 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:gestr/app/relationships/clients/bloc/client_bloc.dart';
-import 'package:gestr/app/relationships/clients/bloc/client_event.dart';
-import 'package:gestr/domain/entities/client.dart';
+import '../viewmodel/create_client_viewmodel.dart';
 
 class CreateClientSheet extends StatefulWidget {
   final String? initialName;
@@ -12,32 +9,10 @@ class CreateClientSheet extends StatefulWidget {
   State<CreateClientSheet> createState() => _CreateClientSheetState();
 }
 
-class _CreateClientSheetState extends State<CreateClientSheet> {
-  final _formKey = GlobalKey<FormState>();
-  final _nameCtrl = TextEditingController();
-  final _emailCtrl = TextEditingController();
-  final _phoneCtrl = TextEditingController();
-  final _taxIdCtrl = TextEditingController();
-  final _addressCtrl = TextEditingController();
-
+class _CreateClientSheetState extends State<CreateClientSheet>
+    with CreateClientViewModelMixin<CreateClientSheet> {
   @override
-  @override
-  void initState() {
-    super.initState();
-    if (widget.initialName != null) {
-      _nameCtrl.text = widget.initialName!;
-    }
-  }
-
-  @override
-  void dispose() {
-    _nameCtrl.dispose();
-    _emailCtrl.dispose();
-    _phoneCtrl.dispose();
-    _taxIdCtrl.dispose();
-    _addressCtrl.dispose();
-    super.dispose();
-  }
+  String? get initialName => widget.initialName;
 
   @override
   Widget build(BuildContext context) {
@@ -49,7 +24,7 @@ class _CreateClientSheetState extends State<CreateClientSheet> {
         top: 24,
       ),
       child: Form(
-        key: _formKey,
+        key: formKey,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -59,38 +34,38 @@ class _CreateClientSheetState extends State<CreateClientSheet> {
             ),
             const SizedBox(height: 12),
             TextFormField(
-              controller: _nameCtrl,
+              controller: nameCtrl,
               decoration: const InputDecoration(labelText: 'Nombre'),
               validator:
                   (v) => v == null || v.trim().isEmpty ? 'Requerido' : null,
             ),
             const SizedBox(height: 12),
             TextFormField(
-              controller: _emailCtrl,
+              controller: emailCtrl,
               decoration: const InputDecoration(labelText: 'Email (opcional)'),
             ),
             const SizedBox(height: 12),
             TextFormField(
-              controller: _phoneCtrl,
+              controller: phoneCtrl,
               decoration: const InputDecoration(
                 labelText: 'Teléfono (opcional)',
               ),
             ),
             const SizedBox(height: 12),
             TextFormField(
-              controller: _taxIdCtrl,
+              controller: taxIdCtrl,
               decoration: const InputDecoration(labelText: 'NIF (opcional)'),
             ),
             const SizedBox(height: 12),
             TextFormField(
-              controller: _addressCtrl,
+              controller: addressCtrl,
               decoration: const InputDecoration(
                 labelText: 'Dirección fiscal (opcional)',
               ),
             ),
             const SizedBox(height: 24),
             FilledButton.icon(
-              onPressed: _save,
+              onPressed: save,
               icon: const Icon(Icons.save_alt),
               label: const Text('Guardar'),
             ),
@@ -99,21 +74,5 @@ class _CreateClientSheetState extends State<CreateClientSheet> {
         ),
       ),
     );
-  }
-
-  void _save() {
-    if (!_formKey.currentState!.validate()) {
-      return;
-    }
-    final client = Client(
-      name: _nameCtrl.text.trim(),
-      email: _emailCtrl.text.trim().isEmpty ? null : _emailCtrl.text.trim(),
-      phone: _phoneCtrl.text.trim().isEmpty ? null : _phoneCtrl.text.trim(),
-      taxId: _taxIdCtrl.text.trim().isEmpty ? null : _taxIdCtrl.text.trim(),
-      fiscalAddress:
-          _addressCtrl.text.trim().isEmpty ? null : _addressCtrl.text.trim(),
-    );
-    context.read<ClientBloc>().add(ClientEvent.create(client));
-    Navigator.pop(context);
   }
 }

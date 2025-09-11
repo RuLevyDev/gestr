@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gestr/app/relationships/clients/application/view/client_detail_dialog.dart';
-
 import 'package:gestr/app/relationships/clients/bloc/client_bloc.dart';
 import 'package:gestr/app/relationships/clients/bloc/client_event.dart';
 import 'package:gestr/app/relationships/clients/bloc/client_state.dart';
@@ -9,6 +8,7 @@ import 'package:gestr/domain/entities/client.dart';
 
 import '../../widgets/client_card.dart';
 import 'create_client_sheet.dart';
+import '../viewmodel/clients_section_mixin.dart';
 
 class ClientsSection extends StatefulWidget {
   const ClientsSection({super.key});
@@ -17,7 +17,8 @@ class ClientsSection extends StatefulWidget {
   State<ClientsSection> createState() => _ClientsSectionState();
 }
 
-class _ClientsSectionState extends State<ClientsSection> {
+class _ClientsSectionState extends State<ClientsSection>
+    with ClientsSectionMixin {
   @override
   void initState() {
     super.initState();
@@ -44,8 +45,9 @@ class _ClientsSectionState extends State<ClientsSection> {
                   return const SizedBox.shrink();
                 }
                 final clients = state.clients;
+                final isDark = Theme.of(context).brightness == Brightness.dark;
                 return clients.isEmpty
-                    ? _buildEmptyMessage()
+                    ? buildEmptyMessage(isDark)
                     : ListView.builder(
                       padding: const EdgeInsets.all(8),
                       itemCount: clients.length,
@@ -54,7 +56,7 @@ class _ClientsSectionState extends State<ClientsSection> {
                         return ClientCard(
                           client: cl,
                           onTap: () => _openDetail(cl),
-                          onDelete: () => _confirmDelete(cl),
+                          onDelete: () => confirmDelete(cl),
                         );
                       },
                     );
@@ -73,7 +75,7 @@ class _ClientsSectionState extends State<ClientsSection> {
           (_) => ClientDetailDialog(
             client: client,
             onEdit: () => _editClient(client),
-            onDelete: () => _confirmDelete(client),
+            onDelete: () => confirmDelete(client),
           ),
     );
   }
@@ -84,87 +86,5 @@ class _ClientsSectionState extends State<ClientsSection> {
       isScrollControlled: true,
       builder: (_) => CreateClientSheet(initialName: client.name),
     );
-  }
-
-  Widget _buildEmptyMessage() {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final color = isDark ? Colors.lightBlueAccent : Colors.blue;
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.people_outline, size: 48, color: color),
-            const SizedBox(height: 12),
-            Text(
-              'No hay clientes todavía.',
-              style: TextStyle(
-                fontSize: 16,
-                color: color,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Crea tu primer cliente para comenzar a gestionarlos.',
-              style: TextStyle(fontSize: 14, color: color.withAlpha(180)),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 16),
-            ElevatedButton.icon(
-              onPressed:
-                  () => showModalBottomSheet(
-                    context: context,
-                    isScrollControlled: true,
-                    builder: (_) => const CreateClientSheet(),
-                  ),
-              icon: const Icon(Icons.add),
-              label: const Text('Crear cliente'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: color,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 10,
-                ),
-                textStyle: const TextStyle(fontSize: 14),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _confirmDelete(Client client) async {
-    final ok =
-        await showDialog<bool>(
-          context: context,
-          builder:
-              (dialogContext) => AlertDialog(
-                title: const Text('Eliminar cliente'),
-                content: Text('¿Eliminar "${client.name}"?'),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(dialogContext, false),
-                    child: const Text('Cancelar'),
-                  ),
-                  FilledButton(
-                    onPressed: () => Navigator.pop(dialogContext, true),
-                    child: const Text('Eliminar'),
-                  ),
-                ],
-              ),
-        ) ??
-        false;
-    if (!mounted) {
-      return;
-    }
-    if (ok && client.id != null) {
-      context.read<ClientBloc>().add(ClientEvent.delete(client.id!));
-    }
   }
 }

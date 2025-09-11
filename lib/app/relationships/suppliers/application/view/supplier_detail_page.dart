@@ -3,6 +3,16 @@ import 'package:gestr/core/utils/background_light.dart';
 import 'package:gestr/core/utils/dialog_background.dart';
 import 'package:gestr/domain/entities/supplier.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:gestr/app/fixedpayments/bloc/fixed_payment_event.dart';
+import 'package:gestr/app/fixedpayments/bloc/fixed_payment_state.dart';
+import 'package:gestr/app/fixedpayments/bloc/fixed_payments_bloc.dart';
+import 'package:gestr/app/invoices/bloc/invoice_bloc.dart';
+import 'package:gestr/app/invoices/bloc/invoice_event.dart';
+import 'package:gestr/app/invoices/bloc/invoice_state.dart';
+import 'package:gestr/app/invoices/widgets/fixed_payments_card.dart';
+import 'package:gestr/app/invoices/widgets/invoice_card.dart';
+import 'package:gestr/app/invoices/application/view/ivoice_details_page.dart';
 
 class SupplierDetailPage extends StatefulWidget {
   final Supplier supplier;
@@ -24,6 +34,14 @@ class _SupplierDetailPageState extends State<SupplierDetailPage> {
   final List<_OrderItem> _items = [];
 
   double get _total => _items.fold(0, (sum, item) => sum + item.price);
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<FixedPaymentBloc>().add(const FixedPaymentEvent.fetch());
+      context.read<InvoiceBloc>().add(const InvoiceEvent.fetch());
+    });
+  }
 
   void _addItem() {
     setState(() {
@@ -44,6 +62,109 @@ class _SupplierDetailPageState extends State<SupplierDetailPage> {
       item.dispose();
     }
     super.dispose();
+  }
+
+  Widget _buildFixedPaymentsSection() {
+    return BlocBuilder<FixedPaymentBloc, FixedPaymentState>(
+      builder: (context, state) {
+        if (state is FixedPaymentLoading) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (state is FixedPaymentError) {
+          return Text('Error al cargar pagos fijos: \\${state.message}');
+        }
+        if (state is FixedPaymentLoaded) {
+          final payments =
+              state.fixedPayments
+                  .where(
+                    (p) =>
+                        (p.supplier ?? '').toLowerCase() ==
+                        widget.supplier.name.toLowerCase(),
+                  )
+                  .toList();
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Pagos fijos',
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.add_circle_outline),
+                    tooltip: 'Añadir pago fijo',
+                    onPressed:
+                        () => Navigator.pushNamed(
+                          context,
+                          '/create-fixed-payment',
+                        ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              if (payments.isEmpty)
+                const _EmptyMessage(
+                  icon: Icons.payments_outlined,
+                  message: 'No hay pagos fijos registrados.',
+                ),
+              for (final p in payments)
+                FixedPaymentCard(payment: p, onTap: () {}),
+            ],
+          );
+        }
+        return const SizedBox.shrink();
+      },
+    );
+  }
+
+  Widget _buildInvoicesSection() {
+    return BlocBuilder<InvoiceBloc, InvoiceState>(
+      builder: (context, state) {
+        if (state is InvoiceLoading) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (state is InvoiceError) {
+          return Text('Error al cargar facturas: \\${state.message}');
+        }
+        if (state is InvoiceLoaded) {
+          final invoices =
+              state.invoices
+                  .where(
+                    (i) =>
+                        (i.issuer ?? '').toLowerCase() ==
+                        widget.supplier.name.toLowerCase(),
+                  )
+                  .toList();
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Facturas', style: Theme.of(context).textTheme.titleMedium),
+              const SizedBox(height: 8),
+              if (invoices.isEmpty)
+                const _EmptyMessage(
+                  icon: Icons.receipt_long_outlined,
+                  message: 'No hay facturas registradas.',
+                ),
+              for (final invoice in invoices)
+                InvoiceCard(
+                  invoice: invoice,
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => InvoiceDetailPage(invoice: invoice),
+                      ),
+                    );
+                  },
+                ),
+            ],
+          );
+        }
+        return const SizedBox.shrink();
+      },
+    );
   }
 
   @override
@@ -147,6 +268,10 @@ class _SupplierDetailPageState extends State<SupplierDetailPage> {
                           : 'Dirección fiscal no disponible',
                 ),
                 const SizedBox(height: 24),
+                _buildFixedPaymentsSection(),
+                const SizedBox(height: 24),
+                _buildInvoicesSection(),
+                const SizedBox(height: 24),
                 Text(
                   'Desglose del pedido',
                   style: Theme.of(context).textTheme.titleMedium,
@@ -232,6 +357,36 @@ class _OrderItem {
   void dispose() {
     productController.dispose();
     priceController.dispose();
+  }
+}
+
+class _EmptyMessage extends StatelessWidget {
+  final IconData icon;
+  final String message;
+
+  const _EmptyMessage({required this.icon, required this.message});
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(
+      context,
+    ).textTheme.bodyMedium?.color?.withOpacity(0.6);
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 24),
+      child: Center(
+        child: Column(
+          children: [
+            Icon(icon, size: 48, color: color),
+            const SizedBox(height: 8),
+            Text(
+              message,
+              style: TextStyle(color: color),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 

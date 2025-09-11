@@ -3,8 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gestr/app/incomes/bloc/income_bloc.dart';
 import 'package:gestr/app/incomes/bloc/income_event.dart';
 import 'package:gestr/app/incomes/bloc/income_state.dart';
-import 'package:gestr/domain/entities/income.dart';
 import '../../widgets/income_card.dart';
+import '../viewmodel/incomes_page_mixin.dart';
 
 class IncomesPage extends StatefulWidget {
   const IncomesPage({super.key});
@@ -12,7 +12,7 @@ class IncomesPage extends StatefulWidget {
   State<IncomesPage> createState() => _IncomesPageState();
 }
 
-class _IncomesPageState extends State<IncomesPage> {
+class _IncomesPageState extends State<IncomesPage> with IncomesPageMixin {
   @override
   void initState() {
     super.initState();
@@ -70,7 +70,7 @@ class _IncomesPageState extends State<IncomesPage> {
                   ),
                   child:
                       incomes.isEmpty
-                          ? _buildEmptyMessage(isDark)
+                          ? buildEmptyMessage(isDark)
                           : Column(
                             children: [
                               Padding(
@@ -99,7 +99,7 @@ class _IncomesPageState extends State<IncomesPage> {
                                     final inc = incomes[i];
                                     return IncomeCard(
                                       income: inc,
-                                      onDelete: () => _confirmDelete(inc),
+                                      onDelete: () => confirmDelete(inc),
                                     );
                                   },
                                 ),
@@ -113,81 +113,5 @@ class _IncomesPageState extends State<IncomesPage> {
         ],
       ),
     );
-  }
-
-  Widget _buildEmptyMessage(bool isDark) {
-    final color = isDark ? Colors.deepPurpleAccent : Colors.teal;
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.trending_up, size: 48, color: color),
-            const SizedBox(height: 12),
-            Text(
-              'No hay ingresos todavía.',
-              style: TextStyle(
-                fontSize: 16,
-                color: color,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Registra tu primer ingreso para comenzar a gestionarlos.',
-              style: TextStyle(fontSize: 14, color: color.withAlpha(180)),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 16),
-            ElevatedButton.icon(
-              onPressed: () => Navigator.pushNamed(context, '/create-income'),
-              icon: const Icon(Icons.add),
-              label: const Text('Crear ingreso'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: color,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 10,
-                ),
-                textStyle: const TextStyle(fontSize: 14),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _confirmDelete(Income inc) async {
-    final ok =
-        await showDialog<bool>(
-          context: context,
-          builder:
-              (dialogContext) => AlertDialog(
-                title: const Text('Eliminar ingreso'),
-                content: Text('¿Eliminar "${inc.title}"?'),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(dialogContext, false),
-                    child: const Text('Cancelar'),
-                  ),
-                  FilledButton(
-                    onPressed: () => Navigator.pop(dialogContext, true),
-                    child: const Text('Eliminar'),
-                  ),
-                ],
-              ),
-        ) ??
-        false;
-    if (!mounted) {
-      return;
-    }
-    if (ok && inc.id != null) {
-      context.read<IncomeBloc>().add(IncomeEvent.delete(inc.id!));
-    }
   }
 }
