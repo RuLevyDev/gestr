@@ -105,19 +105,19 @@ ThemeData getAppTheme(ColorScheme colorScheme) {
       style: ButtonStyle(
         backgroundColor: WidgetStateProperty.all(colorScheme.secondary),
         foregroundColor: WidgetStateProperty.all(colorScheme.onSecondary),
-        textStyle: WidgetStateProperty.all(myTextTheme.titleSmall),
+        textStyle: WidgetStateProperty.all(myTextTheme.displaySmall),
       ),
     ),
     outlinedButtonTheme: OutlinedButtonThemeData(
       style: ButtonStyle(
         backgroundColor: WidgetStateProperty.all(Colors.transparent),
-        foregroundColor: WidgetStateProperty.all(colorScheme.onPrimary),
-        textStyle: WidgetStateProperty.all(myTextTheme.headlineSmall),
+        foregroundColor: WidgetStateProperty.all(colorScheme.tertiary),
+        textStyle: WidgetStateProperty.all(myTextTheme.displaySmall),
       ),
     ),
     textButtonTheme: TextButtonThemeData(
       style: ButtonStyle(
-        foregroundColor: WidgetStateProperty.all(colorScheme.secondary),
+        foregroundColor: WidgetStateProperty.all(colorScheme.tertiary),
         textStyle: WidgetStateProperty.all(myTextTheme.displaySmall),
       ),
     ),

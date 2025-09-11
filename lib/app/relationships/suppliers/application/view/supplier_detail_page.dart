@@ -122,35 +122,6 @@ class _SupplierDetailPageState extends State<SupplierDetailPage> {
     super.dispose();
   }
 
-  Future<void> _confirmRemoveItem(int index) async {
-    final confirmed =
-        await showDialog<bool>(
-          context: context,
-          builder:
-              (context) => AlertDialog(
-                title: const Text('Eliminar producto'),
-                content: const Text(
-                  '¿Desea eliminar este producto del pedido?',
-                ),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.of(context).pop(false),
-                    child: const Text('Cancelar'),
-                  ),
-                  TextButton(
-                    onPressed: () => Navigator.of(context).pop(true),
-                    child: const Text('Eliminar'),
-                  ),
-                ],
-              ),
-        ) ??
-        false;
-    if (confirmed) {
-      _handleRemoveItem(index);
-      _persistOrder();
-    }
-  }
-
   Widget _buildOrderItemsSection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -185,16 +156,22 @@ class _SupplierDetailPageState extends State<SupplierDetailPage> {
                 Row(
                   children: [
                     Expanded(
-                      child: ElevatedButton(
-                        onPressed: _saveOrder,
-                        child: const Text('Guardar pedido'),
+                      child: SizedBox(
+                        height: 33,
+                        child: ElevatedButton(
+                          onPressed: _saveAsFixedPayment,
+                          child: const Text('Guardar pago fijo'),
+                        ),
                       ),
                     ),
                     const SizedBox(width: 8),
                     Expanded(
-                      child: TextButton(
-                        onPressed: _saveAsFixedPayment,
-                        child: const Text('Guardar como pago fijo'),
+                      child: SizedBox(
+                        height: 33,
+                        child: ElevatedButton(
+                          onPressed: _saveOrder,
+                          child: const Text('Guardar pedido'),
+                        ),
                       ),
                     ),
                   ],
