@@ -1,23 +1,22 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gestr/app/relationships/suppliers/application/view/supplier_detail_page.dart';
-
+import 'package:gestr/app/relationships/suppliers/application/viewmodel/suppliers_section_mixin.dart';
 import 'package:gestr/app/relationships/suppliers/bloc/supplier_bloc.dart';
 import 'package:gestr/app/relationships/suppliers/bloc/supplier_event.dart';
 import 'package:gestr/app/relationships/suppliers/bloc/supplier_state.dart';
 import 'package:gestr/domain/entities/supplier.dart';
-
-import '../../widgets/supplier_card.dart';
+import '../widgets/supplier_card.dart';
 import 'create_supplier_sheet.dart';
 
 class SuppliersSection extends StatefulWidget {
   const SuppliersSection({super.key});
-
   @override
   State<SuppliersSection> createState() => _SuppliersSectionState();
 }
 
-class _SuppliersSectionState extends State<SuppliersSection> {
+class _SuppliersSectionState extends State<SuppliersSection>
+    with SuppliersSectionMixin {
   @override
   void initState() {
     super.initState();

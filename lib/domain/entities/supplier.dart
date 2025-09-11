@@ -1,4 +1,5 @@
 import 'package:gestr/domain/entities/supplier_order_item.dart';
+import 'package:gestr/domain/entities/supplier_order.dart';
 
 class Supplier {
   final String? id;
@@ -8,6 +9,7 @@ class Supplier {
   final String? taxId;
   final String? fiscalAddress;
   final List<SupplierOrderItem> orderItems;
+  final List<SupplierOrder> orders;
 
   const Supplier({
     this.id,
@@ -17,5 +19,6 @@ class Supplier {
     this.taxId,
     this.fiscalAddress,
     this.orderItems = const [],
+    this.orders = const [],
   });
 }

@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:gestr/domain/entities/supplier.dart';
 import 'package:gestr/domain/entities/supplier_order_item.dart';
+import 'package:gestr/domain/entities/supplier_order.dart';
 import 'package:gestr/domain/repositories/supplier/supplier_repository.dart';
 
 class SupplierRepositoryImpl implements SupplierRepository {
@@ -30,6 +31,15 @@ class SupplierRepositoryImpl implements SupplierRepository {
                 )
                 .toList() ??
             const [],
+        orders:
+            (m['orders'] as List<dynamic>?)
+                ?.map(
+                  (o) => SupplierOrder.fromMap(
+                    Map<String, dynamic>.from(o as Map<String, dynamic>),
+                  ),
+                )
+                .toList() ??
+            const [],
       );
     }).toList();
   }
@@ -43,6 +53,7 @@ class SupplierRepositoryImpl implements SupplierRepository {
       'taxId': supplier.taxId,
       'fiscalAddress': supplier.fiscalAddress,
       'orderItems': supplier.orderItems.map((i) => i.toMap()).toList(),
+      'orders': supplier.orders.map((o) => o.toMap()).toList(),
     });
   }
 
@@ -56,6 +67,7 @@ class SupplierRepositoryImpl implements SupplierRepository {
       'taxId': supplier.taxId,
       'fiscalAddress': supplier.fiscalAddress,
       'orderItems': supplier.orderItems.map((i) => i.toMap()).toList(),
+      'orders': supplier.orders.map((o) => o.toMap()).toList(),
     });
   }
 
@@ -80,6 +92,15 @@ class SupplierRepositoryImpl implements SupplierRepository {
           (m['orderItems'] as List<dynamic>?)
               ?.map(
                 (e) => SupplierOrderItem.fromMap(Map<String, dynamic>.from(e)),
+              )
+              .toList() ??
+          const [],
+      orders:
+          (m['orders'] as List<dynamic>?)
+              ?.map(
+                (o) => SupplierOrder.fromMap(
+                  Map<String, dynamic>.from(o as Map<String, dynamic>),
+                ),
               )
               .toList() ??
           const [],
