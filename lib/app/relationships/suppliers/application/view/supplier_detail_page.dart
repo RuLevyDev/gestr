@@ -53,7 +53,7 @@ class _SupplierDetailPageState extends State<SupplierDetailPage> {
           final supplier = state.suppliers.first;
           _items.clear();
           for (final it in supplier.orderItems) {
-            final oi = _OrderItem();
+            final oi = _OrderItem(persisted: true);
             oi.productController.text = it.product;
             oi.priceController.text = it.price.toStringAsFixed(2);
             oi.quantityController.text = it.quantity.toString();
@@ -72,7 +72,40 @@ class _SupplierDetailPageState extends State<SupplierDetailPage> {
     });
   }
 
-  void _removeItem(int index) {
+  Future<void> _handleRemoveItem(int index) async {
+    final item = _items[index];
+    if (item.persisted) {
+      final confirmed =
+          await showDialog<bool>(
+            context: context,
+            builder:
+                (context) => AlertDialog(
+                  title: const Text('Eliminar producto'),
+                  content: const Text(
+                    '¿Desea eliminar este producto del pedido?',
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(false),
+                      child: const Text('Cancelar'),
+                    ),
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(true),
+                      child: const Text('Eliminar'),
+                    ),
+                  ],
+                ),
+          ) ??
+          false;
+      if (!confirmed) return;
+      _removeItemAt(index);
+      _persistOrder();
+    } else {
+      _removeItemAt(index);
+    }
+  }
+
+  void _removeItemAt(int index) {
     setState(() {
       _items[index].dispose();
       _items.removeAt(index);
@@ -87,6 +120,90 @@ class _SupplierDetailPageState extends State<SupplierDetailPage> {
       item.dispose();
     }
     super.dispose();
+  }
+
+  Future<void> _confirmRemoveItem(int index) async {
+    final confirmed =
+        await showDialog<bool>(
+          context: context,
+          builder:
+              (context) => AlertDialog(
+                title: const Text('Eliminar producto'),
+                content: const Text(
+                  '¿Desea eliminar este producto del pedido?',
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(false),
+                    child: const Text('Cancelar'),
+                  ),
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(true),
+                    child: const Text('Eliminar'),
+                  ),
+                ],
+              ),
+        ) ??
+        false;
+    if (confirmed) {
+      _handleRemoveItem(index);
+      _persistOrder();
+    }
+  }
+
+  Widget _buildOrderItemsSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Producto / Pedidos',
+          style: Theme.of(context).textTheme.titleMedium,
+        ),
+        const SizedBox(height: 8),
+        for (int i = 0; i < _items.length; i++)
+          _ItemRow(
+            item: _items[i],
+            onRemove: () => _handleRemoveItem(i),
+            onChanged: () => setState(() {}),
+          ),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: TextButton.icon(
+            onPressed: _addItem,
+            icon: const Icon(Icons.add),
+            label: const Text('Añadir producto'),
+          ),
+        ),
+        if (_items.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(top: 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text('Total: €${_total.toStringAsFixed(2)}'),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: _saveOrder,
+                        child: const Text('Guardar pedido'),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: TextButton(
+                        onPressed: _saveAsFixedPayment,
+                        child: const Text('Guardar como pago fijo'),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+      ],
+    );
   }
 
   void _persistOrder() {
@@ -111,6 +228,9 @@ class _SupplierDetailPageState extends State<SupplierDetailPage> {
               .toList(),
     );
     context.read<SupplierBloc>().add(SupplierEvent.update(updated));
+    for (final item in _items) {
+      item.persisted = true;
+    }
   }
 
   void _saveOrder() {
@@ -349,44 +469,7 @@ class _SupplierDetailPageState extends State<SupplierDetailPage> {
                           : 'Dirección fiscal no disponible',
                 ),
                 const SizedBox(height: 16),
-                Text(
-                  'Producto / Pedidos',
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
-                const SizedBox(height: 8),
-                for (int i = 0; i < _items.length; i++)
-                  _ItemRow(
-                    item: _items[i],
-                    onRemove: () => _removeItem(i),
-                    onChanged: () => setState(() {}),
-                  ),
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: TextButton.icon(
-                    onPressed: _addItem,
-                    icon: const Icon(Icons.add),
-                    label: const Text('Añadir producto'),
-                  ),
-                ),
-                if (_items.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Text('Total: €${_total.toStringAsFixed(2)}'),
-                        const SizedBox(height: 8),
-                        ElevatedButton(
-                          onPressed: _saveOrder,
-                          child: const Text('Guardar pedido'),
-                        ),
-                        TextButton(
-                          onPressed: _saveAsFixedPayment,
-                          child: const Text('Guardar como pago fijo'),
-                        ),
-                      ],
-                    ),
-                  ),
+                _buildOrderItemsSection(),
                 const SizedBox(height: 16),
                 _buildFixedPaymentsSection(),
                 const SizedBox(height: 16),
@@ -459,6 +542,9 @@ class _OrderItem {
   final TextEditingController quantityController = TextEditingController(
     text: '1',
   );
+  bool persisted;
+
+  _OrderItem({this.persisted = false});
 
   double get unitPrice =>
       double.tryParse(priceController.text.replaceAll(',', '.')) ?? 0.0;
