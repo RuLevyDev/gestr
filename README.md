@@ -30,9 +30,13 @@ N2F se orienta a organizaciones con múltiples usuarios (empleados y administrad
 - Registro manual de ingresos y gastos.
 - Base para habilitar módulos de clientes, proveedores y productos.
 - Escaneo de facturas con OCR que extrae título, importe, fecha, emisor, receptor y concepto.
+- Modulo de proveedores, productos
+- Modulo de clientes
+
+
 
 ### Lo que falta
-- modulo de proveedores, productos, clientes, servicios , citas,empleados, analytics , opciones , subcripcion
+- Modulo/widget  servicios , citas,empleados, analytics , opciones , subcripcion
 - Conexión bancaria automática para importar movimientos y comprobantes.
 - Exportaciones contables e integración con ERPs.
 
