@@ -23,6 +23,9 @@ class ClientBloc extends Bloc<ClientEvent, ClientState> {
       case ClientEventType.create:
         await _create(event.client!, emit);
         break;
+      case ClientEventType.update:
+        await _update(event.client!, emit);
+        break;
       case ClientEventType.delete:
         await _delete(event.id!, emit);
         break;
@@ -68,6 +71,16 @@ class ClientBloc extends Bloc<ClientEvent, ClientState> {
       emit(ClientLoaded(list));
     } catch (_) {
       emit(const ClientError('No se pudo eliminar el cliente.'));
+    }
+  }
+
+  Future<void> _update(Client client, Emitter<ClientState> emit) async {
+    try {
+      await useCases.update(userId, client);
+      final list = await useCases.fetch(userId);
+      emit(ClientLoaded(list));
+    } catch (_) {
+      emit(const ClientError('No se pudo actualizar el cliente.'));
     }
   }
 

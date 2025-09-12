@@ -4,7 +4,9 @@ import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart
 /// Servicio encargado de procesar imágenes usando Google ML Kit
 /// y devolver el texto reconocido.
 class OcrService {
-  final TextRecognizer _textRecognizer = TextRecognizer();
+  // Be explicit about the script; invoices are Latin by default (es/en)
+  final TextRecognizer _textRecognizer =
+      TextRecognizer(script: TextRecognitionScript.latin);
 
   /// Procesa la [image] recibida y retorna el texto completo detectado.
   Future<String> processImage(File image) async {

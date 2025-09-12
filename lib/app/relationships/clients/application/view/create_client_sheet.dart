@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:gestr/domain/entities/client.dart';
 import '../viewmodel/create_client_viewmodel.dart';
 
 class CreateClientSheet extends StatefulWidget {
+  final Client? client;
   final String? initialName;
-  const CreateClientSheet({super.key, this.initialName});
+  const CreateClientSheet({super.key, this.client, this.initialName});
 
   @override
   State<CreateClientSheet> createState() => _CreateClientSheetState();
@@ -11,6 +13,8 @@ class CreateClientSheet extends StatefulWidget {
 
 class _CreateClientSheetState extends State<CreateClientSheet>
     with CreateClientViewModelMixin<CreateClientSheet> {
+  @override
+  Client? get initialClient => widget.client;
   @override
   String? get initialName => widget.initialName;
 
@@ -29,7 +33,7 @@ class _CreateClientSheetState extends State<CreateClientSheet>
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              'Nuevo cliente',
+              widget.client == null ? 'Nuevo cliente' : 'Editar cliente',
               style: Theme.of(context).textTheme.titleLarge,
             ),
             const SizedBox(height: 12),

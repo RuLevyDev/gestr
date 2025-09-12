@@ -92,7 +92,7 @@ class _SuppliersSectionState extends State<SuppliersSection>
     return showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      builder: (_) => CreateSupplierSheet(initialName: supplier.name),
+      builder: (_) => CreateSupplierSheet(supplier: supplier),
     );
   }
 }

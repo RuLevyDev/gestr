@@ -84,7 +84,7 @@ class _ClientsSectionState extends State<ClientsSection>
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      builder: (_) => CreateClientSheet(initialName: client.name),
+      builder: (_) => CreateClientSheet(client: client),
     );
   }
 }

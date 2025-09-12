@@ -196,24 +196,29 @@ class _SupplierOrderDetailsDialogState
                       SizedBox(
                         height: 240,
                         child: SingleChildScrollView(
-                          child: DataTable(
-                            columns: const [
-                              DataColumn(label: Text('Producto')),
-                              DataColumn(label: Text('Cant.')),
-                              DataColumn(label: Text('Precio')),
-                            ],
-                            rows: [
-                              for (final e in order.items)
-                                DataRow(
-                                  cells: [
-                                    DataCell(Text(e.product)),
-                                    DataCell(Text('${e.quantity}')),
-                                    DataCell(
-                                      Text('EUR ${e.price.toStringAsFixed(2)}'),
-                                    ),
-                                  ],
-                                ),
-                            ],
+                          // Vertical scroll for many rows
+                          child: SingleChildScrollView(
+                            // Horizontal scroll to avoid overflow on small screens
+                            scrollDirection: Axis.horizontal,
+                            child: DataTable(
+                              columns: const [
+                                DataColumn(label: Text('Producto')),
+                                DataColumn(label: Text('Cant.')),
+                                DataColumn(label: Text('Precio')),
+                              ],
+                              rows: [
+                                for (final e in order.items)
+                                  DataRow(
+                                    cells: [
+                                      DataCell(Text(e.product)),
+                                      DataCell(Text('${e.quantity}')),
+                                      DataCell(
+                                        Text('EUR ${e.price.toStringAsFixed(2)}'),
+                                      ),
+                                    ],
+                                  ),
+                              ],
+                            ),
                           ),
                         ),
                       ),

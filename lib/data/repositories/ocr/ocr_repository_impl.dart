@@ -54,7 +54,8 @@ class OcrRepositoryImpl implements OcrRepository {
   }
 
   String? _extractField(String text, List<String> labels) {
-    final lines = text.split('\\n');
+    // Split by real newlines; previous split('\\n') was incorrect
+    final lines = text.split('\n');
     for (final label in labels) {
       final lower = label.toLowerCase();
       for (final line in lines) {

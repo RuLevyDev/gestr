@@ -12,14 +12,24 @@ mixin CreateClientViewModelMixin<T extends StatefulWidget> on State<T> {
   final taxIdCtrl = TextEditingController();
   final addressCtrl = TextEditingController();
 
+  /// If provided, the form will prefill and perform update instead of create.
+  Client? get initialClient => null;
+  /// Optional convenience for create-mode prefill.
   String? get initialName => null;
 
   @override
   void initState() {
     super.initState();
-    final name = initialName;
-    if (name != null) {
-      nameCtrl.text = name;
+    final client = initialClient;
+    if (client != null) {
+      nameCtrl.text = client.name;
+      emailCtrl.text = client.email ?? '';
+      phoneCtrl.text = client.phone ?? '';
+      taxIdCtrl.text = client.taxId ?? '';
+      addressCtrl.text = client.fiscalAddress ?? '';
+    } else {
+      final name = initialName;
+      if (name != null) nameCtrl.text = name;
     }
   }
 
@@ -37,7 +47,9 @@ mixin CreateClientViewModelMixin<T extends StatefulWidget> on State<T> {
     if (!(formKey.currentState?.validate() ?? false)) {
       return;
     }
+    final base = initialClient;
     final client = Client(
+      id: base?.id,
       name: nameCtrl.text.trim(),
       email: emailCtrl.text.trim().isEmpty ? null : emailCtrl.text.trim(),
       phone: phoneCtrl.text.trim().isEmpty ? null : phoneCtrl.text.trim(),
@@ -45,7 +57,11 @@ mixin CreateClientViewModelMixin<T extends StatefulWidget> on State<T> {
       fiscalAddress:
           addressCtrl.text.trim().isEmpty ? null : addressCtrl.text.trim(),
     );
-    context.read<ClientBloc>().add(ClientEvent.create(client));
+    if (base != null) {
+      context.read<ClientBloc>().add(ClientEvent.update(client));
+    } else {
+      context.read<ClientBloc>().add(ClientEvent.create(client));
+    }
     Navigator.pop(context);
   }
 }

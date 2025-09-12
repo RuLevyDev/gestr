@@ -64,19 +64,26 @@ class _RelationshipsPageState extends State<RelationshipsPage>
                               maintainSize: true,
                               maintainAnimation: true,
                               maintainState: true,
-                              child: IconButton(
-                                padding: EdgeInsets.zero,
-                                icon: const Icon(
-                                  Icons.add_circle_outline,
-                                  size: 20,
-                                ),
-                                tooltip: 'Crear cliente',
-                                onPressed:
-                                    () => showModalBottomSheet(
-                                      context: context,
-                                      isScrollControlled: true,
-                                      builder: (_) => const CreateClientSheet(),
+                              child: Tooltip(
+                                message: 'Crear cliente',
+                                child: GestureDetector(
+                                  behavior: HitTestBehavior.opaque,
+                                  onTap: () => showModalBottomSheet(
+                                    context: context,
+                                    isScrollControlled: true,
+                                    builder: (_) => const CreateClientSheet(),
+                                  ),
+                                  child: const SizedBox(
+                                    width: 24,
+                                    height: 24,
+                                    child: Center(
+                                      child: Icon(
+                                        Icons.add_circle_outline,
+                                        size: 18,
+                                      ),
                                     ),
+                                  ),
+                                ),
                               ),
                             ),
                           ],
@@ -89,24 +96,29 @@ class _RelationshipsPageState extends State<RelationshipsPage>
                             const Text('Proveedores'),
                             Visibility(
                               visible: showAddSupplier,
-
                               maintainSize: true,
                               maintainAnimation: true,
                               maintainState: true,
-                              child: IconButton(
-                                padding: EdgeInsets.zero,
-                                icon: const Icon(
-                                  Icons.add_circle_outline,
-                                  size: 20,
-                                ),
-                                tooltip: 'Crear proveedor',
-                                onPressed:
-                                    () => showModalBottomSheet(
-                                      context: context,
-                                      isScrollControlled: true,
-                                      builder:
-                                          (_) => const CreateSupplierSheet(),
+                              child: Tooltip(
+                                message: 'Crear proveedor',
+                                child: GestureDetector(
+                                  behavior: HitTestBehavior.opaque,
+                                  onTap: () => showModalBottomSheet(
+                                    context: context,
+                                    isScrollControlled: true,
+                                    builder: (_) => const CreateSupplierSheet(),
+                                  ),
+                                  child: const SizedBox(
+                                    width: 24,
+                                    height: 24,
+                                    child: Center(
+                                      child: Icon(
+                                        Icons.add_circle_outline,
+                                        size: 18,
+                                      ),
                                     ),
+                                  ),
+                                ),
                               ),
                             ),
                           ],

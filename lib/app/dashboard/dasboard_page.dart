@@ -34,7 +34,7 @@ class _DashboardPageState extends State<DashboardPage> with DashboardPageMixin {
     final theme = Theme.of(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 26, vertical: 52),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 52),
       child: SingleChildScrollView(
         child: BlocBuilder<FixedPaymentBloc, FixedPaymentState>(
           builder: (context, fixedState) {
@@ -137,8 +137,8 @@ class _DashboardPageState extends State<DashboardPage> with DashboardPageMixin {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Wrap(
-                      spacing: 12,
-                      runSpacing: 12,
+                      spacing: 8,
+                      runSpacing: 10,
                       children:
                           financialStats
                               .map(
@@ -353,7 +353,7 @@ class _DashboardPageState extends State<DashboardPage> with DashboardPageMixin {
         filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
         child: Container(
           width: 160,
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
             color:
                 theme.brightness == Brightness.dark

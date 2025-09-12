@@ -5,8 +5,11 @@ import 'package:gestr/app/relationships/suppliers/bloc/supplier_event.dart';
 import 'package:gestr/domain/entities/supplier.dart';
 
 class CreateSupplierSheet extends StatefulWidget {
+  /// If provided, the sheet behaves as an edit form and pre-fills fields.
+  final Supplier? supplier;
+  /// Optional convenience for create-mode prefill.
   final String? initialName;
-  const CreateSupplierSheet({super.key, this.initialName});
+  const CreateSupplierSheet({super.key, this.supplier, this.initialName});
 
   @override
   State<CreateSupplierSheet> createState() => _CreateSupplierSheetState();
@@ -23,7 +26,14 @@ class _CreateSupplierSheetState extends State<CreateSupplierSheet> {
   @override
   void initState() {
     super.initState();
-    if (widget.initialName != null) {
+    final sp = widget.supplier;
+    if (sp != null) {
+      _nameCtrl.text = sp.name;
+      _emailCtrl.text = sp.email ?? '';
+      _phoneCtrl.text = sp.phone ?? '';
+      _taxIdCtrl.text = sp.taxId ?? '';
+      _addressCtrl.text = sp.fiscalAddress ?? '';
+    } else if (widget.initialName != null) {
       _nameCtrl.text = widget.initialName!;
     }
   }
@@ -53,7 +63,7 @@ class _CreateSupplierSheetState extends State<CreateSupplierSheet> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              'Nuevo proveedor',
+              widget.supplier == null ? 'Nuevo proveedor' : 'Editar proveedor',
               style: Theme.of(context).textTheme.titleLarge,
             ),
             const SizedBox(height: 12),
@@ -104,15 +114,25 @@ class _CreateSupplierSheetState extends State<CreateSupplierSheet> {
     if (!_formKey.currentState!.validate()) {
       return;
     }
+    final editing = widget.supplier != null;
+    final base = widget.supplier;
     final supplier = Supplier(
+      id: base?.id,
       name: _nameCtrl.text.trim(),
       email: _emailCtrl.text.trim().isEmpty ? null : _emailCtrl.text.trim(),
       phone: _phoneCtrl.text.trim().isEmpty ? null : _phoneCtrl.text.trim(),
       taxId: _taxIdCtrl.text.trim().isEmpty ? null : _taxIdCtrl.text.trim(),
       fiscalAddress:
           _addressCtrl.text.trim().isEmpty ? null : _addressCtrl.text.trim(),
+      // Preserve existing order-related fields on edit
+      orderItems: base?.orderItems ?? const [],
+      orders: base?.orders ?? const [],
     );
-    context.read<SupplierBloc>().add(SupplierEvent.create(supplier));
+    if (editing) {
+      context.read<SupplierBloc>().add(SupplierEvent.update(supplier));
+    } else {
+      context.read<SupplierBloc>().add(SupplierEvent.create(supplier));
+    }
     Navigator.pop(context);
   }
 }
