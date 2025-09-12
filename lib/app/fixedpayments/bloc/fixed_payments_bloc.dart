@@ -28,6 +28,9 @@ class FixedPaymentBloc extends Bloc<FixedPaymentEvent, FixedPaymentState> {
       case FixedPaymentEventType.create:
         await _handleCreate(event.fixedPayment!, emit);
         break;
+      case FixedPaymentEventType.update:
+        await _handleUpdate(event.fixedPayment!, emit);
+        break;
       case FixedPaymentEventType.delete:
         await _handleDelete(event.paymentId!, emit);
         break;
@@ -98,6 +101,21 @@ class FixedPaymentBloc extends Bloc<FixedPaymentEvent, FixedPaymentState> {
       debugPrint('Error al crear el pago fijo: $e');
       debugPrintStack(stackTrace: stackTrace);
       emit(FixedPaymentError("No se pudo crear el pago fijo."));
+    }
+  }
+
+  Future<void> _handleUpdate(
+    FixedPayment payment,
+    Emitter<FixedPaymentState> emit,
+  ) async {
+    try {
+      await useCases.updateFixedPayment(userId, payment);
+      final payments = await useCases.fetchFixedPayments(userId);
+      emit(FixedPaymentLoaded(payments));
+    } catch (e, stackTrace) {
+      debugPrint('Error al actualizar el pago fijo: $e');
+      debugPrintStack(stackTrace: stackTrace);
+      emit(FixedPaymentError("No se pudo actualizar el pago fijo."));
     }
   }
 }

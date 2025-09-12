@@ -19,6 +19,7 @@ mixin CreateFixedPaymentViewModelMixin<T extends StatefulWidget> on State<T> {
 
   // Campos del formulario
   String? title;
+  String? titleHint;
   double amount = 0.0;
   DateTime startDate = DateTime.now();
   FixedPaymentFrequency frequency = FixedPaymentFrequency.monthly;
@@ -40,7 +41,10 @@ mixin CreateFixedPaymentViewModelMixin<T extends StatefulWidget> on State<T> {
   FixedPayment toFixedPayment({String? id}) {
     return FixedPayment(
       id: id,
-      title: title ?? '',
+      title:
+          (title == null || title!.trim().isEmpty)
+              ? (titleHint ?? '')
+              : title!.trim(),
       amount: amount,
       startDate: startDate,
       frequency: frequency,

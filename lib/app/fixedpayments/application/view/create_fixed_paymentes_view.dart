@@ -32,12 +32,45 @@ class _CreateFixedPaymentPageState extends State<CreateFixedPaymentPage>
     WidgetsBinding.instance.addPostFrameCallback((_) => loadDefaults(context));
     _supplierUseCases = context.read<SupplierUseCases>();
     _loadSuppliers();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _tryPrefillFromArgs());
   }
 
   @override
   void dispose() {
     _supplierCtrl.dispose();
     super.dispose();
+  }
+
+  void _tryPrefillFromArgs() {
+    if (!mounted) return;
+    final route = ModalRoute.of(context);
+    final args = route?.settings.arguments;
+    if (args is Map) {
+      final sup = args['supplier'] as String?;
+      final ttl = args['title'] as String?;
+      final amt = args['amount'];
+      final desc = args['description'] as String?;
+      setState(() {
+        if (sup != null && sup.isNotEmpty) {
+          _supplierCtrl.text = sup;
+          supplier = sup;
+          titleHint = 'Pago a ${sup.trim()}';
+        }
+        if (ttl != null && ttl.isNotEmpty) {
+          title = ttl;
+        }
+        final parsed =
+            amt is num
+                ? amt.toDouble()
+                : (amt is String ? double.tryParse(amt) : null);
+        if (parsed != null) {
+          amount = parsed;
+        }
+        if (desc != null && desc.isNotEmpty) {
+          description = desc;
+        }
+      });
+    }
   }
 
   Future<void> _loadSuppliers() async {
@@ -97,20 +130,25 @@ class _CreateFixedPaymentPageState extends State<CreateFixedPaymentPage>
           isScrollControlled: true,
           builder: (_) => CreateSupplierSheet(initialName: value),
         );
+        if (!mounted) return;
         await _loadSuppliers();
+        if (!mounted) return;
         final created = _suppliers.firstWhere(
           (s) => s.name.toLowerCase() == value.toLowerCase(),
           orElse: () => const Supplier(name: ''),
         );
         if (created.id != null) {
+          if (!mounted) return;
           _selectSupplier(created);
         }
       } else {
+        if (!mounted) return;
         setState(() {
           supplier = value;
         });
       }
     } else {
+      if (!mounted) return;
       _selectSupplier(match);
     }
   }
@@ -192,13 +230,17 @@ class _CreateFixedPaymentPageState extends State<CreateFixedPaymentPage>
             children: [
               TextFormField(
                 decoration: const InputDecoration(labelText: 'Título'),
-                validator:
-                    (value) =>
-                        value == null || value.isEmpty
-                            ? 'Campo obligatorio'
-                            : null,
+                validator: (value) => null,
                 onSaved: (value) => title = value,
               ),
+              if (titleHint != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 6),
+                  child: Text(
+                    'Sugerencia: ${titleHint!}',
+                    style: const TextStyle(fontSize: 12, color: Colors.grey),
+                  ),
+                ),
               const SizedBox(height: 12),
               TextFormField(
                 maxLines: 2,

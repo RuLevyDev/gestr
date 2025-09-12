@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 
 abstract class OrderItemVm {
   TextEditingController get productController;
@@ -15,6 +15,7 @@ class OrderItemsEditor extends StatelessWidget {
   final double total;
   final VoidCallback onSave;
   final bool canSave;
+  final bool showAddButton;
 
   const OrderItemsEditor({
     super.key,
@@ -25,6 +26,7 @@ class OrderItemsEditor extends StatelessWidget {
     required this.total,
     required this.onSave,
     required this.canSave,
+    this.showAddButton = true,
   });
 
   @override
@@ -41,14 +43,15 @@ class OrderItemsEditor extends StatelessWidget {
             onChanged: onChanged,
           ),
         const SizedBox(height: 8),
-        Align(
-          alignment: Alignment.centerLeft,
-          child: TextButton.icon(
-            onPressed: onAdd,
-            icon: const Icon(Icons.add),
-            label: const Text('Añadir pedido o producto'),
+        if (showAddButton)
+          Align(
+            alignment: Alignment.centerLeft,
+            child: TextButton.icon(
+              onPressed: onAdd,
+              icon: const Icon(Icons.add),
+              label: const Text('Añadir pedido o producto'),
+            ),
           ),
-        ),
         const SizedBox(height: 8),
         if (items.isNotEmpty)
           Padding(
@@ -119,7 +122,9 @@ class _ItemRow extends StatelessWidget {
             child: TextField(
               controller: priceController,
               decoration: const InputDecoration(labelText: 'Precio'),
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
               onChanged: (_) => onChanged(),
             ),
           ),
@@ -129,4 +134,3 @@ class _ItemRow extends StatelessWidget {
     );
   }
 }
-

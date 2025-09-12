@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gestr/app/relationships/suppliers/application/view/suppliers_section.dart';
 import 'package:gestr/app/relationships/suppliers/bloc/supplier_bloc.dart';
@@ -16,11 +16,17 @@ mixin SuppliersSectionMixin on State<SuppliersSection> {
           children: [
             Icon(Icons.store_mall_directory_outlined, size: 48, color: color),
             const SizedBox(height: 12),
-            Text('No hay proveedores todavía.',
-              style: TextStyle(fontSize: 16, color: color, fontWeight: FontWeight.w600),
+            Text(
+              'No hay proveedores todavía.',
+              style: TextStyle(
+                fontSize: 16,
+                color: color,
+                fontWeight: FontWeight.w600,
+              ),
             ),
             const SizedBox(height: 8),
-            Text('Crea tu primer proveedor para comenzar a gestionarlos.',
+            Text(
+              'Crea tu primer proveedor para comenzar a gestionarlos.',
               style: TextStyle(fontSize: 14, color: color.withAlpha(180)),
               textAlign: TextAlign.center,
             ),
@@ -31,8 +37,13 @@ mixin SuppliersSectionMixin on State<SuppliersSection> {
               label: const Text('Crear proveedor'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: color,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 10,
+                ),
                 textStyle: const TextStyle(fontSize: 14),
               ),
             ),
@@ -43,17 +54,26 @@ mixin SuppliersSectionMixin on State<SuppliersSection> {
   }
 
   Future<bool> confirmDelete(Supplier supplier) async {
-    final ok = await showDialog<bool>(
+    final ok =
+        await showDialog<bool>(
           context: context,
-          builder: (dialogContext) => AlertDialog(
-            title: const Text('Eliminar proveedor'),
-            content: Text('¿Eliminar "' + supplier.name + '"?'),
-            actions: [
-              TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: const Text('Cancelar')),
-              FilledButton(onPressed: () => Navigator.pop(dialogContext, true), child: const Text('Eliminar')),
-            ],
-          ),
-        ) ?? false;
+          builder:
+              (dialogContext) => AlertDialog(
+                title: const Text('Eliminar proveedor'),
+                content: Text('¿Eliminar "${supplier.name}"?'),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(dialogContext, false),
+                    child: const Text('Cancelar'),
+                  ),
+                  FilledButton(
+                    onPressed: () => Navigator.pop(dialogContext, true),
+                    child: const Text('Eliminar'),
+                  ),
+                ],
+              ),
+        ) ??
+        false;
     if (!mounted) return false;
     if (ok && supplier.id != null) {
       context.read<SupplierBloc>().add(SupplierEvent.delete(supplier.id!));
@@ -62,5 +82,3 @@ mixin SuppliersSectionMixin on State<SuppliersSection> {
     return false;
   }
 }
-
-

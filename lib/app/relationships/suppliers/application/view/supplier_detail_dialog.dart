@@ -28,7 +28,8 @@ class SupplierDetailDialog extends StatelessWidget {
         child: Stack(
           children: [
             Positioned.fill(
-              child: isDark ? const DialogBackground() : const BackgroundLight(),
+              child:
+                  isDark ? const DialogBackground() : const BackgroundLight(),
             ),
             Padding(
               padding: const EdgeInsets.all(24),
@@ -58,7 +59,9 @@ class SupplierDetailDialog extends StatelessWidget {
                               final deleted = await onDelete();
                               if (deleted && context.mounted) {
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text('Proveedor eliminado')),
+                                  const SnackBar(
+                                    content: Text('Proveedor eliminado'),
+                                  ),
                                 );
                               }
                               break;
@@ -76,53 +79,58 @@ class SupplierDetailDialog extends StatelessWidget {
                               break;
                           }
                         },
-                        itemBuilder: (context) => [
-                          const PopupMenuItem(
-                            value: _SupplierDetailMenuOption.edit,
-                            child: Text('Editar'),
-                          ),
-                          const PopupMenuItem(
-                            value: _SupplierDetailMenuOption.delete,
-                            child: Text('Eliminar'),
-                          ),
-                          if (supplier.phone?.isNotEmpty == true)
-                            const PopupMenuItem(
-                              value: _SupplierDetailMenuOption.call,
-                              child: Text('Llamar'),
-                            ),
-                          if (supplier.email?.isNotEmpty == true)
-                            const PopupMenuItem(
-                              value: _SupplierDetailMenuOption.email,
-                              child: Text('Enviar correo'),
-                            ),
-                        ],
+                        itemBuilder:
+                            (context) => [
+                              const PopupMenuItem(
+                                value: _SupplierDetailMenuOption.edit,
+                                child: Text('Editar'),
+                              ),
+                              const PopupMenuItem(
+                                value: _SupplierDetailMenuOption.delete,
+                                child: Text('Eliminar'),
+                              ),
+                              if (supplier.phone?.isNotEmpty == true)
+                                const PopupMenuItem(
+                                  value: _SupplierDetailMenuOption.call,
+                                  child: Text('Llamar'),
+                                ),
+                              if (supplier.email?.isNotEmpty == true)
+                                const PopupMenuItem(
+                                  value: _SupplierDetailMenuOption.email,
+                                  child: Text('Enviar correo'),
+                                ),
+                            ],
                       ),
                     ],
                   ),
                   const SizedBox(height: 24),
                   _InfoRow(
                     icon: Icons.email_outlined,
-                    value: supplier.email?.isNotEmpty == true
-                        ? supplier.email!
-                        : 'Correo no disponible',
+                    value:
+                        supplier.email?.isNotEmpty == true
+                            ? supplier.email!
+                            : 'Correo no disponible',
                   ),
                   _InfoRow(
                     icon: Icons.phone_outlined,
-                    value: supplier.phone?.isNotEmpty == true
-                        ? supplier.phone!
-                        : 'Teléfono no disponible',
+                    value:
+                        supplier.phone?.isNotEmpty == true
+                            ? supplier.phone!
+                            : 'Teléfono no disponible',
                   ),
                   _InfoRow(
                     icon: Icons.badge_outlined,
-                    value: supplier.taxId?.isNotEmpty == true
-                        ? 'NIF: ${supplier.taxId}'
-                        : 'NIF no disponible',
+                    value:
+                        supplier.taxId?.isNotEmpty == true
+                            ? 'NIF: ${supplier.taxId}'
+                            : 'NIF no disponible',
                   ),
                   _InfoRow(
                     icon: Icons.location_on_outlined,
-                    value: supplier.fiscalAddress?.isNotEmpty == true
-                        ? supplier.fiscalAddress!
-                        : 'Dirección fiscal no disponible',
+                    value:
+                        supplier.fiscalAddress?.isNotEmpty == true
+                            ? supplier.fiscalAddress!
+                            : 'Dirección fiscal no disponible',
                   ),
                 ],
               ),
@@ -156,4 +164,3 @@ class _InfoRow extends StatelessWidget {
 }
 
 enum _SupplierDetailMenuOption { edit, delete, call, email }
-

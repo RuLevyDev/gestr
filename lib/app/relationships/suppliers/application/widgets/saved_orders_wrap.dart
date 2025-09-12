@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:gestr/domain/entities/fixed_payments_model.dart';
@@ -23,9 +25,16 @@ class SavedOrdersWrap extends StatelessWidget {
       children: List.generate(orders.length, (index) {
         final order = orders[index];
         final isSingle = order.items.length == 1;
-        final defaultLabel = isSingle ? 'Producto ${index + 1}' : 'Pedido ${index + 1}';
-        final label = (order.title?.trim().isNotEmpty == true) ? order.title! : defaultLabel;
-        final total = order.items.fold<double>(0, (sum, it) => sum + (it.price * it.quantity));
+        final defaultLabel =
+            isSingle ? 'Producto ${index + 1}' : 'Pedido ${index + 1}';
+        final label =
+            (order.title?.trim().isNotEmpty == true)
+                ? order.title!
+                : defaultLabel;
+        final total = order.items.fold<double>(
+          0,
+          (sum, it) => sum + (it.price * it.quantity),
+        );
 
         FixedPayment? matched;
         for (final p in payments) {
@@ -35,27 +44,46 @@ class SavedOrdersWrap extends StatelessWidget {
           }
         }
 
-        final text = StringBuffer()
-          ..write('$label - Total: EUR ${total.toStringAsFixed(2)}');
+        final text =
+            StringBuffer()
+              ..write('$label - Total: ${total.toStringAsFixed(2)} €');
         if (matched != null) {
-          text.write(" - PF: ${DateFormat('d/M/yy').format(matched.startDate)}");
+          text.write(
+            " - PF: ${DateFormat('d/M/yy').format(matched.startDate)}",
+          );
         }
 
         return InkWell(
           borderRadius: BorderRadius.circular(12),
           onTap: onTap == null ? null : () => onTap!(index),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surface,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: Theme.of(context).dividerColor.withValues(alpha: 0.4),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: Theme.of(context).colorScheme.primary.withAlpha(90),
+                ),
               ),
-            ),
-            child: Text(
-              text.toString(),
-              style: Theme.of(context).textTheme.bodyMedium,
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.primary.withAlpha(28),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    text.toString(),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.displaySmall!.copyWith(fontSize: 12),
+                  ),
+                ),
+              ),
             ),
           ),
         );
@@ -63,4 +91,3 @@ class SavedOrdersWrap extends StatelessWidget {
     );
   }
 }
-

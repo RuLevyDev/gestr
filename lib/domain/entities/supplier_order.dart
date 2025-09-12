@@ -10,13 +10,14 @@ class SupplierOrder {
   factory SupplierOrder.fromMap(Map<String, dynamic> map) {
     return SupplierOrder(
       date: DateTime.tryParse(map['date'] ?? '') ?? DateTime.now(),
-      items: (map['items'] as List<dynamic>? ?? [])
-          .map(
-            (e) => SupplierOrderItem.fromMap(
-              Map<String, dynamic>.from(e as Map<String, dynamic>),
-            ),
-          )
-          .toList(),
+      items:
+          (map['items'] as List<dynamic>? ?? [])
+              .map(
+                (e) => SupplierOrderItem.fromMap(
+                  Map<String, dynamic>.from(e as Map<String, dynamic>),
+                ),
+              )
+              .toList(),
       title: map['title'] as String?,
     );
   }
