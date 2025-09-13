@@ -39,6 +39,9 @@ mixin CreateInvoiceViewModelMixin<T extends StatefulWidget> on State<T> {
   final TextEditingController issuerController = TextEditingController();
   final TextEditingController receiverController = TextEditingController();
   final TextEditingController conceptController = TextEditingController();
+  // Controllers para importes que se actualizan por OCR
+  final TextEditingController amountController = TextEditingController();
+  final TextEditingController ivaController = TextEditingController();
 
   // Campos adicionales
   String? issuer;
@@ -67,6 +70,7 @@ mixin CreateInvoiceViewModelMixin<T extends StatefulWidget> on State<T> {
     _ocrService = OcrService();
     ocrUseCases = OcrUseCases(OcrRepositoryImpl(_ocrService));
     _loadUser();
+    _syncAmountControllers();
   }
 
   Future<void> _loadUser() async {
@@ -85,6 +89,7 @@ mixin CreateInvoiceViewModelMixin<T extends StatefulWidget> on State<T> {
       double neto = amount / 1.21;
       iva = amount - neto;
       amount = neto;
+      _syncAmountControllers();
     }
   }
 
@@ -146,28 +151,73 @@ mixin CreateInvoiceViewModelMixin<T extends StatefulWidget> on State<T> {
       setState(() {
         invoiceImage = file;
       });
-      final data = await ocrUseCases.parseInvoice(file);
-      setState(() {
-        title ??= data.title;
-        if (data.amount != null) {
-          amount = data.amount!;
+      try {
+        final data = await ocrUseCases.parseInvoice(file);
+        if (data.title == null &&
+            data.amount == null &&
+            data.date == null &&
+            data.issuer == null &&
+            data.receiver == null &&
+            data.concept == null) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('No se pudo extraer información de la imagen')),
+            );
+          }
         }
-        if (data.date != null) {
-          invoiceDate = data.date!;
+        if (!mounted) return;
+        setState(() {
+          title ??= data.title;
+          // Importes desde OCR
+          if (data.amount != null) {
+            amount = data.amount!; // base
+          } else if (data.totalAmount != null && data.vatAmount != null) {
+            amount = (data.totalAmount! - data.vatAmount!).clamp(0, double.infinity);
+          }
+          if (data.vatAmount != null) {
+            iva = data.vatAmount!;
+          } else if (data.totalAmount != null && data.amount != null) {
+            iva = (data.totalAmount! - data.amount!).clamp(0, double.infinity);
+          } else if (data.totalAmount != null && data.vatRate != null) {
+            final r = data.vatRate! / 100.0;
+            final base = data.totalAmount! / (1 + r);
+            iva = data.totalAmount! - base;
+            amount = base;
+          }
+          _syncAmountControllers();
+          if (data.date != null) {
+            invoiceDate = data.date!;
+          }
+          if (data.issuer != null) {
+            issuerController.text = data.issuer!;
+            issuer = data.issuer;
+          }
+          if (data.receiver != null) {
+            receiverController.text = data.receiver!;
+            receiver = data.receiver;
+          }
+          if (data.concept != null && (conceptController.text.isEmpty)) {
+            conceptController.text = data.concept!;
+            concept = data.concept;
+          }
+          // Si hay ítems OCR, rellenar el concepto como listado si aún vacío
+          if (data.items.isNotEmpty && conceptController.text.isEmpty) {
+            final lines = [
+              for (final it in data.items)
+                '${it.quantity} x ${it.product} - ${it.price.toStringAsFixed(2)} €'
+            ];
+            final text = lines.join('\n');
+            conceptController.text = text;
+            concept = text;
+          }
+        });
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error al procesar la imagen: $e')),
+          );
         }
-        if (data.issuer != null) {
-          issuerController.text = data.issuer!;
-          issuer = data.issuer;
-        }
-        if (data.receiver != null) {
-          receiverController.text = data.receiver!;
-          receiver = data.receiver;
-        }
-        if (data.concept != null) {
-          conceptController.text = data.concept!;
-          concept = data.concept;
-        }
-      });
+      }
     }
   }
 
@@ -182,8 +232,15 @@ mixin CreateInvoiceViewModelMixin<T extends StatefulWidget> on State<T> {
     issuerController.dispose();
     receiverController.dispose();
     conceptController.dispose();
+    amountController.dispose();
+    ivaController.dispose();
     _ocrService.dispose();
     super.dispose();
+  }
+
+  void _syncAmountControllers() {
+    amountController.text = amount > 0 ? amount.toStringAsFixed(2) : '';
+    ivaController.text = iva > 0 ? iva.toStringAsFixed(2) : '';
   }
 
   // Selección de fecha

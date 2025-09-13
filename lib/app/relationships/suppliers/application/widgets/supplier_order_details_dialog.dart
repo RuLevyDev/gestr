@@ -186,7 +186,7 @@ class _SupplierOrderDetailsDialogState
                               ),
                             ),
                             Text(
-                              'EUR ${order.items.first.price.toStringAsFixed(2)}',
+                              '${order.items.first.price.toStringAsFixed(2)} €',
                               style: theme.textTheme.titleMedium,
                             ),
                           ],
@@ -201,19 +201,39 @@ class _SupplierOrderDetailsDialogState
                             // Horizontal scroll to avoid overflow on small screens
                             scrollDirection: Axis.horizontal,
                             child: DataTable(
+                              columnSpacing: 32,
                               columns: const [
-                                DataColumn(label: Text('Producto')),
-                                DataColumn(label: Text('Cant.')),
-                                DataColumn(label: Text('Precio')),
+                                DataColumn(
+                                  label: Text('Producto'),
+                                  columnWidth: IntrinsicColumnWidth(),
+                                ),
+                                DataColumn(label: Text('Cant.'), numeric: true),
+                                DataColumn(
+                                  label: Text('Precio'),
+                                  numeric: true,
+                                ),
                               ],
                               rows: [
                                 for (final e in order.items)
                                   DataRow(
                                     cells: [
-                                      DataCell(Text(e.product)),
-                                      DataCell(Text('${e.quantity}')),
                                       DataCell(
-                                        Text('EUR ${e.price.toStringAsFixed(2)}'),
+                                        Text(
+                                          e.product,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                      DataCell(
+                                        Text(
+                                          '${e.quantity}',
+                                          textAlign: TextAlign.right,
+                                        ),
+                                      ),
+                                      DataCell(
+                                        Text(
+                                          '${e.price.toStringAsFixed(2)} €',
+                                          textAlign: TextAlign.right,
+                                        ),
                                       ),
                                     ],
                                   ),
@@ -225,7 +245,7 @@ class _SupplierOrderDetailsDialogState
                     ],
                     const SizedBox(height: 8),
                     Text(
-                      'Total: EUR ${totalLocal.toStringAsFixed(2)}',
+                      'Total: ${totalLocal.toStringAsFixed(2)} €',
                       style: theme.textTheme.titleSmall,
                     ),
                   ],

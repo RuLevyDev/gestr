@@ -260,6 +260,7 @@ class _CreateInvoicePageState extends State<CreateInvoicePage>
                             ),
                             // Campo título
                             TextFormField(
+                              key: ValueKey(amount),
                               decoration: InputDecoration(
                                 labelText: 'Título',
                                 enabledBorder: UnderlineInputBorder(
@@ -490,6 +491,7 @@ class _CreateInvoicePageState extends State<CreateInvoicePage>
                             Visibility(
                               visible: !isAmountIncludingIva,
                               child: TextFormField(
+                                key: ValueKey(iva),
                                 decoration: InputDecoration(
                                   labelText: 'IVA (€)',
                                   enabledBorder: UnderlineInputBorder(

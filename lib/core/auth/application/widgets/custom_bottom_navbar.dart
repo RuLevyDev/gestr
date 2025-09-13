@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 
 class CustomBottomNavBar extends StatelessWidget {
@@ -17,76 +18,108 @@ class CustomBottomNavBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      // ❌ sin márgenes
+      margin: EdgeInsets.zero,
       decoration: BoxDecoration(
-        color:
-            isDark
-                ? Colors.black.withValues(alpha: 0.85)
-                : Colors.white.withValues(alpha: 0.85),
-        borderRadius: BorderRadius.circular(30),
+        // ❌ sin borderRadius
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.3),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            color:
+                isDark
+                    ? Colors.black.withValues(alpha: 0.5)
+                    : Colors.grey.withValues(alpha: 0.3),
+            blurRadius: 20,
+            offset: const Offset(0, -2), // sombra hacia arriba
           ),
         ],
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: List.generate(icons.length, (index) {
-          final isSelected = index == currentIndex;
-          return Expanded(
-            child: GestureDetector(
-              onTap: () => onTap(index),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 250),
-                padding: const EdgeInsets.symmetric(vertical: 10),
-                decoration: BoxDecoration(
-                  color:
-                      isSelected
-                          ? isDark
-                              ? Colors.purpleAccent.withValues(alpha: 0.2)
-                              : Colors.tealAccent.withValues(alpha: 0.2)
-                          : Colors.transparent,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      icons[index],
-                      color:
-                          isSelected
-                              ? isDark
-                                  ? Colors.tealAccent.withValues(alpha: 0.8)
-                                  : Colors.purpleAccent.withValues(alpha: 0.8)
-                              : Colors.grey.shade400,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      labels[index],
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight:
-                            isSelected ? FontWeight.bold : FontWeight.normal,
-                        color:
-                            isSelected
-                                ? isDark
-                                    ? Colors.tealAccent.withValues(alpha: 0.2)
-                                    : Colors.purpleAccent.withValues(alpha: 0.2)
-                                : Colors.grey.shade400,
-                      ),
-                    ),
-                  ],
-                ),
+      child: ClipRect(
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            decoration: BoxDecoration(
+              color:
+                  isDark
+                      ? Colors.black.withValues(alpha: 0.6)
+                      : Colors.white.withValues(alpha: 0.6),
+
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.2),
+                width: 1.5,
               ),
             ),
-          );
-        }),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: List.generate(icons.length, (index) {
+                final isSelected = index == currentIndex;
+
+                return Expanded(
+                  child: GestureDetector(
+                    onTap: () => onTap(index),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 300),
+                      curve: Curves.easeInOut,
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      decoration: BoxDecoration(
+                        color:
+                            isSelected
+                                ? (isDark
+                                    ? Colors.tealAccent.withValues(alpha: 0.15)
+                                    : Colors.purpleAccent.withValues(
+                                      alpha: 0.15,
+                                    ))
+                                : Colors.transparent,
+
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          AnimatedScale(
+                            scale: isSelected ? 1.2 : 1.0,
+                            duration: const Duration(milliseconds: 250),
+                            curve: Curves.easeOutBack,
+                            child: Icon(
+                              icons[index],
+                              size: 24,
+                              color:
+                                  isSelected
+                                      ? (isDark
+                                          ? Colors.tealAccent
+                                          : Colors.purpleAccent)
+                                      : Colors.grey.shade400,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          AnimatedDefaultTextStyle(
+                            duration: const Duration(milliseconds: 200),
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight:
+                                  isSelected
+                                      ? FontWeight.bold
+                                      : FontWeight.w400,
+                              color:
+                                  isSelected
+                                      ? (isDark
+                                          ? Colors.tealAccent
+                                          : Colors.purpleAccent)
+                                      : Colors.grey.shade400,
+                            ),
+                            child: Text(labels[index]),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              }),
+            ),
+          ),
+        ),
       ),
     );
   }
