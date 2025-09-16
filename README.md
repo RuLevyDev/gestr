@@ -51,8 +51,8 @@ N2F se orienta a organizaciones con múltiples usuarios (empleados y administrad
 ### Checklist de cumplimiento AEAT dentro de la app
 - [x] Garantizar soporte en la app para los siguientes formatos de imagen exigidos por la AEAT:
   - [x] PDF/A (ISO 19005)
-    - Generación básica desde la app: PDF 1.4 con fuentes incrustadas (Open Sans vía PdfGoogleFonts). Sin cifrado ni elementos interactivos.
-    - Nota: Validación PDF/A completa (XMP + OutputIntent/ICC) pendiente de integrar con herramienta externa (p.ej., veraPDF) o servicio backend de normalización.
+    - [ ] Generación básica desde la app: PDF 1.4 con fuentes incrustadas (Open Sans vía PdfGoogleFonts). Sin cifrado ni elementos interactivos.
+    - [ ] Nota: Validación PDF/A completa (XMP + OutputIntent/ICC) pendiente de integrar con herramienta externa (p.ej., veraPDF) o servicio backend de normalización.
   - [ ] PNG
   - [ ] JPEG 2000
   - [ ] TIFF 6.0
