@@ -9,7 +9,7 @@ flut<?xml version="1.0" encoding="UTF-8"?>
 	<key>ANDROID_CLIENT_ID</key>
 	<string>663748995058-85q059tbvfd4ng34v2sppf7a5qabn1e6.apps.googleusercontent.com</string>
 	<key>API_KEY</key>
-	<string>AIzaSyA2oKhY8pcGUj8S9VR-SsFS9XF4kah7N6s</string>
+	<string>GOOGLE_API_KEY_DEV_IOS</string>
 	<key>GCM_SENDER_ID</key>
 	<string>663748995058</string>
 	<key>PLIST_VERSION</key>

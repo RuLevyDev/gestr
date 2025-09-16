@@ -14,6 +14,7 @@ mixin CreateClientViewModelMixin<T extends StatefulWidget> on State<T> {
 
   /// If provided, the form will prefill and perform update instead of create.
   Client? get initialClient => null;
+
   /// Optional convenience for create-mode prefill.
   String? get initialName => null;
 

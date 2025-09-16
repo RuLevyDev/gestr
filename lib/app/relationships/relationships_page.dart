@@ -68,11 +68,13 @@ class _RelationshipsPageState extends State<RelationshipsPage>
                                 message: 'Crear cliente',
                                 child: GestureDetector(
                                   behavior: HitTestBehavior.opaque,
-                                  onTap: () => showModalBottomSheet(
-                                    context: context,
-                                    isScrollControlled: true,
-                                    builder: (_) => const CreateClientSheet(),
-                                  ),
+                                  onTap:
+                                      () => showModalBottomSheet(
+                                        context: context,
+                                        isScrollControlled: true,
+                                        builder:
+                                            (_) => const CreateClientSheet(),
+                                      ),
                                   child: const SizedBox(
                                     width: 24,
                                     height: 24,
@@ -103,11 +105,13 @@ class _RelationshipsPageState extends State<RelationshipsPage>
                                 message: 'Crear proveedor',
                                 child: GestureDetector(
                                   behavior: HitTestBehavior.opaque,
-                                  onTap: () => showModalBottomSheet(
-                                    context: context,
-                                    isScrollControlled: true,
-                                    builder: (_) => const CreateSupplierSheet(),
-                                  ),
+                                  onTap:
+                                      () => showModalBottomSheet(
+                                        context: context,
+                                        isScrollControlled: true,
+                                        builder:
+                                            (_) => const CreateSupplierSheet(),
+                                      ),
                                   child: const SizedBox(
                                     width: 24,
                                     height: 24,

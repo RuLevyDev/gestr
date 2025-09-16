@@ -7,6 +7,7 @@ import 'package:gestr/domain/entities/supplier.dart';
 class CreateSupplierSheet extends StatefulWidget {
   /// If provided, the sheet behaves as an edit form and pre-fills fields.
   final Supplier? supplier;
+
   /// Optional convenience for create-mode prefill.
   final String? initialName;
   const CreateSupplierSheet({super.key, this.supplier, this.initialName});

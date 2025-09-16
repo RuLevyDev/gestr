@@ -25,7 +25,12 @@ class OcrRepositoryImpl implements OcrRepository {
     print('[OCR] Raw text lines: ${rawText.split('\n').length}');
 
     final normalized = _normalize(rawText);
-    final lines = normalized.split('\n').map((l) => l.trim()).where((l) => l.isNotEmpty).toList();
+    final lines =
+        normalized
+            .split('\n')
+            .map((l) => l.trim())
+            .where((l) => l.isNotEmpty)
+            .toList();
     // ignore: avoid_print
     print('[OCR] Normalized lines: ${lines.length}');
 
@@ -39,9 +44,20 @@ class OcrRepositoryImpl implements OcrRepository {
     }
 
     // Totales: intenta obtener base, iva y total
-    double? baseAmount = _extractAmountByKeywords(lines, ['base imponible', 'base', 'subtotal', 'neto']);
+    double? baseAmount = _extractAmountByKeywords(lines, [
+      'base imponible',
+      'base',
+      'subtotal',
+      'neto',
+    ]);
     var vatInfo = _extractVat(lines);
-    double? totalAmount = _extractAmountByKeywords(lines, ['total', 'total a pagar', 'importe total', 'total factura']) ??
+    double? totalAmount =
+        _extractAmountByKeywords(lines, [
+          'total',
+          'total a pagar',
+          'importe total',
+          'total factura',
+        ]) ??
         _extractBestAmount(lines, normalized);
 
     // Si no hay suficientes datos, intenta el patrón en dos líneas (cabecera y valores)
@@ -49,10 +65,7 @@ class OcrRepositoryImpl implements OcrRepository {
       final adj = _extractTotalsFromAdjacentLines(lines);
       baseAmount ??= adj.base;
       totalAmount ??= adj.total;
-      vatInfo = _VatInfo(
-        amount: vatInfo.amount ?? adj.vat,
-        rate: vatInfo.rate,
-      );
+      vatInfo = _VatInfo(amount: vatInfo.amount ?? adj.vat, rate: vatInfo.rate);
     }
 
     // Calcular faltantes si posible
@@ -76,8 +89,17 @@ class OcrRepositoryImpl implements OcrRepository {
 
     // Campos adicionales
     final issuer = _extractField(normalized, ['Emisor', 'Issuer', 'Proveedor']);
-    final receiver = _extractField(normalized, ['Receptor', 'Receiver', 'Cliente']);
-    final concept = _extractField(normalized, ['Concepto', 'Concept', 'Descripción', 'Descripcion']);
+    final receiver = _extractField(normalized, [
+      'Receptor',
+      'Receiver',
+      'Cliente',
+    ]);
+    final concept = _extractField(normalized, [
+      'Concepto',
+      'Concept',
+      'Descripción',
+      'Descripcion',
+    ]);
     final items = _extractItems(lines);
 
     return OcrInvoiceData(
@@ -109,7 +131,10 @@ class OcrRepositoryImpl implements OcrRepository {
           // Si no hay separador, intenta tomar la siguiente línea como valor
           if (i + 1 < lines.length) {
             final next = lines[i + 1].trim();
-            if (next.isNotEmpty && !labels.any((l) => next.toLowerCase().startsWith(l.toLowerCase()))) {
+            if (next.isNotEmpty &&
+                !labels.any(
+                  (l) => next.toLowerCase().startsWith(l.toLowerCase()),
+                )) {
               return next;
             }
           }
@@ -168,7 +193,13 @@ class OcrRepositoryImpl implements OcrRepository {
     }
 
     // 1) Busca en líneas con keywords de totales
-    final keywords = ['total', 'importe', 'a pagar', 'total a pagar', 'total factura'];
+    final keywords = [
+      'total',
+      'importe',
+      'a pagar',
+      'total a pagar',
+      'total factura',
+    ];
     final candidateValues = <double>[];
     for (final line in lines) {
       final lower = line.toLowerCase();
@@ -185,7 +216,12 @@ class OcrRepositoryImpl implements OcrRepository {
     }
 
     // 2) Fallback: mayor número con dos decimales en todo el texto
-    final matches = amountRe.allMatches(text).map((m) => parseAmount(m.group(0)!)).whereType<double>().toList();
+    final matches =
+        amountRe
+            .allMatches(text)
+            .map((m) => parseAmount(m.group(0)!))
+            .whereType<double>()
+            .toList();
     if (matches.isNotEmpty) {
       matches.sort();
       return matches.last;
@@ -210,17 +246,24 @@ class OcrRepositoryImpl implements OcrRepository {
     return best;
   }
 
-  ({double? base, double? vat, double? total}) _extractTotalsFromAdjacentLines(List<String> lines) {
+  ({double? base, double? vat, double? total}) _extractTotalsFromAdjacentLines(
+    List<String> lines,
+  ) {
     // Busca una línea tipo "Subtotal Iva Total" y toma los 2-3 importes de la siguiente
     final headerRe = RegExp(r'(subtotal|base|iva|impuesto|total)');
     final amountRe = RegExp(r'(?<!\d)(?:\d{1,3}(?:[.,]\d{3})*[.,]\d{2})(?!\d)');
     for (int i = 0; i < lines.length - 1; i++) {
       final h = lines[i].toLowerCase();
-      if (headerRe.hasMatch(h) && (h.contains('subtotal') || h.contains('base'))) {
+      if (headerRe.hasMatch(h) &&
+          (h.contains('subtotal') || h.contains('base'))) {
         final next = lines[i + 1];
         final ms = amountRe.allMatches(next).toList();
         if (ms.isNotEmpty) {
-          final nums = ms.map((m) => _toDouble(m.group(0)!)).whereType<double>().toList();
+          final nums =
+              ms
+                  .map((m) => _toDouble(m.group(0)!))
+                  .whereType<double>()
+                  .toList();
           if (nums.length == 3) {
             return (base: nums[0], vat: nums[1], total: nums[2]);
           } else if (nums.length == 2) {
@@ -261,7 +304,9 @@ class OcrRepositoryImpl implements OcrRepository {
     final rateRe = RegExp(r'(\d{1,2})(?:[,\.]\d+)?\s*%');
     for (final line in lines) {
       final lower = line.toLowerCase();
-      if (lower.contains('iva') || lower.contains('vat') || lower.contains('impuesto')) {
+      if (lower.contains('iva') ||
+          lower.contains('vat') ||
+          lower.contains('impuesto')) {
         // tasa
         final rm = rateRe.firstMatch(line);
         if (rm != null) {
@@ -355,7 +400,9 @@ class OcrRepositoryImpl implements OcrRepository {
           }
 
           if (product.isNotEmpty && (price ?? 0) > 0) {
-            items.add(OcrLineItem(product: product, quantity: qty, price: price!));
+            items.add(
+              OcrLineItem(product: product, quantity: qty, price: price!),
+            );
             captured = true;
             break;
           }

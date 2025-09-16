@@ -11,6 +11,7 @@ import 'package:gestr/domain/usecases/user/self_employed_user_usecases.dart';
 import 'package:gestr/domain/entities/fixed_payments_model.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:pdf/widgets.dart' as pw;
+import 'package:gestr/core/pdf/pdfa_utils.dart';
 import 'package:share_plus/share_plus.dart';
 
 mixin CreateFixedPaymentViewModelMixin<T extends StatefulWidget> on State<T> {
@@ -155,10 +156,12 @@ mixin CreateFixedPaymentViewModelMixin<T extends StatefulWidget> on State<T> {
   }
 
   Future<void> generateAndSharePdf() async {
-    final pdf = pw.Document();
+    final pdf = PdfAUtils.createDocument();
+    final pageTheme = await PdfAUtils.pageTheme();
 
     pdf.addPage(
       pw.Page(
+        pageTheme: pageTheme,
         build: (context) {
           return pw.Column(
             crossAxisAlignment: pw.CrossAxisAlignment.start,
@@ -177,7 +180,11 @@ mixin CreateFixedPaymentViewModelMixin<T extends StatefulWidget> on State<T> {
                     pw.SizedBox(height: 20),
                     pw.Text('Comprobante:'),
                     pw.SizedBox(height: 8),
-                    pw.Image(pw.MemoryImage(proofImage!.readAsBytesSync())),
+                    pw.Image(
+                      pw.MemoryImage(
+                        await PdfAUtils.prepareImageBytesForPdfA(proofImage!),
+                      ),
+                    ),
                   ],
                 ),
             ],
@@ -187,8 +194,9 @@ mixin CreateFixedPaymentViewModelMixin<T extends StatefulWidget> on State<T> {
     );
 
     final bytes = await pdf.save();
+    final normalized = await PdfAUtils.maybeNormalizeOnBackend(bytes);
     final xfile = XFile.fromData(
-      bytes,
+      normalized,
       name: 'pago_fijo.pdf',
       mimeType: 'application/pdf',
     );

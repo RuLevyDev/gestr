@@ -9,4 +9,3 @@ class OcrLineItem {
     required this.price,
   });
 }
-

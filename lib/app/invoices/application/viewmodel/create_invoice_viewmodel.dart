@@ -13,6 +13,7 @@ import 'package:gestr/data/repositories/ocr/ocr_repository_impl.dart';
 import 'package:gestr/domain/usecases/ocr/ocr_usecases.dart';
 
 import 'package:pdf/widgets.dart' as pw;
+import 'package:gestr/core/pdf/pdfa_utils.dart';
 import 'package:share_plus/share_plus.dart';
 
 mixin CreateInvoiceViewModelMixin<T extends StatefulWidget> on State<T> {
@@ -161,7 +162,9 @@ mixin CreateInvoiceViewModelMixin<T extends StatefulWidget> on State<T> {
             data.concept == null) {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('No se pudo extraer información de la imagen')),
+              const SnackBar(
+                content: Text('No se pudo extraer información de la imagen'),
+              ),
             );
           }
         }
@@ -172,7 +175,10 @@ mixin CreateInvoiceViewModelMixin<T extends StatefulWidget> on State<T> {
           if (data.amount != null) {
             amount = data.amount!; // base
           } else if (data.totalAmount != null && data.vatAmount != null) {
-            amount = (data.totalAmount! - data.vatAmount!).clamp(0, double.infinity);
+            amount = (data.totalAmount! - data.vatAmount!).clamp(
+              0,
+              double.infinity,
+            );
           }
           if (data.vatAmount != null) {
             iva = data.vatAmount!;
@@ -204,7 +210,7 @@ mixin CreateInvoiceViewModelMixin<T extends StatefulWidget> on State<T> {
           if (data.items.isNotEmpty && conceptController.text.isEmpty) {
             final lines = [
               for (final it in data.items)
-                '${it.quantity} x ${it.product} - ${it.price.toStringAsFixed(2)} €'
+                '${it.quantity} x ${it.product} - ${it.price.toStringAsFixed(2)} €',
             ];
             final text = lines.join('\n');
             conceptController.text = text;
@@ -277,10 +283,12 @@ mixin CreateInvoiceViewModelMixin<T extends StatefulWidget> on State<T> {
 
   // Generación y compartición de PDF
   Future<void> generateAndSharePdf() async {
-    final pdf = pw.Document();
+    final pdf = PdfAUtils.createDocument();
+    final pageTheme = await PdfAUtils.pageTheme();
 
     pdf.addPage(
       pw.Page(
+        pageTheme: pageTheme,
         build: (context) {
           return pw.Column(
             crossAxisAlignment: pw.CrossAxisAlignment.start,
@@ -299,7 +307,11 @@ mixin CreateInvoiceViewModelMixin<T extends StatefulWidget> on State<T> {
                     pw.SizedBox(height: 20),
                     pw.Text('Imagen de factura:'),
                     pw.SizedBox(height: 8),
-                    pw.Image(pw.MemoryImage(invoiceImage!.readAsBytesSync())),
+                    pw.Image(
+                      pw.MemoryImage(
+                        await PdfAUtils.prepareImageBytesForPdfA(invoiceImage!),
+                      ),
+                    ),
                   ],
                 ),
             ],
@@ -309,8 +321,9 @@ mixin CreateInvoiceViewModelMixin<T extends StatefulWidget> on State<T> {
     );
 
     final bytes = await pdf.save();
+    final normalized = await PdfAUtils.maybeNormalizeOnBackend(bytes);
     final xfile = XFile.fromData(
-      bytes,
+      normalized,
       name: 'factura.pdf',
       mimeType: 'application/pdf',
     );
