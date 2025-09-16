@@ -140,6 +140,17 @@ mixin CreateFixedPaymentViewModelMixin<T extends StatefulWidget> on State<T> {
     });
   }
 
+  String _resolvedDocumentTitle() {
+    final trimmedTitle = title?.trim();
+    if (trimmedTitle != null && trimmedTitle.isNotEmpty) {
+      return trimmedTitle;
+    }
+    final trimmedHint = titleHint?.trim();
+    if (trimmedHint != null && trimmedHint.isNotEmpty) {
+      return trimmedHint;
+    }
+    return 'Pago fijo';
+  }
   Future<void> selectStartDate() async {
     final picked = await showDatePicker(
       context: context,
@@ -195,7 +206,18 @@ mixin CreateFixedPaymentViewModelMixin<T extends StatefulWidget> on State<T> {
     );
 
     final bytes = await pdf.save();
-    final normalized = await PdfAUtils.maybeNormalizeOnBackend(bytes);
+    final normalized = await PdfAUtils.maybeNormalizeOnBackend(
+      bytes,
+      request: PdfaBackendRequest.strict(
+        metadata: <String, String>{
+          'title': 'Pago fijo - ${_resolvedDocumentTitle()}',
+          'author': 'Gestr App',
+          'subject': 'Comprobante de pago fijo',
+          'keywords': 'gestr,pago_fijo',
+          'frequency': frequency.name,
+        },
+      ),
+    );
     final xfile = XFile.fromData(
       normalized,
       name: 'pago_fijo.pdf',
