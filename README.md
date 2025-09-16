@@ -44,6 +44,10 @@ N2F se orienta a organizaciones con múltiples usuarios (empleados y administrad
 - [ ] Alertas y recordatorios proactivos para gastos incompletos.
 - [ ] Análisis predictivo de flujo de caja y recomendaciones.
 
+## Validación y normalización PDF/A
+- [ ]Ejecuta `dart run tool/generate_sample_pdfs.dart` (o `flutter pub run tool/generate_sample_pdfs.dart` si solo está disponible Flutter) para generar comprobantes de ejemplo con los metadatos XMP solicitados al backend.
+- [ ] Lanza `tool/validate_pdfa.sh` para regenerar los PDFs de muestra y validarlos automáticamente con [veraPDF](https://verapdf.org/) dentro de un contenedor Docker.
+- [ ] La acción de GitHub `.github/workflows/pdfa-validate.yml` reutiliza estos scripts para garantizar que siempre exista una verificación PDF/A sin coste adicional durante los PR.
 ### Checklist de cumplimiento AEAT dentro de la app
 - [x] Garantizar soporte en la app para los siguientes formatos de imagen exigidos por la AEAT:
   - [x] PDF/A (ISO 19005)

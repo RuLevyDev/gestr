@@ -234,6 +234,15 @@ mixin CreateInvoiceViewModelMixin<T extends StatefulWidget> on State<T> {
     });
   }
 
+  String _resolvedInvoiceTitle() {
+    final trimmedTitle = title?.trim();
+    if (trimmedTitle != null && trimmedTitle.isNotEmpty) {
+      return trimmedTitle;
+    }
+    final formattedDate = '${invoiceDate.toLocal()}'.split(' ').first;
+    return 'Factura $formattedDate';
+  }
+
   @override
   void dispose() {
     issuerController.dispose();
@@ -322,7 +331,18 @@ mixin CreateInvoiceViewModelMixin<T extends StatefulWidget> on State<T> {
     );
 
     final bytes = await pdf.save();
-    final normalized = await PdfAUtils.maybeNormalizeOnBackend(bytes);
+    final normalized = await PdfAUtils.maybeNormalizeOnBackend(
+      bytes,
+      request: PdfaBackendRequest.strict(
+        metadata: <String, String>{
+          'title': 'Factura - ${_resolvedInvoiceTitle()}',
+          'author': 'Gestr App',
+          'subject': 'Factura generada en Gestr',
+          'keywords': 'gestr,factura',
+          'status': status.name,
+        },
+      ),
+    );
     final xfile = XFile.fromData(
       normalized,
       name: 'factura.pdf',
