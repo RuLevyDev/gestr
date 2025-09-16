@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -158,6 +159,10 @@ mixin CreateFixedPaymentViewModelMixin<T extends StatefulWidget> on State<T> {
   Future<void> generateAndSharePdf() async {
     final pdf = PdfAUtils.createDocument();
     final pageTheme = await PdfAUtils.pageTheme();
+    final Uint8List? imageBytes =
+        proofImage != null
+            ? await PdfAUtils.prepareImageBytesForPdfA(proofImage!)
+            : null;
 
     pdf.addPage(
       pw.Page(
@@ -174,17 +179,13 @@ mixin CreateFixedPaymentViewModelMixin<T extends StatefulWidget> on State<T> {
               pw.Text('Frecuencia: ${frequency.name}'),
               if (description != null && description!.isNotEmpty)
                 pw.Text('Descripción: $description'),
-              if (proofImage != null)
+              if (imageBytes != null)
                 pw.Column(
                   children: [
                     pw.SizedBox(height: 20),
                     pw.Text('Comprobante:'),
                     pw.SizedBox(height: 8),
-                    pw.Image(
-                      pw.MemoryImage(
-                        await PdfAUtils.prepareImageBytesForPdfA(proofImage!),
-                      ),
-                    ),
+                    pw.Image(pw.MemoryImage(imageBytes)),
                   ],
                 ),
             ],

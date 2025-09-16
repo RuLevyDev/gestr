@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -285,6 +286,10 @@ mixin CreateInvoiceViewModelMixin<T extends StatefulWidget> on State<T> {
   Future<void> generateAndSharePdf() async {
     final pdf = PdfAUtils.createDocument();
     final pageTheme = await PdfAUtils.pageTheme();
+    final Uint8List? imageBytes =
+        invoiceImage != null
+            ? await PdfAUtils.prepareImageBytesForPdfA(invoiceImage!)
+            : null;
 
     pdf.addPage(
       pw.Page(
@@ -301,17 +306,13 @@ mixin CreateInvoiceViewModelMixin<T extends StatefulWidget> on State<T> {
               pw.Text('IVA: €${iva.toStringAsFixed(2)}'),
               pw.Text('Total: €${total.toStringAsFixed(2)}'),
               pw.Text('Estado: ${status.name}'),
-              if (invoiceImage != null)
+              if (imageBytes != null)
                 pw.Column(
                   children: [
                     pw.SizedBox(height: 20),
                     pw.Text('Imagen de factura:'),
                     pw.SizedBox(height: 8),
-                    pw.Image(
-                      pw.MemoryImage(
-                        await PdfAUtils.prepareImageBytesForPdfA(invoiceImage!),
-                      ),
-                    ),
+                    pw.Image(pw.MemoryImage(imageBytes)),
                   ],
                 ),
             ],
