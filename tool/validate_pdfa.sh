@@ -25,7 +25,7 @@ if ! command -v docker &>/dev/null; then
   exit 1
 fi
 
-docker run --rm -v "$OUTPUT_DIR:/work" verapdf/verapdf:latest \
+docker run --rm -v "$OUTPUT_DIR:/work" ghcr.io/veraPDF/veraPDF-apps:latest \
   --format text --maxfail 1 --failonerror /work/*.pdf
 
 echo "PDF/A validation completed successfully."
