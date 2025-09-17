@@ -372,7 +372,7 @@ mixin CreateInvoiceViewModelMixin<T extends StatefulWidget> on State<T> {
           ),
         );
       } catch (_) {
-        if (context.mounted) {
+        if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('No se pudieron generar todos los formatos AEAT'),

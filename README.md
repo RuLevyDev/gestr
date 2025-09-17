@@ -47,19 +47,23 @@ N2F se orienta a organizaciones con múltiples usuarios (empleados y administrad
 - [ ] Análisis predictivo de flujo de caja y recomendaciones.
 
 ## Validación y normalización PDF/A
-- [x]Ejecuta `dart run tool/generate_sample_pdfs.dart` (o `flutter pub run tool/generate_sample_pdfs.dart` si solo está disponible Flutter) para generar comprobantes de ejemplo con los metadatos XMP solicitados al backend.
+- [x] Ejecuta `dart run tool/generate_sample_pdfs.dart` (o `flutter pub run tool/generate_sample_pdfs.dart` si solo está disponible Flutter) para generar comprobantes de ejemplo con los metadatos XMP solicitados al backend.
 - [x] Lanza `tool/validate_pdfa.sh` para regenerar los PDFs de muestra y validarlos automáticamente con [veraPDF](https://verapdf.org/) dentro de un contenedor Docker.
 - [x] La acción de GitHub `.github/workflows/pdfa-validate.yml` reutiliza estos scripts para garantizar que siempre exista una verificación PDF/A sin coste adicional durante los PR.
 
 ### Checklist de cumplimiento AEAT dentro de la app
 - [ ] Garantizar soporte en la app para los siguientes formatos de imagen exigidos por la AEAT:
   - [x] PDF/A (ISO 19005)
-    - [x] Generación básica desde la app: PDF 1.4 con fuentes incrustadas (Open Sans vía el helper `PdfGoogleFonts`). Sin cifrado ni elementos interactivos.
+    - [x] Generación básica desde la app: PDF 1.4 con fuentes incrustadas (Open Sans vía el helper `PdfGoogleFonts` de `printing`). Sin cifrado ni elementos interactivos.
     - [x] Validación PDF/A completa (XMP + OutputIntent/ICC) cubierta mediante el script `tool/validate_pdfa.sh`, que genera comprobantes y los verifica con veraPDF en Docker.
-  - [ ] PNG
-  - [ ] JPEG 2000
-  - [ ] TIFF 6.0
-  - [ ] PDF 1.4+ con compresión sin pérdida
+  - [x] PNG
+    - [x] Conversión directa en cliente con `AeatImageSupport.generateAttachments`, que añade las variantes PNG al flujo de compartición de facturas y pagos fijos.
+  - [x] JPEG 2000
+    - [x] Solicitud opcional al backend definido en `AEAT_JPEG2000_URL` para normalizar las imágenes a JP2 cuando se comparte documentación.
+  - [x] TIFF 6.0
+    - [x] Exportación local a TIFF 6.0 mediante el paquete `image` dentro de `AeatImageSupport`.
+  - [x] PDF 1.4+ con compresión sin pérdida
+    - [x] Generación automática de PDF 1.4 con compresión Flate (lossless) para cada comprobante gracias a `AeatImageSupport`.
 - [ ] Asegurar que la digitalización mantenga una resolución mínima de 200 ppp en B/N, color o escala de grises.
 - [ ] Generar un fichero por factura con sus metadatos (referencia de homologación, marca de tiempo, nombre y versión del software en XMP).
 - [ ] Firmar electrónicamente cada fichero de imagen con algoritmos seguros (mínimo SHA-1, recomendado SHA-256 o superior).

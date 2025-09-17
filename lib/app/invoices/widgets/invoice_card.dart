@@ -69,6 +69,7 @@ class InvoiceCard extends StatelessWidget {
                             .toList();
 
                     if (files.isEmpty) {
+                      if (!context.mounted) return;
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
                           content: Text(
@@ -86,6 +87,7 @@ class InvoiceCard extends StatelessWidget {
                       ),
                     );
                   } catch (_) {
+                    if (!context.mounted) return;
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
                         content: Text('Error al generar los formatos AEAT'),
