@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -12,7 +13,10 @@ import 'package:gestr/domain/usecases/user/self_employed_user_usecases.dart';
 import 'package:gestr/data/ocr/ocr_service.dart';
 import 'package:gestr/data/repositories/ocr/ocr_repository_impl.dart';
 import 'package:gestr/domain/usecases/ocr/ocr_usecases.dart';
+import 'package:gestr/core/config/compliance_constants.dart';
 import 'package:gestr/core/image/aeat_image_support.dart';
+import 'package:gestr/core/pdf/aeat_xmp.dart';
+import 'package:gestr/core/pdf/pdfa_generator.dart';
 
 import 'package:pdf/widgets.dart' as pw;
 import 'package:gestr/core/pdf/pdfa_utils.dart';
@@ -351,12 +355,32 @@ mixin CreateInvoiceViewModelMixin<T extends StatefulWidget> on State<T> {
         mimeType: 'application/pdf',
       ),
     ];
+    final resolvedTitle = _resolvedInvoiceTitle();
+    final sanitized = AeatImageSupport.sanitizeLabel(resolvedTitle);
+    final metadataTimestamp = DateTime.now().toUtc();
+    final metadataDocId = PdfaGenerator.generateDocId(
+      '$resolvedTitle-${metadataTimestamp.toIso8601String()}',
+    );
+    final metadataXmp = buildAeatXmp(
+      title: 'Factura - $resolvedTitle',
+      author: ComplianceConstants.softwareName,
+      docId: metadataDocId,
+      homologationRef: ComplianceConstants.homologationReference,
+      timestamp: metadataTimestamp,
+      softwareName: ComplianceConstants.softwareName,
+      softwareVersion: ComplianceConstants.softwareVersion,
+    );
+
+    files.add(
+      XFile.fromData(
+        utf8.encode(metadataXmp),
+        name: '${sanitized}_metadata.xmp',
+        mimeType: 'application/rdf+xml',
+      ),
+    );
 
     if (invoiceImage != null) {
       try {
-        final sanitized = AeatImageSupport.sanitizeLabel(
-          _resolvedInvoiceTitle(),
-        );
         final attachments = await AeatImageSupport.generateAttachments(
           invoiceImage!,
           baseName: sanitized,

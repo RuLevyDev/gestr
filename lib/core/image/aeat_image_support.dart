@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math' as math;
 import 'dart:typed_data';
 
 import 'package:http/http.dart' as http;
@@ -27,13 +28,14 @@ class AeatImageSupport {
     if (decoded == null) {
       throw StateError('No se pudo decodificar la imagen en ${file.path}');
     }
+    final normalized = _ensureMinimumResolution(decoded);
 
     final sanitizedName = _sanitizeBaseName(
       baseName ?? _deriveBaseName(file.path),
     );
     final attachments = <AeatImageAttachment>[];
 
-    final pngBytes = Uint8List.fromList(img.encodePng(decoded));
+    final pngBytes = Uint8List.fromList(img.encodePng(normalized));
     attachments.add(
       AeatImageAttachment(
         filename: '$sanitizedName.png',
@@ -42,7 +44,7 @@ class AeatImageSupport {
       ),
     );
 
-    final tiffBytes = Uint8List.fromList(img.encodeTiff(decoded));
+    final tiffBytes = Uint8List.fromList(img.encodeTiff(normalized));
     attachments.add(
       AeatImageAttachment(
         filename: '$sanitizedName.tiff',
@@ -51,7 +53,7 @@ class AeatImageSupport {
       ),
     );
 
-    final pdfBytes = await _encodeLosslessPdf(decoded);
+    final pdfBytes = await _encodeLosslessPdf(normalized);
     attachments.add(
       AeatImageAttachment(
         filename: '${sanitizedName}_lossless.pdf',
@@ -60,7 +62,7 @@ class AeatImageSupport {
       ),
     );
 
-    final jpeg2000 = await _encodeJpeg2000(decoded);
+    final jpeg2000 = await _encodeJpeg2000(normalized);
     if (jpeg2000 != null && jpeg2000.isNotEmpty) {
       attachments.add(
         AeatImageAttachment(
@@ -166,6 +168,39 @@ class AeatImageSupport {
       return 'documento';
     }
     return replaced.length > 48 ? replaced.substring(0, 48) : replaced;
+  }
+
+  static img.Image _ensureMinimumResolution(img.Image source) {
+    const minShortSide = 1654; // 8.27 pulgadas * 200 ppp (lado corto A4)
+    const minLongSide = 2338; // 11.69 pulgadas * 200 ppp (lado largo A4)
+
+    final width = source.width;
+    final height = source.height;
+    final isLandscape = width >= height;
+    final shortSide = isLandscape ? height : width;
+    final longSide = isLandscape ? width : height;
+
+    if (shortSide >= minShortSide && longSide >= minLongSide) {
+      return source;
+    }
+
+    final scaleShort = minShortSide / shortSide;
+    final scaleLong = minLongSide / longSide;
+    final scale = math.max(scaleShort, scaleLong);
+
+    if (scale <= 1.0) {
+      return source;
+    }
+
+    final newWidth = math.max(1, (width * scale).round());
+    final newHeight = math.max(1, (height * scale).round());
+
+    return img.copyResize(
+      source,
+      width: newWidth,
+      height: newHeight,
+      interpolation: img.Interpolation.cubic,
+    );
   }
 }
 

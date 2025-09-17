@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:firebase_auth/firebase_auth.dart';
@@ -12,6 +13,9 @@ import 'package:gestr/domain/usecases/user/self_employed_user_usecases.dart';
 import 'package:gestr/domain/entities/fixed_payments_model.dart';
 import 'package:gestr/core/image/aeat_image_support.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:gestr/core/pdf/aeat_xmp.dart';
+import 'package:gestr/core/pdf/pdfa_generator.dart';
+import 'package:gestr/core/config/compliance_constants.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:gestr/core/pdf/pdfa_utils.dart';
 import 'package:share_plus/share_plus.dart';
@@ -228,11 +232,32 @@ mixin CreateFixedPaymentViewModelMixin<T extends StatefulWidget> on State<T> {
       ),
     ];
 
+    final resolvedTitle = _resolvedDocumentTitle();
+    final sanitized = AeatImageSupport.sanitizeLabel(resolvedTitle);
+    final metadataTimestamp = DateTime.now().toUtc();
+    final metadataDocId = PdfaGenerator.generateDocId(
+      '$resolvedTitle-${metadataTimestamp.toIso8601String()}',
+    );
+    final metadataXmp = buildAeatXmp(
+      title: 'Pago fijo - $resolvedTitle',
+      author: ComplianceConstants.softwareName,
+      docId: metadataDocId,
+      homologationRef: ComplianceConstants.homologationReference,
+      timestamp: metadataTimestamp,
+      softwareName: ComplianceConstants.softwareName,
+      softwareVersion: ComplianceConstants.softwareVersion,
+    );
+
+    files.add(
+      XFile.fromData(
+        utf8.encode(metadataXmp),
+        name: '${sanitized}_metadata.xmp',
+        mimeType: 'application/rdf+xml',
+      ),
+    );
+
     if (proofImage != null) {
       try {
-        final sanitized = AeatImageSupport.sanitizeLabel(
-          _resolvedDocumentTitle(),
-        );
         final attachments = await AeatImageSupport.generateAttachments(
           proofImage!,
           baseName: sanitized,

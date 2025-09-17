@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:gestr/core/config/compliance_constants.dart';
 import 'package:gestr/core/pdf/pdfa_generator.dart';
 
 void main(List<String> args) {
@@ -11,7 +12,7 @@ void main(List<String> args) {
   stdout.writeln('Generating PDF/A sample documents in ${outputDir.path}');
 
   final descriptors = <_PdfDescriptor>[
-    const _PdfDescriptor(
+    _PdfDescriptor(
       fileName: 'fixed_payment_sample.pdf',
       title: 'Fixed Payment Sample',
       author: 'Gestr App',
@@ -24,8 +25,9 @@ void main(List<String> args) {
         'FREQUENCY: MONTHLY',
         'STATUS: ACTIVE',
       ],
+      timestamp: DateTime.utc(2024, 1, 1, 0, 0, 0),
     ),
-    const _PdfDescriptor(
+    _PdfDescriptor(
       fileName: 'invoice_sample.pdf',
       title: 'Invoice Sample',
       author: 'Gestr App',
@@ -38,6 +40,7 @@ void main(List<String> args) {
         'STATUS: PAID',
         'NOTES: SAMPLE RECORD',
       ],
+      timestamp: DateTime.utc(2024, 1, 1, 0, 0, 0),
     ),
   ];
 
@@ -47,6 +50,10 @@ void main(List<String> args) {
       author: descriptor.author,
       lines: descriptor.lines,
       docId: descriptor.docId,
+      homologationRef: ComplianceConstants.homologationReference,
+      timestamp: descriptor.timestamp,
+      softwareName: ComplianceConstants.softwareName,
+      softwareVersion: ComplianceConstants.softwareVersion,
     );
     final file = File('${outputDir.path}/${descriptor.fileName}');
     file.writeAsBytesSync(bytes, flush: true);
@@ -69,6 +76,7 @@ class _PdfDescriptor {
     required this.author,
     required this.docId,
     required this.lines,
+    required this.timestamp,
   });
 
   final String fileName;
@@ -76,4 +84,5 @@ class _PdfDescriptor {
   final String author;
   final String docId;
   final List<String> lines;
+  final DateTime timestamp;
 }

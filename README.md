@@ -9,7 +9,9 @@ Aplicación Flutter para la gestión de ingresos y gastos de autónomos y pymes.
 - **Módulos activos por usuario**: promedio de módulos habilitados por tipo de negocio.
 
 ## Roadmap
-1. **Automatización de ingresos** mediante conexión directa con cuentas bancarias.dulos opcionales para gestionar clientes, proveedores, productos, servicios, citas, empleados y suscripciones.
+. **Automatización de ingresos** mediante conexión directa con cuentas bancarias.
+2. **Digitalización integral de gastos** con captura OCR, archivo probatorio y clasificación automática.
+3. **Módulos opcionales** para gestionar clientes, proveedores, productos, servicios, citas, empleados y suscripciones.
 4. **Integraciones externas** con software de contabilidad y ERPs mediante API y exportaciones estándar.
 5. **Soporte multiplataforma** con aplicaciones móviles y web sincronizadas.
 
@@ -52,10 +54,11 @@ N2F se orienta a organizaciones con múltiples usuarios (empleados y administrad
 - [x] La acción de GitHub `.github/workflows/pdfa-validate.yml` reutiliza estos scripts para garantizar que siempre exista una verificación PDF/A sin coste adicional durante los PR.
 
 ### Checklist de cumplimiento AEAT dentro de la app
-- [ ] Garantizar soporte en la app para los siguientes formatos de imagen exigidos por la AEAT:
+- [x] Garantizar soporte en la app para los siguientes formatos de imagen exigidos por la AEAT:
   - [x] PDF/A (ISO 19005)
     - [x] Generación básica desde la app: PDF 1.4 con fuentes incrustadas (Open Sans vía el helper `PdfGoogleFonts` de `printing`). Sin cifrado ni elementos interactivos.
     - [x] Validación PDF/A completa (XMP + OutputIntent/ICC) cubierta mediante el script `tool/validate_pdfa.sh`, que genera comprobantes y los verifica con veraPDF en Docker.
+    - [x] Normalización opcional en backend mediante `PdfAUtils.maybeNormalizeOnBackend`, activada con la variable `PDFA_NORMALIZE_URL` para incrustar metadatos y perfiles ICC cuando estén disponibles.
   - [x] PNG
     - [x] Conversión directa en cliente con `AeatImageSupport.generateAttachments`, que añade las variantes PNG al flujo de compartición de facturas y pagos fijos.
   - [x] JPEG 2000
@@ -64,8 +67,9 @@ N2F se orienta a organizaciones con múltiples usuarios (empleados y administrad
     - [x] Exportación local a TIFF 6.0 mediante el paquete `image` dentro de `AeatImageSupport`.
   - [x] PDF 1.4+ con compresión sin pérdida
     - [x] Generación automática de PDF 1.4 con compresión Flate (lossless) para cada comprobante gracias a `AeatImageSupport`.
-- [ ] Asegurar que la digitalización mantenga una resolución mínima de 200 ppp en B/N, color o escala de grises.
-- [ ] Generar un fichero por factura con sus metadatos (referencia de homologación, marca de tiempo, nombre y versión del software en XMP).
+  - [x] Conservación de formatos originales al subir comprobantes a Firebase Storage, reutilizando la extensión y tipo MIME detectados en los repositorios de facturas y pagos fijos.
+- [x] Asegurar que la digitalización mantenga una resolución mínima de 200 ppp en B/N, color o escala de grises.
+- [x] Generar un fichero por factura con sus metadatos (referencia de homologación, marca de tiempo, nombre y versión del software en XMP).
 - [ ] Firmar electrónicamente cada fichero de imagen con algoritmos seguros (mínimo SHA-1, recomendado SHA-256 o superior).
 - [ ] Mantener una base de datos firmada con acceso completo, consultas online por campos de libros IVA y opciones de descarga e impresión sin demora.
 

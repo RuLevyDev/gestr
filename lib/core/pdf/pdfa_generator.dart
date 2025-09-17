@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:gestr/core/pdf/aeat_xmp.dart';
+
 /// Utility to build minimalist PDF/A-1b compliant sample documents.
 ///
 /// The implementation mirrors the manual generator used by
@@ -16,6 +18,10 @@ class PdfaGenerator {
     required String author,
     required String docId,
     required List<String> lines,
+    String? homologationRef,
+    DateTime? timestamp,
+    String? softwareName,
+    String? softwareVersion,
   }) {
     final sanitizedLines =
         lines.map(sanitizeLine).where((line) => line.isNotEmpty).toList();
@@ -25,10 +31,12 @@ class PdfaGenerator {
 
     final literalTitle = _escapeLiteral(title);
     final literalAuthor = _escapeLiteral(author);
+    final resolvedTimestamp = (timestamp ?? DateTime.now()).toUtc();
+    final pdfDate = _formatPdfDate(resolvedTimestamp);
     final infoId = builder.addObject(
       '<< /Title ($literalTitle) /Author ($literalAuthor) '
       '/Producer (Gestr PDF/A sample generator) '
-      '/CreationDate (D:20240101000000Z) /ModDate (D:20240101000000Z) >>',
+      '/CreationDate ($pdfDate) /ModDate ($pdfDate) >>',
     );
 
     final contentString = _buildContentStream(sanitizedLines);
@@ -54,7 +62,15 @@ class PdfaGenerator {
     );
     builder.replaceInObject(pageId, '/Parent 0 0 R', '/Parent $pagesId 0 R');
 
-    final xmpString = _buildXmp(title: title, author: author, docId: docId);
+    final xmpString = buildAeatXmp(
+      title: title,
+      author: author,
+      docId: docId,
+      homologationRef: homologationRef,
+      timestamp: resolvedTimestamp,
+      softwareName: softwareName,
+      softwareVersion: softwareVersion,
+    );
     final xmpBytes = utf8.encode(xmpString);
     final metadataId = builder.addStream(
       '<< /Type /Metadata /Subtype /XML /Length ${xmpBytes.length} >>',
@@ -107,6 +123,17 @@ class PdfaGenerator {
     final fallback = sanitized.isEmpty ? 'GESTR-DOC' : sanitized;
     return fallback.length > 32 ? fallback.substring(0, 32) : fallback;
   }
+}
+
+String _formatPdfDate(DateTime timestamp) {
+  final utc = timestamp.toUtc();
+  final year = utc.year.toString().padLeft(4, '0');
+  final month = utc.month.toString().padLeft(2, '0');
+  final day = utc.day.toString().padLeft(2, '0');
+  final hour = utc.hour.toString().padLeft(2, '0');
+  final minute = utc.minute.toString().padLeft(2, '0');
+  final second = utc.second.toString().padLeft(2, '0');
+  return 'D:$year$month$day$hour$minute${second}Z';
 }
 
 String _buildContentStream(List<String> lines) {
@@ -194,30 +221,6 @@ String _escapeText(String text) {
 }
 
 String _escapeLiteral(String text) => _escapeText(text);
-
-String _buildXmp({
-  required String title,
-  required String author,
-  required String docId,
-}) {
-  final escapedTitle = const HtmlEscape().convert(title);
-  final escapedAuthor = const HtmlEscape().convert(author);
-  return '''<?xpacket begin='\ufeff' id='$docId'?>
-<x:xmpmeta xmlns:x='adobe:ns:meta/'>
-  <rdf:RDF xmlns:rdf='http://www.w3.org/1999/02/22-rdf-syntax-ns#'>
-    <rdf:Description rdf:about='' xmlns:dc='http://purl.org/dc/elements/1.1/' xmlns:pdf='http://ns.adobe.com/pdf/1.3/' xmlns:xmp='http://ns.adobe.com/xap/1.0/' xmlns:pdfaid='http://www.aiim.org/pdfa/ns/id/'>
-      <dc:title><rdf:Alt><rdf:li xml:lang='x-default'>$escapedTitle</rdf:li></rdf:Alt></dc:title>
-      <dc:creator><rdf:Seq><rdf:li>$escapedAuthor</rdf:li></rdf:Seq></dc:creator>
-      <pdf:Producer>Gestr PDF/A sample generator</pdf:Producer>
-      <xmp:CreateDate>2024-01-01T00:00:00Z</xmp:CreateDate>
-      <xmp:ModifyDate>2024-01-01T00:00:00Z</xmp:ModifyDate>
-      <pdfaid:part>1</pdfaid:part>
-      <pdfaid:conformance>B</pdfaid:conformance>
-    </rdf:Description>
-  </rdf:RDF>
-</x:xmpmeta>
-<?xpacket end='w'?>''';
-}
 
 void _ensurePatternsFor(List<String> lines) {
   final needed = <String>{};
