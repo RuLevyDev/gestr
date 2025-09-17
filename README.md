@@ -49,8 +49,8 @@ N2F se orienta a organizaciones con múltiples usuarios (empleados y administrad
 - [ ] Lanza `tool/validate_pdfa.sh` para regenerar los PDFs de muestra y validarlos automáticamente con [veraPDF](https://verapdf.org/) dentro de un contenedor Docker.
 - [ ] La acción de GitHub `.github/workflows/pdfa-validate.yml` reutiliza estos scripts para garantizar que siempre exista una verificación PDF/A sin coste adicional durante los PR.
 ### Checklist de cumplimiento AEAT dentro de la app
-- [x] Garantizar soporte en la app para los siguientes formatos de imagen exigidos por la AEAT:
-  - [x] PDF/A (ISO 19005)
+- [] Garantizar soporte en la app para los siguientes formatos de imagen exigidos por la AEAT:
+  - [] PDF/A (ISO 19005)
     - [ ] Generación básica desde la app: PDF 1.4 con fuentes incrustadas (Open Sans vía PdfGoogleFonts). Sin cifrado ni elementos interactivos.
     - [ ] Nota: Validación PDF/A completa (XMP + OutputIntent/ICC) pendiente de integrar con herramienta externa (p.ej., veraPDF) o servicio backend de normalización.
   - [ ] PNG
