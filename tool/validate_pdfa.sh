@@ -3,7 +3,7 @@ set -euo pipefail
 
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 OUTPUT_DIR="$PROJECT_ROOT/samples/pdfs"
-VERAPDF_IMAGE="${VERAPDF_IMAGE:-ghcr.io/verapdf/verapdf-apps:latest}"
+VERAPDF_IMAGE="${VERAPDF_IMAGE:-docker.io/verapdf/cli:latest}"
 
 pushd "$PROJECT_ROOT" >/dev/null
 

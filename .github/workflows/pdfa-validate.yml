@@ -31,16 +31,11 @@ jobs:
         run: |
           ls -la samples/pdfs || true
           
-      - name: Login to GitHub Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.repository_owner }}
-          password: ${{ secrets.GITHUB_TOKEN }}    
+   
 
       - name: Validate with veraPDF (Docker)
         env:
-          DEFAULT_VERAPDF_IMAGE: ghcr.io/verapdf/verapdf-apps:latest  
+          DEFAULT_VERAPDF_IMAGE: docker.io/verapdf/cli:latest
         run: |
           VERAPDF_IMAGE="${VERAPDF_IMAGE:-$DEFAULT_VERAPDF_IMAGE}"
           docker run --rm -v "${{ github.workspace }}/samples/pdfs:/work" "$VERAPDF_IMAGE" \
