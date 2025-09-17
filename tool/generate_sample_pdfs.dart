@@ -77,7 +77,14 @@ Uint8List _buildPdf({
     '<< /Title ($literalTitle) /Author ($literalAuthor) /Producer (Gestr PDF/A sample generator) /CreationDate (D:20240101000000Z) /ModDate (D:20240101000000Z) >>',
   );
 
-  final contentLines = <String>['BT', '/F1 14 Tf', '1 0 0 1 72 720 Tm'];
+  final contentLines = <String>[
+    'q',
+    '/CS0 cs',
+    '0 0 0 sc',
+    'BT',
+    '/F1 14 Tf',
+    '1 0 0 1 72 720 Tm',
+  ];
   const leading = 18;
   for (var i = 0; i < lines.length; i++) {
     final escaped = _escapeText(lines[i]);
@@ -89,6 +96,7 @@ Uint8List _buildPdf({
     }
   }
   contentLines.add('ET');
+  contentLines.add('Q');
   final contentString = contentLines.join('\n');
   final contentBytes = ascii.encode(contentString);
   final contentId = builder.addStream(
@@ -101,8 +109,13 @@ Uint8List _buildPdf({
     usedCodes.addAll(line.codeUnits);
   }
 
-  final fontId = _buildType3Font(builder, usedCodes);
-  final resourcesId = builder.addObject('<< /Font << /F1 $fontId 0 R >> >>');
+  final colorSpaceId = builder.addObject(
+    '<< /Type /CalRGB /WhitePoint [0.9505 1.0 1.0890] /Gamma [2.2 2.2 2.2] >>',
+  );
+  final fontId = _buildType3Font(builder, usedCodes, colorSpaceId);
+  final resourcesId = builder.addObject(
+    '<< /Font << /F1 $fontId 0 R >> /ColorSpace << /CS0 $colorSpaceId 0 R >> >>',
+  );
 
   final pageId = builder.addObject(
     '<< /Type /Page /Parent 0 0 R /MediaBox [0 0 595 842] /Resources $resourcesId 0 R /Contents $contentId 0 R >>',
@@ -229,7 +242,7 @@ class _PdfBuilder {
   }
 }
 
-int _buildType3Font(_PdfBuilder builder, Set<int> usedCodes) {
+int _buildType3Font(_PdfBuilder builder, Set<int> usedCodes, int colorSpaceId) {
   final uniqueCodes = usedCodes.toList()..sort();
   final glyphIds = <String, int>{};
 
@@ -274,14 +287,12 @@ int _buildType3Font(_PdfBuilder builder, Set<int> usedCodes) {
     lastChar - firstChar + 1,
     (_) => '600',
   ).join(' ');
-  final colorSpaceId = builder.addObject(
-    '<< /ColorSpace << /CS0 << /Type /CalRGB /WhitePoint [0.9505 1.0 1.0890] /Gamma [2.2 2.2 2.2] >> >> >>',
-  );
+
   final fontId = builder.addObject(
     '<< /Type /Font /Subtype /Type3 /Name /F1 /FontBBox [0 0 600 700] '
     '/FontMatrix [0.001 0 0 0.001 0 0] /CharProcs $charProcsId 0 R /Encoding $encodingId 0 R '
     '/FirstChar $firstChar /LastChar $lastChar /Widths [$widths] '
-    '/Resources $colorSpaceId 0 R >>',
+    '/Resources << /ColorSpace << /CS0 $colorSpaceId 0 R >> >> >>',
   );
 
   return fontId;
