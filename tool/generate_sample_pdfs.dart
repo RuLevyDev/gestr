@@ -77,44 +77,18 @@ Uint8List _buildPdf({
     '<< /Title ($literalTitle) /Author ($literalAuthor) /Producer (Gestr PDF/A sample generator) /CreationDate (D:20240101000000Z) /ModDate (D:20240101000000Z) >>',
   );
 
-  final contentLines = <String>[
-    'q',
-    '/CS0 cs',
-    '0 0 0 sc',
-    'BT',
-    '/F1 14 Tf',
-    '1 0 0 1 72 720 Tm',
-  ];
-  const leading = 18;
-  for (var i = 0; i < lines.length; i++) {
-    final escaped = _escapeText(lines[i]);
-    if (i == 0) {
-      contentLines.add('($escaped) Tj');
-    } else {
-      contentLines.add('0 -$leading Td');
-      contentLines.add('($escaped) Tj');
-    }
-  }
-  contentLines.add('ET');
-  contentLines.add('Q');
-  final contentString = contentLines.join('\n');
+  final contentString = _buildContentStream(lines);
   final contentBytes = ascii.encode(contentString);
   final contentId = builder.addStream(
     '<< /Length ${contentBytes.length} >>',
     contentBytes,
   );
 
-  final usedCodes = <int>{};
-  for (final line in lines) {
-    usedCodes.addAll(line.codeUnits);
-  }
-
   final colorSpaceId = builder.addObject(
     '<< /Type /CalRGB /WhitePoint [0.9505 1.0 1.0890] /Gamma [2.2 2.2 2.2] >>',
   );
-  final fontId = _buildType3Font(builder, usedCodes, colorSpaceId);
   final resourcesId = builder.addObject(
-    '<< /Font << /F1 $fontId 0 R >> /ColorSpace << /CS0 $colorSpaceId 0 R >> >>',
+    '<< /ColorSpace << /CS0 $colorSpaceId 0 R >> >>',
   );
 
   final pageId = builder.addObject(
@@ -140,6 +114,69 @@ Uint8List _buildPdf({
   final fileIdHex = _buildFileIdHex(docId);
 
   return builder.build(rootId: catalogId, infoId: infoId, fileIdHex: fileIdHex);
+}
+
+String _buildContentStream(List<String> lines) {
+  const startX = 72.0;
+  const startY = 720.0;
+  const cellSize = 2.0;
+  const glyphColumns = 5;
+  const glyphRows = 7;
+  const glyphAdvance = glyphColumns * cellSize + cellSize;
+  const leading = 18.0;
+
+  final buffer =
+      StringBuffer()
+        ..writeln('q')
+        ..writeln('/CS0 cs')
+        ..writeln('0 0 0 sc');
+
+  final rectangles = <String>[];
+
+  for (var lineIndex = 0; lineIndex < lines.length; lineIndex++) {
+    final line = lines[lineIndex];
+    final topY = startY - lineIndex * leading;
+    for (var charIndex = 0; charIndex < line.length; charIndex++) {
+      final ch = line[charIndex];
+      final pattern = _glyphPatterns[ch];
+      if (pattern == null) {
+        throw StateError('Missing glyph pattern for "$ch"');
+      }
+      final baseX = startX + charIndex * glyphAdvance;
+      for (var row = 0; row < glyphRows; row++) {
+        final rowPattern = pattern[row];
+        for (var col = 0; col < rowPattern.length; col++) {
+          if (rowPattern[col] == '#') {
+            final x = baseX + col * cellSize;
+            final y = topY - (row + 1) * cellSize;
+            rectangles.add(
+              '${_formatNumber(x)} ${_formatNumber(y)} ${_formatNumber(cellSize)} ${_formatNumber(cellSize)} re',
+            );
+          }
+        }
+      }
+    }
+  }
+
+  if (rectangles.isNotEmpty) {
+    buffer.writeln(rectangles.join('\n'));
+    buffer.writeln('f');
+  }
+
+  buffer.writeln('Q');
+  return buffer.toString();
+}
+
+String _formatNumber(double value) {
+  const epsilon = 1e-6;
+  if ((value - value.roundToDouble()).abs() < epsilon) {
+    return value.round().toString();
+  }
+  var text = value.toStringAsFixed(3);
+  while (text.contains('.') && (text.endsWith('0') || text.endsWith('.'))) {
+    text = text.substring(0, text.length - 1);
+  }
+  return text;
 }
 
 class _PdfDescriptor {
@@ -242,92 +279,92 @@ class _PdfBuilder {
   }
 }
 
-int _buildType3Font(_PdfBuilder builder, Set<int> usedCodes, int colorSpaceId) {
-  final uniqueCodes = usedCodes.toList()..sort();
-  final glyphIds = <String, int>{};
+// int _buildType3Font(_PdfBuilder builder, Set<int> usedCodes, int colorSpaceId) {
+//   final uniqueCodes = usedCodes.toList()..sort();
+//   final glyphIds = <String, int>{};
 
-  for (final code in uniqueCodes) {
-    final ch = String.fromCharCode(code);
-    final pattern = _glyphPatterns[ch];
-    if (pattern == null) {
-      throw StateError('Missing glyph pattern for "$ch"');
-    }
-    final content = ascii.encode(_buildCharProc(pattern));
-    final streamDict = '<< /Length ${content.length} >>';
-    final objId = builder.addStream(streamDict, content);
-    glyphIds[_glyphName(ch)] = objId;
-  }
+//   for (final code in uniqueCodes) {
+//     final ch = String.fromCharCode(code);
+//     final pattern = _glyphPatterns[ch];
+//     if (pattern == null) {
+//       throw StateError('Missing glyph pattern for "$ch"');
+//     }
+//     final content = ascii.encode(_buildCharProc(pattern));
+//     final streamDict = '<< /Length ${content.length} >>';
+//     final objId = builder.addStream(streamDict, content);
+//     glyphIds[_glyphName(ch)] = objId;
+//   }
 
-  final entries =
-      glyphIds.entries.toList()..sort((a, b) => a.key.compareTo(b.key));
-  final charProcsBuffer = StringBuffer('<< ');
-  for (final entry in entries) {
-    charProcsBuffer.write('/${entry.key} ${entry.value} 0 R ');
-  }
-  charProcsBuffer.write('>>');
-  final charProcsId = builder.addObject(charProcsBuffer.toString());
+//   final entries =
+//       glyphIds.entries.toList()..sort((a, b) => a.key.compareTo(b.key));
+//   final charProcsBuffer = StringBuffer('<< ');
+//   for (final entry in entries) {
+//     charProcsBuffer.write('/${entry.key} ${entry.value} 0 R ');
+//   }
+//   charProcsBuffer.write('>>');
+//   final charProcsId = builder.addObject(charProcsBuffer.toString());
 
-  final differencesBuffer = StringBuffer('[ ');
-  int? lastCode;
-  for (final code in uniqueCodes) {
-    if (lastCode == null || code != lastCode + 1) {
-      differencesBuffer.write('$code ');
-    }
-    differencesBuffer.write('/${_glyphName(String.fromCharCode(code))} ');
-    lastCode = code;
-  }
-  differencesBuffer.write(']');
-  final encodingId = builder.addObject(
-    '<< /Type /Encoding /BaseEncoding /WinAnsiEncoding /Differences ${differencesBuffer.toString()} >>',
-  );
+//   final differencesBuffer = StringBuffer('[ ');
+//   int? lastCode;
+//   for (final code in uniqueCodes) {
+//     if (lastCode == null || code != lastCode + 1) {
+//       differencesBuffer.write('$code ');
+//     }
+//     differencesBuffer.write('/${_glyphName(String.fromCharCode(code))} ');
+//     lastCode = code;
+//   }
+//   differencesBuffer.write(']');
+//   final encodingId = builder.addObject(
+//     '<< /Type /Encoding /BaseEncoding /WinAnsiEncoding /Differences ${differencesBuffer.toString()} >>',
+//   );
 
-  final firstChar = uniqueCodes.first;
-  final lastChar = uniqueCodes.last;
-  final widths = List<String>.generate(
-    lastChar - firstChar + 1,
-    (_) => '600',
-  ).join(' ');
+//   final firstChar = uniqueCodes.first;
+//   final lastChar = uniqueCodes.last;
+//   final widths = List<String>.generate(
+//     lastChar - firstChar + 1,
+//     (_) => '600',
+//   ).join(' ');
 
-  final fontId = builder.addObject(
-    '<< /Type /Font /Subtype /Type3 /Name /F1 /FontBBox [0 0 600 700] '
-    '/FontMatrix [0.001 0 0 0.001 0 0] /CharProcs $charProcsId 0 R /Encoding $encodingId 0 R '
-    '/FirstChar $firstChar /LastChar $lastChar /Widths [$widths] '
-    '/Resources << /ColorSpace << /CS0 $colorSpaceId 0 R >> >> >>',
-  );
+//   final fontId = builder.addObject(
+//     '<< /Type /Font /Subtype /Type3 /Name /F1 /FontBBox [0 0 600 700] '
+//     '/FontMatrix [0.001 0 0 0.001 0 0] /CharProcs $charProcsId 0 R /Encoding $encodingId 0 R '
+//     '/FirstChar $firstChar /LastChar $lastChar /Widths [$widths] '
+//     '/Resources << /ColorSpace << /CS0 $colorSpaceId 0 R >> >> >>',
+//   );
 
-  return fontId;
-}
+//   return fontId;
+// }
 
-String _buildCharProc(List<String> pattern) {
-  const cellSize = 100;
-  final rows = pattern.length;
-  final buffer =
-      StringBuffer()
-        ..writeln('600 0 0 0 600 ${rows * cellSize} d1')
-        ..writeln('q')
-        ..writeln('/CS0 cs')
-        ..writeln('0 0 0 sc');
+// String _buildCharProc(List<String> pattern) {
+//   const cellSize = 100;
+//   final rows = pattern.length;
+//   final buffer =
+//       StringBuffer()
+//         ..writeln('600 0 0 0 600 ${rows * cellSize} d1')
+//         ..writeln('q')
+//         ..writeln('/CS0 cs')
+//         ..writeln('0 0 0 sc');
 
-  final filled = <String>[];
-  for (var row = 0; row < rows; row++) {
-    final line = pattern[row];
-    for (var col = 0; col < line.length; col++) {
-      if (line[col] == '#') {
-        final x = col * cellSize;
-        final y = (rows - 1 - row) * cellSize;
-        filled.add('$x $y $cellSize $cellSize re');
-      }
-    }
-  }
+//   final filled = <String>[];
+//   for (var row = 0; row < rows; row++) {
+//     final line = pattern[row];
+//     for (var col = 0; col < line.length; col++) {
+//       if (line[col] == '#') {
+//         final x = col * cellSize;
+//         final y = (rows - 1 - row) * cellSize;
+//         filled.add('$x $y $cellSize $cellSize re');
+//       }
+//     }
+//   }
 
-  if (filled.isNotEmpty) {
-    buffer.writeln(filled.join('\n'));
-    buffer.writeln('f');
-  }
+//   if (filled.isNotEmpty) {
+//     buffer.writeln(filled.join('\n'));
+//     buffer.writeln('f');
+//   }
 
-  buffer.writeln('Q');
-  return buffer.toString();
-}
+//   buffer.writeln('Q');
+//   return buffer.toString();
+// }
 
 String _buildFileIdHex(String seed) {
   final source = seed.isEmpty ? 'gestr-doc-id' : seed;
@@ -343,42 +380,42 @@ String _buildFileIdHex(String seed) {
   return buffer.toString();
 }
 
-String _glyphName(String ch) {
-  switch (ch) {
-    case ' ':
-      return 'space';
-    case ':':
-      return 'colon';
-    case '-':
-      return 'hyphen';
-    case ',':
-      return 'comma';
-    case '.':
-      return 'period';
-    case '0':
-      return 'zero';
-    case '1':
-      return 'one';
-    case '2':
-      return 'two';
-    case '3':
-      return 'three';
-    case '4':
-      return 'four';
-    case '5':
-      return 'five';
-    case '6':
-      return 'six';
-    case '7':
-      return 'seven';
-    case '8':
-      return 'eight';
-    case '9':
-      return 'nine';
-    default:
-      return ch;
-  }
-}
+// String _glyphName(String ch) {
+//   switch (ch) {
+//     case ' ':
+//       return 'space';
+//     case ':':
+//       return 'colon';
+//     case '-':
+//       return 'hyphen';
+//     case ',':
+//       return 'comma';
+//     case '.':
+//       return 'period';
+//     case '0':
+//       return 'zero';
+//     case '1':
+//       return 'one';
+//     case '2':
+//       return 'two';
+//     case '3':
+//       return 'three';
+//     case '4':
+//       return 'four';
+//     case '5':
+//       return 'five';
+//     case '6':
+//       return 'six';
+//     case '7':
+//       return 'seven';
+//     case '8':
+//       return 'eight';
+//     case '9':
+//       return 'nine';
+//     default:
+//       return ch;
+//   }
+// }
 
 String _escapeText(String text) {
   return text
