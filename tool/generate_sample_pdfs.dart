@@ -178,7 +178,7 @@ class _PdfBuilder {
   }
 
   Uint8List build({required int rootId, required int infoId}) {
-    final header = ascii.encode('%PDF-1.4\n%\u00e2\u00e3\u00cf\u00d3\n');
+    final header = latin1.encode('%PDF-1.4\n%\u00e2\u00e3\u00cf\u00d3\n');
     final buffer = BytesBuilder();
     buffer.add(header);
 
