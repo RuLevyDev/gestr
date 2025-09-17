@@ -3,6 +3,7 @@ set -euo pipefail
 
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 OUTPUT_DIR="$PROJECT_ROOT/samples/pdfs"
+VERAPDF_IMAGE="ghcr.io/verapdf/verapdf-apps:latest"
 
 pushd "$PROJECT_ROOT" >/dev/null
 
@@ -25,7 +26,7 @@ if ! command -v docker &>/dev/null; then
   exit 1
 fi
 
-docker run --rm -v "$OUTPUT_DIR:/work" verapdf/verapdf:latest \
+docker run --rm -v "$OUTPUT_DIR:/work" "$VERAPDF_IMAGE" \
   --format text --maxfail 1 --failonerror /work/*.pdf
 
 echo "PDF/A validation completed successfully."
