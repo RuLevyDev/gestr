@@ -10,6 +10,7 @@ import 'package:gestr/app/fixedpayments/bloc/fixed_payment_state.dart';
 import 'package:gestr/app/fixedpayments/bloc/fixed_payments_bloc.dart';
 import 'package:gestr/domain/usecases/user/self_employed_user_usecases.dart';
 import 'package:gestr/domain/entities/fixed_payments_model.dart';
+import 'package:gestr/core/image/aeat_image_support.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:gestr/core/pdf/pdfa_utils.dart';
@@ -151,6 +152,7 @@ mixin CreateFixedPaymentViewModelMixin<T extends StatefulWidget> on State<T> {
     }
     return 'Pago fijo';
   }
+
   Future<void> selectStartDate() async {
     final picked = await showDatePicker(
       context: context,
@@ -218,17 +220,46 @@ mixin CreateFixedPaymentViewModelMixin<T extends StatefulWidget> on State<T> {
         },
       ),
     );
-    final xfile = XFile.fromData(
-      normalized,
-      name: 'pago_fijo.pdf',
-      mimeType: 'application/pdf',
-    );
+    final files = <XFile>[
+      XFile.fromData(
+        normalized,
+        name: 'pago_fijo.pdf',
+        mimeType: 'application/pdf',
+      ),
+    ];
+
+    if (proofImage != null) {
+      try {
+        final sanitized = AeatImageSupport.sanitizeLabel(
+          _resolvedDocumentTitle(),
+        );
+        final attachments = await AeatImageSupport.generateAttachments(
+          proofImage!,
+          baseName: sanitized,
+        );
+
+        files.addAll(
+          attachments.map(
+            (attachment) => XFile.fromData(
+              attachment.bytes,
+              name: attachment.filename,
+              mimeType: attachment.mimeType,
+            ),
+          ),
+        );
+      } catch (_) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('No se pudieron generar todos los formatos AEAT'),
+            ),
+          );
+        }
+      }
+    }
 
     await SharePlus.instance.share(
-      ShareParams(
-        files: [xfile],
-        text: 'Aquí está el comprobante del pago fijo',
-      ),
+      ShareParams(files: files, text: 'Aquí está el comprobante del pago fijo'),
     );
   }
 }

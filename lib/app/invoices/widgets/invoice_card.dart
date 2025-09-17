@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gestr/app/invoices/bloc/invoice_bloc.dart';
 import 'package:gestr/app/invoices/bloc/invoice_event.dart';
 import 'package:gestr/domain/entities/invoice_model.dart';
+import 'package:gestr/core/image/aeat_image_support.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
@@ -38,17 +39,56 @@ class InvoiceCard extends StatelessWidget {
             children: [
               SlidableAction(
                 onPressed: (context) async {
-                  if (invoice.image != null) {
-                    await SharePlus.instance.share(
-                      ShareParams(
-                        files: [XFile(invoice.image!.path)],
-                        text: 'Factura: ${invoice.title}',
-                      ),
-                    );
-                  } else {
+                  if (invoice.image == null) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
                         content: Text('No hay imagen para compartir'),
+                      ),
+                    );
+                    return;
+                  }
+
+                  try {
+                    final attachments =
+                        await AeatImageSupport.generateAttachments(
+                          invoice.image!,
+                          baseName: AeatImageSupport.sanitizeLabel(
+                            invoice.title,
+                          ),
+                        );
+
+                    final files =
+                        attachments
+                            .map(
+                              (attachment) => XFile.fromData(
+                                attachment.bytes,
+                                name: attachment.filename,
+                                mimeType: attachment.mimeType,
+                              ),
+                            )
+                            .toList();
+
+                    if (files.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                            'No se pudieron preparar los archivos AEAT',
+                          ),
+                        ),
+                      );
+                      return;
+                    }
+
+                    await SharePlus.instance.share(
+                      ShareParams(
+                        files: files,
+                        text: 'Factura: ${invoice.title}',
+                      ),
+                    );
+                  } catch (_) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Error al generar los formatos AEAT'),
                       ),
                     );
                   }

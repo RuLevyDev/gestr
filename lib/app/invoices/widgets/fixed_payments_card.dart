@@ -1,6 +1,7 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
+import 'package:gestr/core/image/aeat_image_support.dart';
 import 'package:gestr/app/fixedpayments/bloc/fixed_payment_event.dart';
 import 'package:gestr/app/fixedpayments/bloc/fixed_payments_bloc.dart';
 import 'package:gestr/domain/entities/fixed_payments_model.dart';
@@ -36,12 +37,50 @@ class FixedPaymentCard extends StatelessWidget {
               if (payment.image != null)
                 SlidableAction(
                   onPressed: (context) async {
-                    await SharePlus.instance.share(
-                      ShareParams(
-                        files: [XFile(payment.image!.path)],
-                        text: 'Pago fijo: ${payment.title}',
-                      ),
-                    );
+                    try {
+                      final attachments =
+                          await AeatImageSupport.generateAttachments(
+                            payment.image!,
+                            baseName: AeatImageSupport.sanitizeLabel(
+                              payment.title,
+                            ),
+                          );
+
+                      final files =
+                          attachments
+                              .map(
+                                (attachment) => XFile.fromData(
+                                  attachment.bytes,
+                                  name: attachment.filename,
+                                  mimeType: attachment.mimeType,
+                                ),
+                              )
+                              .toList();
+
+                      if (files.isEmpty) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                              'No se pudieron preparar los archivos AEAT',
+                            ),
+                          ),
+                        );
+                        return;
+                      }
+
+                      await SharePlus.instance.share(
+                        ShareParams(
+                          files: files,
+                          text: 'Pago fijo: ${payment.title}',
+                        ),
+                      );
+                    } catch (_) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Error al generar los formatos AEAT'),
+                        ),
+                      );
+                    }
                   },
                   backgroundColor: Colors.transparent,
                   foregroundColor: Colors.blueAccent,

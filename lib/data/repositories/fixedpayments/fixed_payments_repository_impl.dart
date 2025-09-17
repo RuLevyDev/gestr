@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:gestr/domain/entities/fixed_payments_model.dart';
@@ -49,10 +51,7 @@ class FixedPaymentRepositoryImpl implements FixedPaymentRepository {
       String? imageUrl;
 
       if (payment.image != null) {
-        final fileName = '${DateTime.now().millisecondsSinceEpoch}.jpg';
-        final ref = storage.ref().child('fixedPayments/$fileName');
-        await ref.putFile(payment.image!);
-        imageUrl = await ref.getDownloadURL();
+        imageUrl = await _uploadImage(payment.image!, 'fixedPayments');
       }
 
       await firestore
@@ -96,10 +95,7 @@ class FixedPaymentRepositoryImpl implements FixedPaymentRepository {
           await oldRef.delete();
         }
 
-        final fileName = '${DateTime.now().millisecondsSinceEpoch}.jpg';
-        final ref = storage.ref().child('fixedPayments/$fileName');
-        await ref.putFile(payment.image!);
-        imageUrl = await ref.getDownloadURL();
+        imageUrl = await _uploadImage(payment.image!, 'fixedPayments');
       }
 
       await docRef.update({
@@ -173,6 +169,48 @@ class FixedPaymentRepositoryImpl implements FixedPaymentRepository {
       );
     } catch (e) {
       throw Exception("Error al obtener el pago fijo por ID: $e");
+    }
+  }
+
+  Future<String> _uploadImage(File file, String folder) async {
+    final ext = _resolveExtension(file.path);
+    final fileName = '${DateTime.now().millisecondsSinceEpoch}$ext';
+    final ref = storage.ref().child('$folder/$fileName');
+    final metadata = SettableMetadata(
+      contentType: _contentTypeForExtension(ext),
+    );
+    await ref.putFile(file, metadata);
+    return ref.getDownloadURL();
+  }
+
+  String _resolveExtension(String path) {
+    final normalised = path.replaceAll('\\', '/');
+    final name = normalised.split('/').last;
+    final dotIndex = name.lastIndexOf('.');
+    if (dotIndex != -1 && dotIndex < name.length - 1) {
+      return name.substring(dotIndex).toLowerCase();
+    }
+    return '.bin';
+  }
+
+  String _contentTypeForExtension(String ext) {
+    switch (ext) {
+      case '.png':
+        return 'image/png';
+      case '.jpg':
+      case '.jpeg':
+        return 'image/jpeg';
+      case '.jp2':
+      case '.jpf':
+      case '.jpx':
+        return 'image/jp2';
+      case '.tif':
+      case '.tiff':
+        return 'image/tiff';
+      case '.pdf':
+        return 'application/pdf';
+      default:
+        return 'application/octet-stream';
     }
   }
 

@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:gestr/domain/entities/invoice_model.dart';
 import 'package:gestr/domain/repositories/invoice/invoice_reposiroty.dart';
@@ -64,10 +66,7 @@ class InvoiceRepositoryImpl implements InvoiceRepository {
       String? imageUrl;
 
       if (invoice.image != null) {
-        final fileName = '${DateTime.now().millisecondsSinceEpoch}.jpg';
-        final ref = storage.ref().child('invoices/$fileName');
-        await ref.putFile(invoice.image!);
-        imageUrl = await ref.getDownloadURL();
+        imageUrl = await _uploadImage(invoice.image!, 'invoices');
       }
 
       await firestore
@@ -135,10 +134,7 @@ class InvoiceRepositoryImpl implements InvoiceRepository {
           await oldRef.delete();
         }
 
-        final fileName = '${DateTime.now().millisecondsSinceEpoch}.jpg';
-        final ref = storage.ref().child('invoices/$fileName');
-        await ref.putFile(invoice.image!);
-        imageUrl = await ref.getDownloadURL();
+        imageUrl = await _uploadImage(invoice.image!, 'invoices');
       }
 
       await docRef.update({
@@ -154,6 +150,48 @@ class InvoiceRepositoryImpl implements InvoiceRepository {
       });
     } catch (e) {
       throw Exception("Error al actualizar la factura: $e");
+    }
+  }
+
+  Future<String> _uploadImage(File file, String folder) async {
+    final ext = _resolveExtension(file.path);
+    final fileName = '${DateTime.now().millisecondsSinceEpoch}$ext';
+    final ref = storage.ref().child('$folder/$fileName');
+    final metadata = SettableMetadata(
+      contentType: _contentTypeForExtension(ext),
+    );
+    await ref.putFile(file, metadata);
+    return ref.getDownloadURL();
+  }
+
+  String _resolveExtension(String path) {
+    final normalised = path.replaceAll('\\', '/');
+    final name = normalised.split('/').last;
+    final dotIndex = name.lastIndexOf('.');
+    if (dotIndex != -1 && dotIndex < name.length - 1) {
+      return name.substring(dotIndex).toLowerCase();
+    }
+    return '.bin';
+  }
+
+  String _contentTypeForExtension(String ext) {
+    switch (ext) {
+      case '.png':
+        return 'image/png';
+      case '.jpg':
+      case '.jpeg':
+        return 'image/jpeg';
+      case '.jp2':
+      case '.jpf':
+      case '.jpx':
+        return 'image/jp2';
+      case '.tif':
+      case '.tiff':
+        return 'image/tiff';
+      case '.pdf':
+        return 'application/pdf';
+      default:
+        return 'application/octet-stream';
     }
   }
 

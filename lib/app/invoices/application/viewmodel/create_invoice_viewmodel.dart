@@ -12,6 +12,7 @@ import 'package:gestr/domain/usecases/user/self_employed_user_usecases.dart';
 import 'package:gestr/data/ocr/ocr_service.dart';
 import 'package:gestr/data/repositories/ocr/ocr_repository_impl.dart';
 import 'package:gestr/domain/usecases/ocr/ocr_usecases.dart';
+import 'package:gestr/core/image/aeat_image_support.dart';
 
 import 'package:pdf/widgets.dart' as pw;
 import 'package:gestr/core/pdf/pdfa_utils.dart';
@@ -343,14 +344,46 @@ mixin CreateInvoiceViewModelMixin<T extends StatefulWidget> on State<T> {
         },
       ),
     );
-    final xfile = XFile.fromData(
-      normalized,
-      name: 'factura.pdf',
-      mimeType: 'application/pdf',
-    );
+    final files = <XFile>[
+      XFile.fromData(
+        normalized,
+        name: 'factura.pdf',
+        mimeType: 'application/pdf',
+      ),
+    ];
+
+    if (invoiceImage != null) {
+      try {
+        final sanitized = AeatImageSupport.sanitizeLabel(
+          _resolvedInvoiceTitle(),
+        );
+        final attachments = await AeatImageSupport.generateAttachments(
+          invoiceImage!,
+          baseName: sanitized,
+        );
+
+        files.addAll(
+          attachments.map(
+            (attachment) => XFile.fromData(
+              attachment.bytes,
+              name: attachment.filename,
+              mimeType: attachment.mimeType,
+            ),
+          ),
+        );
+      } catch (_) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('No se pudieron generar todos los formatos AEAT'),
+            ),
+          );
+        }
+      }
+    }
 
     await SharePlus.instance.share(
-      ShareParams(files: [xfile], text: 'Aquí está tu factura generada'),
+      ShareParams(files: files, text: 'Aquí está tu factura generada'),
     );
   }
 }
