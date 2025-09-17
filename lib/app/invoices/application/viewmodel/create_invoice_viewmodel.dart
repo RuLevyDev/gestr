@@ -18,9 +18,12 @@ import 'package:gestr/core/image/aeat_image_support.dart';
 import 'package:gestr/core/pdf/aeat_xmp.dart';
 import 'package:gestr/core/pdf/pdfa_generator.dart';
 
-import 'package:pdf/widgets.dart' as pw;
+// import 'package:pdf/widgets.dart' as pw;
 import 'package:gestr/core/pdf/pdfa_utils.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:gestr/app/invoices/application/pdf/invoice_pdf_builder.dart';
+
+// import 'package:printing/printing.dart';
 
 mixin CreateInvoiceViewModelMixin<T extends StatefulWidget> on State<T> {
   final formKey = GlobalKey<FormState>();
@@ -41,6 +44,8 @@ mixin CreateInvoiceViewModelMixin<T extends StatefulWidget> on State<T> {
 
   // User profile
   SelfEmployedUser? selfEmployedUser;
+
+  // pw.ThemeData? _invoicePdfTheme;
 
   // Controllers for advanced fields
   final TextEditingController issuerController = TextEditingController();
@@ -296,51 +301,68 @@ mixin CreateInvoiceViewModelMixin<T extends StatefulWidget> on State<T> {
     }
   }
 
+  // Future<pw.ThemeData?> _ensureInvoicePdfTheme() async {
+  //   if (_invoicePdfTheme != null) {
+  //     return _invoicePdfTheme;
+  //   }
+
+  //   try {
+  //     final base = await PdfGoogleFonts.openSansRegular();
+  //     final bold = await PdfGoogleFonts.openSansBold();
+  //     final italic = await PdfGoogleFonts.openSansItalic();
+  //     final boldItalic = await PdfGoogleFonts.openSansBoldItalic();
+  //     _invoicePdfTheme = pw.ThemeData.withFont(
+  //       base: base,
+  //       bold: bold,
+  //       italic: italic,
+  //       boldItalic: boldItalic,
+  //     );
+  //   } catch (_) {
+  //     // Ignore and rely on the default Helvetica theme when fonts cannot be loaded.
+  //   }
+
+  //   return _invoicePdfTheme;
+  // }
+
   // Generación y compartición de PDF
   Future<void> generateAndSharePdf() async {
-    final pdf = PdfAUtils.createDocument();
-    final pageTheme = await PdfAUtils.pageTheme();
     final Uint8List? imageBytes =
         invoiceImage != null
             ? await PdfAUtils.prepareImageBytesForPdfA(invoiceImage!)
             : null;
 
-    pdf.addPage(
-      pw.Page(
-        pageTheme: pageTheme,
-        build: (context) {
-          return pw.Column(
-            crossAxisAlignment: pw.CrossAxisAlignment.start,
-            children: [
-              pw.Text('Factura', style: pw.TextStyle(fontSize: 24)),
-              pw.SizedBox(height: 12),
-              pw.Text('Título: $title'),
-              pw.Text('Fecha: ${invoiceDate.toLocal()}'.split(' ')[0]),
-              pw.Text('Importe neto: €${amount.toStringAsFixed(2)}'),
-              pw.Text('IVA: €${iva.toStringAsFixed(2)}'),
-              pw.Text('Total: €${total.toStringAsFixed(2)}'),
-              pw.Text('Estado: ${status.name}'),
-              if (imageBytes != null)
-                pw.Column(
-                  children: [
-                    pw.SizedBox(height: 20),
-                    pw.Text('Imagen de factura:'),
-                    pw.SizedBox(height: 8),
-                    pw.Image(pw.MemoryImage(imageBytes)),
-                  ],
-                ),
-            ],
-          );
-        },
+    // final theme = await _ensureInvoicePdfTheme();
+
+    final resolvedTitle = _resolvedInvoiceTitle();
+    final trimmedIssuer = issuer?.trim();
+    final trimmedReceiver = receiver?.trim();
+    final trimmedConcept = concept?.trim();
+    final trimmedReceiverTaxId = receiverTaxId?.trim();
+    final trimmedReceiverAddress = receiverAddress?.trim();
+
+    final pdfBytes = await InvoicePdfBuilder.build(
+      InvoicePdfContent(
+        title: resolvedTitle,
+        invoiceNumber: '—',
+        issueDate: invoiceDate,
+        netAmount: amount,
+        ivaAmount: iva,
+        status: status,
+        issuerName: trimmedIssuer,
+        receiverName: trimmedReceiver,
+        receiverTaxId: trimmedReceiverTaxId,
+        receiverAddress: trimmedReceiverAddress,
+        concept: trimmedConcept,
+        currency: 'EUR',
+        attachmentImageBytes: imageBytes,
       ),
     );
 
-    final bytes = await pdf.save();
     final normalized = await PdfAUtils.maybeNormalizeOnBackend(
-      bytes,
+      pdfBytes,
       request: PdfaBackendRequest.strict(
         metadata: <String, String>{
-          'title': 'Factura - ${_resolvedInvoiceTitle()}',
+          'title': 'Factura - $resolvedTitle',
           'author': 'Gestr App',
           'subject': 'Factura generada en Gestr',
           'keywords': 'gestr,factura',
@@ -355,7 +377,7 @@ mixin CreateInvoiceViewModelMixin<T extends StatefulWidget> on State<T> {
         mimeType: 'application/pdf',
       ),
     ];
-    final resolvedTitle = _resolvedInvoiceTitle();
+
     final sanitized = AeatImageSupport.sanitizeLabel(resolvedTitle);
     final metadataTimestamp = DateTime.now().toUtc();
     final metadataDocId = PdfaGenerator.generateDocId(

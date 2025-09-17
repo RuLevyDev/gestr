@@ -314,8 +314,6 @@ class _PartyBox extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.black12),
         color: theme.colorScheme.surface.withValues(alpha: .04),
       ),
       child: Column(
@@ -329,6 +327,7 @@ class _PartyBox extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           SelectableText(value, style: theme.textTheme.bodyMedium),
+          Divider(color: Colors.black12),
         ],
       ),
     );

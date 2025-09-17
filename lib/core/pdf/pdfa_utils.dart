@@ -6,11 +6,12 @@ import 'package:image/image.dart' as img;
 import 'package:http/http.dart' as http;
 import 'package:pdf/widgets.dart' as pw;
 import 'package:pdf/pdf.dart' as pdf;
-import 'package:printing/printing.dart';
 
 /// Minimal helpers to get closer to PDF/A requirements in client-side PDFs.
 /// - Uses PDF 1.4 (required by PDF/A-1)
-/// - Embeds fonts via Google Fonts helpers (fonts are embedded in the file)
+
+/// - Provides a Helvetica-based fallback theme that works in pure Dart
+///   environments while allowing callers to inject custom embedded fonts.
 /// Note: Full PDF/A conformance (XMP metadata, OutputIntent/ICC profile, etc.)
 /// is typically done server-side or with specialized tooling.
 class PdfaBackendRequest {
@@ -50,41 +51,23 @@ class PdfAUtils {
     return pw.Document(version: pdf.PdfVersion.pdf_1_4, compress: true);
   }
 
-  /// Provides a PageTheme with embedded Open Sans fonts to comply with PDF/A.
-  static Future<pw.PageTheme> pageTheme() async {
-    final theme = await _resolveThemeData();
-    return pw.PageTheme(theme: theme);
+  /// Provides a [pw.PageTheme] using either the supplied [theme] or the
+  /// lazily-initialised Helvetica fallback that is compatible with pure Dart
+  /// environments.
+  static Future<pw.PageTheme> pageTheme({pw.ThemeData? theme}) async {
+    return pw.PageTheme(theme: theme ?? defaultTheme());
   }
 
-  static pw.ThemeData? _cachedThemeData;
+  static pw.ThemeData? _cachedDefaultTheme;
 
-  static Future<pw.ThemeData> _resolveThemeData() async {
-    if (_cachedThemeData != null) {
-      return _cachedThemeData!;
-    }
-
-    try {
-      final base = await PdfGoogleFonts.openSansRegular();
-      final bold = await PdfGoogleFonts.openSansBold();
-      final italic = await PdfGoogleFonts.openSansItalic();
-      final boldItalic = await PdfGoogleFonts.openSansBoldItalic();
-      _cachedThemeData = pw.ThemeData.withFont(
-        base: base,
-        bold: bold,
-        italic: italic,
-        boldItalic: boldItalic,
-      );
-    } catch (_) {
-      _cachedThemeData = pw.ThemeData.withFont(
-        base: pw.Font.helvetica(),
-        bold: pw.Font.helveticaBold(),
-
-        italic: pw.Font.helveticaOblique(),
-        boldItalic: pw.Font.helveticaBoldOblique(),
-      );
-    }
-
-    return _cachedThemeData!;
+  /// Returns the default theme used when no custom fonts are injected.
+  static pw.ThemeData defaultTheme() {
+    return _cachedDefaultTheme ??= pw.ThemeData.withFont(
+      base: pw.Font.helvetica(),
+      bold: pw.Font.helveticaBold(),
+      italic: pw.Font.helveticaOblique(),
+      boldItalic: pw.Font.helveticaBoldOblique(),
+    );
   }
 
   /// Flattens transparency against white and encodes as baseline JPEG so the

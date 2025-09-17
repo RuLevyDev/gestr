@@ -1,0 +1,66 @@
+<?xpacket begin='﻿' id='INVOICE-SAMPLE-2024-05-30T10:00:'?>
+<x:xmpmeta xmlns:x='adobe:ns:meta/'>
+  <rdf:RDF xmlns:rdf='http://www.w3.org/1999/02/22-rdf-syntax-ns#'>
+    <rdf:Description rdf:about=''
+      xmlns:dc='http://purl.org/dc/elements/1.1/'
+      xmlns:pdf='http://ns.adobe.com/pdf/1.3/'
+      xmlns:xmp='http://ns.adobe.com/xap/1.0/'
+      xmlns:pdfaid='http://www.aiim.org/pdfa/ns/id/'
+      xmlns:gestr='https://gestr.app/ns/aeat/1.0/'>
+      <dc:title><rdf:Alt><rdf:li xml:lang='x-default'>Factura - Factura servicios Gestr mayo 2024</rdf:li></rdf:Alt></dc:title>
+      <dc:creator><rdf:Seq><rdf:li>Gestr App</rdf:li></rdf:Seq></dc:creator>
+      <pdf:Producer>Gestr App</pdf:Producer>
+      <xmp:CreateDate>2024-05-30T10:00:00.000Z</xmp:CreateDate>
+      <xmp:ModifyDate>2024-05-30T10:00:00.000Z</xmp:ModifyDate>
+      <pdfaid:part>1</pdfaid:part>
+      <pdfaid:conformance>B</pdfaid:conformance>
+      <gestr:HomologationRef>AEAT-HOMOLOGATION-PENDING</gestr:HomologationRef>
+      <gestr:Timestamp>2024-05-30T10:00:00.000Z</gestr:Timestamp>
+      <gestr:SoftwareName>Gestr App</gestr:SoftwareName>
+      <gestr:SoftwareVersion>1.0.0</gestr:SoftwareVersion>
+    </rdf:Description>
+    <rdf:Description rdf:about=''
+      xmlns:pdfaExtension='http://www.aiim.org/pdfa/ns/extension/'
+      xmlns:pdfaSchema='http://www.aiim.org/pdfa/ns/schema#'
+      xmlns:pdfaProperty='http://www.aiim.org/pdfa/ns/property#'>
+      <pdfaExtension:schemas>
+        <rdf:Bag>
+          <rdf:li rdf:parseType='Resource'>
+            <pdfaSchema:schema>Gestr AEAT Metadata</pdfaSchema:schema>
+            <pdfaSchema:namespaceURI>https://gestr.app/ns/aeat/1.0/</pdfaSchema:namespaceURI>
+            <pdfaSchema:prefix>gestr</pdfaSchema:prefix>
+            <pdfaSchema:property>
+              <rdf:Seq>
+                <rdf:li rdf:parseType='Resource'>
+                  <pdfaProperty:name>HomologationRef</pdfaProperty:name>
+                  <pdfaProperty:valueType>Text</pdfaProperty:valueType>
+                  <pdfaProperty:category>external</pdfaProperty:category>
+                  <pdfaProperty:description>AEAT homologation reference identifier.</pdfaProperty:description>
+                </rdf:li>
+                <rdf:li rdf:parseType='Resource'>
+                  <pdfaProperty:name>Timestamp</pdfaProperty:name>
+                  <pdfaProperty:valueType>Date</pdfaProperty:valueType>
+                  <pdfaProperty:category>external</pdfaProperty:category>
+                  <pdfaProperty:description>UTC timestamp recording when the document metadata was generated.</pdfaProperty:description>
+                </rdf:li>
+                <rdf:li rdf:parseType='Resource'>
+                  <pdfaProperty:name>SoftwareName</pdfaProperty:name>
+                  <pdfaProperty:valueType>Text</pdfaProperty:valueType>
+                  <pdfaProperty:category>external</pdfaProperty:category>
+                  <pdfaProperty:description>Name of the software producing the document.</pdfaProperty:description>
+                </rdf:li>
+                <rdf:li rdf:parseType='Resource'>
+                  <pdfaProperty:name>SoftwareVersion</pdfaProperty:name>
+                  <pdfaProperty:valueType>Text</pdfaProperty:valueType>
+                  <pdfaProperty:category>external</pdfaProperty:category>
+                  <pdfaProperty:description>Version of the software producing the document.</pdfaProperty:description>
+                </rdf:li>
+              </rdf:Seq>
+            </pdfaSchema:property>
+          </rdf:li>
+        </rdf:Bag>
+      </pdfaExtension:schemas>
+    </rdf:Description>
+  </rdf:RDF>
+</x:xmpmeta>
+<?xpacket end='w'?>
