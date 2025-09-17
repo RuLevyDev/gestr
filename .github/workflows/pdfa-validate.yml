@@ -29,6 +29,7 @@ jobs:
 
       - name: Validate with veraPDF (Docker)
         run: |
+          VERAPDF_IMAGE="${VERAPDF_IMAGE:-ghcr.io/verapdf/verapdf-apps:latest}"
           docker run --rm -v "${{ github.workspace }}/samples/pdfs:/work" "$VERAPDF_IMAGE" \
             --format text --maxfail 1 --failonerror /work/*.pdf
 
