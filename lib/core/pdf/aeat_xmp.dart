@@ -57,6 +57,48 @@ String buildAeatXmp({
       <gestr:SoftwareName>$escapedSoftwareName</gestr:SoftwareName>
       <gestr:SoftwareVersion>$escapedSoftwareVersion</gestr:SoftwareVersion>
     </rdf:Description>
+    <rdf:Description rdf:about=''
+      xmlns:pdfaExtension='http://www.aiim.org/pdfa/ns/extension/'
+      xmlns:pdfaSchema='http://www.aiim.org/pdfa/ns/schema#'
+      xmlns:pdfaProperty='http://www.aiim.org/pdfa/ns/property#'>
+      <pdfaExtension:schemas>
+        <rdf:Bag>
+          <rdf:li rdf:parseType='Resource'>
+            <pdfaSchema:schema>Gestr AEAT Metadata</pdfaSchema:schema>
+            <pdfaSchema:namespaceURI>https://gestr.app/ns/aeat/1.0/</pdfaSchema:namespaceURI>
+            <pdfaSchema:prefix>gestr</pdfaSchema:prefix>
+            <pdfaSchema:property>
+              <rdf:Seq>
+                <rdf:li rdf:parseType='Resource'>
+                  <pdfaProperty:name>HomologationRef</pdfaProperty:name>
+                  <pdfaProperty:valueType>Text</pdfaProperty:valueType>
+                  <pdfaProperty:category>external</pdfaProperty:category>
+                  <pdfaProperty:description>AEAT homologation reference identifier.</pdfaProperty:description>
+                </rdf:li>
+                <rdf:li rdf:parseType='Resource'>
+                  <pdfaProperty:name>Timestamp</pdfaProperty:name>
+                  <pdfaProperty:valueType>Date</pdfaProperty:valueType>
+                  <pdfaProperty:category>external</pdfaProperty:category>
+                  <pdfaProperty:description>UTC timestamp recording when the document metadata was generated.</pdfaProperty:description>
+                </rdf:li>
+                <rdf:li rdf:parseType='Resource'>
+                  <pdfaProperty:name>SoftwareName</pdfaProperty:name>
+                  <pdfaProperty:valueType>Text</pdfaProperty:valueType>
+                  <pdfaProperty:category>external</pdfaProperty:category>
+                  <pdfaProperty:description>Name of the software producing the document.</pdfaProperty:description>
+                </rdf:li>
+                <rdf:li rdf:parseType='Resource'>
+                  <pdfaProperty:name>SoftwareVersion</pdfaProperty:name>
+                  <pdfaProperty:valueType>Text</pdfaProperty:valueType>
+                  <pdfaProperty:category>external</pdfaProperty:category>
+                  <pdfaProperty:description>Version of the software producing the document.</pdfaProperty:description>
+                </rdf:li>
+              </rdf:Seq>
+            </pdfaSchema:property>
+          </rdf:li>
+        </rdf:Bag>
+      </pdfaExtension:schemas>
+    </rdf:Description>
   </rdf:RDF>
 </x:xmpmeta>
 <?xpacket end='w'?>''';

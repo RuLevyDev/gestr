@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:gestr/core/config/compliance_constants.dart';
 import 'package:gestr/core/pdf/aeat_xmp.dart';
 
 /// Utility to build minimalist PDF/A-1b compliant sample documents.
@@ -29,13 +30,17 @@ class PdfaGenerator {
 
     final builder = _PdfBuilder();
 
+    final resolvedTimestamp = (timestamp ?? DateTime.now()).toUtc();
+    final resolvedSoftwareName = _resolveSoftwareName(softwareName);
+    final resolvedSoftwareVersion = _resolveSoftwareVersion(softwareVersion);
+
     final literalTitle = _escapeLiteral(title);
     final literalAuthor = _escapeLiteral(author);
-    final resolvedTimestamp = (timestamp ?? DateTime.now()).toUtc();
+    final literalProducer = _escapeLiteral(resolvedSoftwareName);
     final pdfDate = _formatPdfDate(resolvedTimestamp);
     final infoId = builder.addObject(
       '<< /Title ($literalTitle) /Author ($literalAuthor) '
-      '/Producer (Gestr PDF/A sample generator) '
+      '/Producer ($literalProducer) '
       '/CreationDate ($pdfDate) /ModDate ($pdfDate) >>',
     );
 
@@ -68,8 +73,8 @@ class PdfaGenerator {
       docId: docId,
       homologationRef: homologationRef,
       timestamp: resolvedTimestamp,
-      softwareName: softwareName,
-      softwareVersion: softwareVersion,
+      softwareName: resolvedSoftwareName,
+      softwareVersion: resolvedSoftwareVersion,
     );
     final xmpBytes = utf8.encode(xmpString);
     final metadataId = builder.addStream(
@@ -197,6 +202,20 @@ String _formatNumber(double value) {
     text = text.substring(0, text.length - 1);
   }
   return text;
+}
+
+String _resolveSoftwareName(String? value) {
+  if (value != null && value.trim().isNotEmpty) {
+    return value.trim();
+  }
+  return ComplianceConstants.softwareName;
+}
+
+String _resolveSoftwareVersion(String? value) {
+  if (value != null && value.trim().isNotEmpty) {
+    return value.trim();
+  }
+  return ComplianceConstants.softwareVersion;
 }
 
 String _buildFileIdHex(String seed) {
