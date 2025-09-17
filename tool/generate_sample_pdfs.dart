@@ -74,7 +74,7 @@ Uint8List _buildPdf({
   final literalTitle = _escapeLiteral(title);
   final literalAuthor = _escapeLiteral(author);
   final infoId = builder.addObject(
-    '<< /Title ($literalTitle) /Author ($literalAuthor) /Producer (Gestr PDF/A sample generator) >>',
+    '<< /Title ($literalTitle) /Author ($literalAuthor) /Producer (Gestr PDF/A sample generator) /CreationDate (D:20240101000000Z) /ModDate (D:20240101000000Z) >>',
   );
 
   final contentLines = <String>['BT', '/F1 14 Tf', '1 0 0 1 72 720 Tm'];
@@ -124,7 +124,9 @@ Uint8List _buildPdf({
     '<< /Type /Catalog /Pages $pagesId 0 R /Metadata $metadataId 0 R /Lang (en-US) >>',
   );
 
-  return builder.build(rootId: catalogId, infoId: infoId);
+  final fileIdHex = _buildFileIdHex(docId);
+
+  return builder.build(rootId: catalogId, infoId: infoId, fileIdHex: fileIdHex);
 }
 
 class _PdfDescriptor {
@@ -177,7 +179,11 @@ class _PdfBuilder {
     obj.bytes = ascii.encode(updated);
   }
 
-  Uint8List build({required int rootId, required int infoId}) {
+  Uint8List build({
+    required int rootId,
+    required int infoId,
+    required String fileIdHex,
+  }) {
     final header = latin1.encode('%PDF-1.4\n%\u00e2\u00e3\u00cf\u00d3\n');
     final buffer = BytesBuilder();
     buffer.add(header);
@@ -212,7 +218,7 @@ class _PdfBuilder {
     xref
       ..writeln('trailer')
       ..writeln(
-        '<< /Size ${offsets.length} /Root $rootId 0 R /Info $infoId 0 R >>',
+        '<< /Size ${offsets.length} /Root $rootId 0 R /Info $infoId 0 R /ID [<$fileIdHex> <$fileIdHex>] >>',
       )
       ..writeln('startxref')
       ..writeln('$xrefOffset')
@@ -268,11 +274,14 @@ int _buildType3Font(_PdfBuilder builder, Set<int> usedCodes) {
     lastChar - firstChar + 1,
     (_) => '600',
   ).join(' ');
-
+  final colorSpaceId = builder.addObject(
+    '<< /ColorSpace << /CS0 << /Type /CalRGB /WhitePoint [0.9505 1.0 1.0890] /Gamma [2.2 2.2 2.2] >> >> >>',
+  );
   final fontId = builder.addObject(
     '<< /Type /Font /Subtype /Type3 /Name /F1 /FontBBox [0 0 600 700] '
     '/FontMatrix [0.001 0 0 0.001 0 0] /CharProcs $charProcsId 0 R /Encoding $encodingId 0 R '
-    '/FirstChar $firstChar /LastChar $lastChar /Widths [$widths] >>',
+    '/FirstChar $firstChar /LastChar $lastChar /Widths [$widths] '
+    '/Resources $colorSpaceId 0 R >>',
   );
 
   return fontId;
@@ -284,8 +293,9 @@ String _buildCharProc(List<String> pattern) {
   final buffer =
       StringBuffer()
         ..writeln('q')
-        ..writeln('0 g')
-        ..writeln('600 0 0 0 600 ${rows * cellSize} setcachedevice');
+        ..writeln('CS0 cs')
+        ..writeln('0 0 0 sc')
+        ..writeln('600 0 0 0 600 ${rows * cellSize} d1');
 
   final filled = <String>[];
   for (var row = 0; row < rows; row++) {
@@ -305,6 +315,20 @@ String _buildCharProc(List<String> pattern) {
   }
 
   buffer.writeln('Q');
+  return buffer.toString();
+}
+
+String _buildFileIdHex(String seed) {
+  final source = seed.isEmpty ? 'gestr-doc-id' : seed;
+  final bytes = List<int>.generate(16, (index) {
+    final char = source.codeUnitAt(index % source.length);
+    return (char + index) & 0xff;
+  });
+
+  final buffer = StringBuffer();
+  for (final byte in bytes) {
+    buffer.write(byte.toRadixString(16).padLeft(2, '0'));
+  }
   return buffer.toString();
 }
 
