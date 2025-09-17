@@ -85,12 +85,11 @@ Uint8List _buildPdf({
   );
 
   final colorSpaceId = builder.addObject(
-    '<< /Type /CalRGB /WhitePoint [0.9505 1.0 1.0890] /Gamma [2.2 2.2 2.2] >>',
+    '[ /CalRGB << /WhitePoint [0.9505 1.0 1.0890] /Gamma [2.2 2.2 2.2] >> ]',
   );
   final resourcesId = builder.addObject(
     '<< /ColorSpace << /CS0 $colorSpaceId 0 R >> >>',
   );
-
   final pageId = builder.addObject(
     '<< /Type /Page /Parent 0 0 R /MediaBox [0 0 595 842] /Resources $resourcesId 0 R /Contents $contentId 0 R >>',
   );
