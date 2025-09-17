@@ -7,8 +7,8 @@ import 'dart:typed_data';
 /// `tool/generate_sample_pdfs.dart` so the same PDF structure is available in
 /// the Flutter application. Only a limited character set is supported; use
 /// [sanitizeLine] to normalize arbitrary user input into a compatible form.
-class PdfaSampleGenerator {
-  const PdfaSampleGenerator._();
+class PdfaGenerator {
+  const PdfaGenerator._();
 
   /// Generates a PDF document using the provided [lines].
   static Uint8List generate({

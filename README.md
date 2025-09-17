@@ -33,25 +33,28 @@ N2F se orienta a organizaciones con múltiples usuarios (empleados y administrad
 - [x] Escaneo de facturas con OCR que extrae título, importe, fecha, emisor, receptor y concepto.
 - [x] Módulo de proveedores y productos.
 - [x] Módulo de clientes.
+- [x] Conciliación bancaria manual con vinculación de movimientos importados.
+- [x] Generación y compartición de comprobantes PDF con utilidades orientadas a PDF/A.
 
 #### Pendientes
 - [ ] Módulos/widgets de servicios, citas, empleados, analíticas, opciones, notificaciones y suscripciones.
 - [ ] Conexión bancaria automática para importar movimientos y comprobantes.
 - [ ] Exportaciones contables e integración con ERPs.
 
-- [ ] Panel de KPIs en tiempo real y widgets configurables.
+- [ ] Panel de KPIs en tiempo real y widgets totalmente configurables.
 - [ ] Sistema de suscripciones para activar módulos avanzados.
 - [ ] Alertas y recordatorios proactivos para gastos incompletos.
 - [ ] Análisis predictivo de flujo de caja y recomendaciones.
 
 ## Validación y normalización PDF/A
-- [ ]Ejecuta `dart run tool/generate_sample_pdfs.dart` (o `flutter pub run tool/generate_sample_pdfs.dart` si solo está disponible Flutter) para generar comprobantes de ejemplo con los metadatos XMP solicitados al backend.
-- [ ] Lanza `tool/validate_pdfa.sh` para regenerar los PDFs de muestra y validarlos automáticamente con [veraPDF](https://verapdf.org/) dentro de un contenedor Docker.
-- [ ] La acción de GitHub `.github/workflows/pdfa-validate.yml` reutiliza estos scripts para garantizar que siempre exista una verificación PDF/A sin coste adicional durante los PR.
+- [x]Ejecuta `dart run tool/generate_sample_pdfs.dart` (o `flutter pub run tool/generate_sample_pdfs.dart` si solo está disponible Flutter) para generar comprobantes de ejemplo con los metadatos XMP solicitados al backend.
+- [x] Lanza `tool/validate_pdfa.sh` para regenerar los PDFs de muestra y validarlos automáticamente con [veraPDF](https://verapdf.org/) dentro de un contenedor Docker.
+- [x] La acción de GitHub `.github/workflows/pdfa-validate.yml` reutiliza estos scripts para garantizar que siempre exista una verificación PDF/A sin coste adicional durante los PR.
+
 ### Checklist de cumplimiento AEAT dentro de la app
-- [] Garantizar soporte en la app para los siguientes formatos de imagen exigidos por la AEAT:
-  - [] PDF/A (ISO 19005)
-    - [ ] Generación básica desde la app: PDF 1.4 con fuentes incrustadas (Open Sans vía PdfGoogleFonts). Sin cifrado ni elementos interactivos.
+- [ ] Garantizar soporte en la app para los siguientes formatos de imagen exigidos por la AEAT:
+  - [x] PDF/A (ISO 19005)
+    - [x] Generación básica desde la app: PDF 1.4 con fuentes incrustadas (Open Sans vía el helper `PdfGoogleFonts`). Sin cifrado ni elementos interactivos.
     - [ ] Nota: Validación PDF/A completa (XMP + OutputIntent/ICC) pendiente de integrar con herramienta externa (p.ej., veraPDF) o servicio backend de normalización.
   - [ ] PNG
   - [ ] JPEG 2000

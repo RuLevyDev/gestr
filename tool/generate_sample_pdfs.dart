@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:gestr/core/pdf/pdfa_sample_generator.dart';
+import 'package:gestr/core/pdf/pdfa_generator.dart';
 
 void main(List<String> args) {
   final outputDir = Directory('samples/pdfs');
@@ -42,7 +42,7 @@ void main(List<String> args) {
   ];
 
   for (final descriptor in descriptors) {
-    final bytes = PdfaSampleGenerator.generate(
+    final bytes = PdfaGenerator.generate(
       title: descriptor.title,
       author: descriptor.author,
       lines: descriptor.lines,
