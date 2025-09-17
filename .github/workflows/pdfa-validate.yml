@@ -37,7 +37,24 @@ jobs:
         env:
           DEFAULT_VERAPDF_IMAGE: docker.io/verapdf/cli:latest
         run: |
-          VERAPDF_IMAGE="${VERAPDF_IMAGE:-$DEFAULT_VERAPDF_IMAGE}"
-          docker run --rm -v "${{ github.workspace }}/samples/pdfs:/work" "$VERAPDF_IMAGE" \
-            --format text --maxfail 1 --failonerror /work/*.pdf
+          set -euo pipefail
 
+          VERAPDF_IMAGE="${VERAPDF_IMAGE:-$DEFAULT_VERAPDF_IMAGE}"
+
+          shopt -s nullglob
+          pdf_files=(samples/pdfs/*.pdf)
+          shopt -u nullglob
+
+          if [ "${#pdf_files[@]}" -eq 0 ]; then
+            echo "No sample PDFs were generated for validation." >&2
+            exit 1
+          fi
+
+          verapdf_args=()
+          if [ -n "${VERAPDF_ARGS:-}" ]; then
+            # shellcheck disable=SC2206
+            verapdf_args=(${VERAPDF_ARGS})
+          fi
+
+          docker run --rm -v "${{ github.workspace }}:/data" "$VERAPDF_IMAGE" \
+            "${verapdf_args[@]}" "${pdf_files[@]}"

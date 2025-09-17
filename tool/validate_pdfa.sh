@@ -2,7 +2,6 @@
 set -euo pipefail
 
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-OUTPUT_DIR="$PROJECT_ROOT/samples/pdfs"
 VERAPDF_IMAGE="${VERAPDF_IMAGE:-docker.io/verapdf/cli:latest}"
 
 pushd "$PROJECT_ROOT" >/dev/null
@@ -26,8 +25,23 @@ if ! command -v docker &>/dev/null; then
   exit 1
 fi
 
-docker run --rm -v "$OUTPUT_DIR:/work" "$VERAPDF_IMAGE" \
-  --format text --maxfail 1 --failonerror /work/*.pdf
+shopt -s nullglob
+PDF_FILES=(samples/pdfs/*.pdf)
+shopt -u nullglob
+
+if [ "${#PDF_FILES[@]}" -eq 0 ]; then
+  echo "No PDFs were generated; nothing to validate." >&2
+  exit 1
+fi
+
+VERAPDF_ARGS_ARRAY=()
+if [ -n "${VERAPDF_ARGS:-}" ]; then
+  # shellcheck disable=SC2206
+  VERAPDF_ARGS_ARRAY=(${VERAPDF_ARGS})
+fi
+
+docker run --rm -v "$PROJECT_ROOT:/data" "$VERAPDF_IMAGE" \
+  "${VERAPDF_ARGS_ARRAY[@]}" "${PDF_FILES[@]}"
 
 echo "PDF/A validation completed successfully."
 
