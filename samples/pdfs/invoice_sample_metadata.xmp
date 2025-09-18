@@ -10,12 +10,12 @@
       <dc:title><rdf:Alt><rdf:li xml:lang='x-default'>Factura - Factura servicios Gestr mayo 2024</rdf:li></rdf:Alt></dc:title>
       <dc:creator><rdf:Seq><rdf:li>Gestr App</rdf:li></rdf:Seq></dc:creator>
       <pdf:Producer>Gestr App</pdf:Producer>
-      <xmp:CreateDate>2024-05-30T10:00:00.000Z</xmp:CreateDate>
-      <xmp:ModifyDate>2024-05-30T10:00:00.000Z</xmp:ModifyDate>
+      <xmp:CreateDate>2024-05-30T10:00:00Z</xmp:CreateDate>
+      <xmp:ModifyDate>2024-05-30T10:00:00Z</xmp:ModifyDate>
       <pdfaid:part>1</pdfaid:part>
       <pdfaid:conformance>B</pdfaid:conformance>
       <gestr:HomologationRef>AEAT-HOMOLOGATION-PENDING</gestr:HomologationRef>
-      <gestr:Timestamp>2024-05-30T10:00:00.000Z</gestr:Timestamp>
+      <gestr:Timestamp>2024-05-30T10:00:00Z</gestr:Timestamp>
       <gestr:SoftwareName>Gestr App</gestr:SoftwareName>
       <gestr:SoftwareVersion>1.0.0</gestr:SoftwareVersion>
     </rdf:Description>

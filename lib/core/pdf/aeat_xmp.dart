@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:gestr/core/config/compliance_constants.dart';
+import 'package:gestr/core/pdf/pdf_timestamp_utils.dart';
 
 /// Builds an XMP metadata packet that satisfies the AEAT requirements for
 /// digital invoices.
@@ -13,8 +14,10 @@ String buildAeatXmp({
   String? softwareName,
   String? softwareVersion,
 }) {
-  final resolvedTimestamp = (timestamp ?? DateTime.now()).toUtc();
-  final isoTimestamp = resolvedTimestamp.toIso8601String();
+  final resolvedTimestamp = normalizeToSecondPrecisionUtc(
+    timestamp ?? DateTime.now(),
+  );
+  final isoTimestamp = formatIso8601Utc(resolvedTimestamp);
   final htmlEscape = const HtmlEscape();
 
   final escapedTitle = htmlEscape.convert(title);

@@ -11,7 +11,6 @@ class PixelFont {
 
   static const double _cellSize = 2.0;
   static const int _glyphColumns = 5;
-  static const int _glyphRows = 7;
   static const double _glyphAdvance = _glyphColumns * _cellSize + _cellSize;
   static const double _baseFontSize = 12.0;
   static const double _baseLineHeight = 18.0;

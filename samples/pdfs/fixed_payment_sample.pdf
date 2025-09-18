@@ -1355,7 +1355,7 @@ endobj
 << /Type /Pages /Kids [5 0 R] /Count 1 >>
 endobj
 7 0 obj
-<< /Type /Metadata /Subtype /XML /Length 3603 >>
+<< /Type /Metadata /Subtype /XML /Length 3591 >>
 stream
 <?xpacket begin='﻿' id='uuid-fixed'?>
 <x:xmpmeta xmlns:x='adobe:ns:meta/'>
@@ -1369,12 +1369,12 @@ stream
       <dc:title><rdf:Alt><rdf:li xml:lang='x-default'>Fixed Payment Sample</rdf:li></rdf:Alt></dc:title>
       <dc:creator><rdf:Seq><rdf:li>Gestr App</rdf:li></rdf:Seq></dc:creator>
       <pdf:Producer>Gestr App</pdf:Producer>
-      <xmp:CreateDate>2024-01-01T00:00:00.000Z</xmp:CreateDate>
-      <xmp:ModifyDate>2024-01-01T00:00:00.000Z</xmp:ModifyDate>
+      <xmp:CreateDate>2024-01-01T00:00:00Z</xmp:CreateDate>
+      <xmp:ModifyDate>2024-01-01T00:00:00Z</xmp:ModifyDate>
       <pdfaid:part>1</pdfaid:part>
       <pdfaid:conformance>B</pdfaid:conformance>
       <gestr:HomologationRef>AEAT-HOMOLOGATION-PENDING</gestr:HomologationRef>
-      <gestr:Timestamp>2024-01-01T00:00:00.000Z</gestr:Timestamp>
+      <gestr:Timestamp>2024-01-01T00:00:00Z</gestr:Timestamp>
       <gestr:SoftwareName>Gestr App</gestr:SoftwareName>
       <gestr:SoftwareVersion>1.0.0</gestr:SoftwareVersion>
     </rdf:Description>
@@ -1438,9 +1438,9 @@ xref
 0000020086 00000 n 
 0000020190 00000 n 
 0000020247 00000 n 
-0000023932 00000 n 
+0000023920 00000 n 
 trailer
 << /Size 9 /Root 8 0 R /Info 1 0 R /ID [<75766b67316b6f7f6d6d7f8075713b75> <75766b67316b6f7f6d6d7f8075713b75>] >>
 startxref
-24011
+23999
 %%EOF

@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:gestr/core/config/compliance_constants.dart';
 import 'package:gestr/core/pdf/aeat_xmp.dart';
 import 'package:gestr/core/pdf/pdfa_document_builder.dart';
+import 'package:gestr/core/pdf/pdf_timestamp_utils.dart';
 import 'package:gestr/core/pdf/pixel_font.dart';
 
 /// Utility to build minimalist PDF/A-1b compliant sample documents.
@@ -32,14 +33,16 @@ class PdfaGenerator {
 
     final builder = PdfaDocumentBuilder();
 
-    final resolvedTimestamp = (timestamp ?? DateTime.now()).toUtc();
+    final resolvedTimestamp = normalizeToSecondPrecisionUtc(
+      timestamp ?? DateTime.now(),
+    );
     final resolvedSoftwareName = _resolveSoftwareName(softwareName);
     final resolvedSoftwareVersion = _resolveSoftwareVersion(softwareVersion);
 
     final literalTitle = _escapeLiteral(title);
     final literalAuthor = _escapeLiteral(author);
     final literalProducer = _escapeLiteral(resolvedSoftwareName);
-    final pdfDate = _formatPdfDate(resolvedTimestamp);
+    final pdfDate = formatPdfDate(resolvedTimestamp);
     final infoId = builder.addObject(
       '<< /Title ($literalTitle) /Author ($literalAuthor) '
       '/Producer ($literalProducer) '
@@ -106,17 +109,6 @@ class PdfaGenerator {
     final fallback = sanitized.isEmpty ? 'GESTR-DOC' : sanitized;
     return fallback.length > 32 ? fallback.substring(0, 32) : fallback;
   }
-}
-
-String _formatPdfDate(DateTime timestamp) {
-  final utc = timestamp.toUtc();
-  final year = utc.year.toString().padLeft(4, '0');
-  final month = utc.month.toString().padLeft(2, '0');
-  final day = utc.day.toString().padLeft(2, '0');
-  final hour = utc.hour.toString().padLeft(2, '0');
-  final minute = utc.minute.toString().padLeft(2, '0');
-  final second = utc.second.toString().padLeft(2, '0');
-  return 'D:$year$month$day$hour$minute${second}Z';
 }
 
 String _buildContentStream(List<String> lines) {
