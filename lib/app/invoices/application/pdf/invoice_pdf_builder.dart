@@ -62,7 +62,7 @@ class InvoicePdfBuilder {
     final builder = PdfaDocumentBuilder();
 
     final literalTitle = _escapeLiteral(
-      content.title.isEmpty ? 'Factura' : content.title,
+      content.title.isEmpty ? 'FACTURA' : content.title,
     );
     final literalAuthor = _escapeLiteral(ComplianceConstants.softwareName);
     final literalProducer = _escapeLiteral(ComplianceConstants.softwareName);
@@ -148,13 +148,16 @@ _InvoicePageLayout _buildLayout(InvoicePdfContent content) {
   );
 
   builder.addTitle('FACTURA');
-  builder.addLabelValue('N?', content.invoiceNumber ?? 'No disponible');
+  builder.addLabelValue('NUMERO', content.invoiceNumber ?? 'NO DISPONIBLE');
   builder.addLabelValue('FECHA', _formatDate(content.issueDate));
   builder.addStatusChip(content.status.labelEs);
 
   builder.addSeparator();
 
-  final issuerLines = _wrapMultiline(content.issuerName);
+  final issuerLines = _wrapMultiline(
+    content.issuerName,
+    builder.cardContentWidth,
+  );
   if (issuerLines.isNotEmpty) {
     builder.addSectionTitle('EMISOR');
     builder.addBodyLines(issuerLines);
@@ -165,6 +168,7 @@ _InvoicePageLayout _buildLayout(InvoicePdfContent content) {
     content.receiverName,
     content.receiverTaxId,
     content.receiverAddress,
+    builder.cardContentWidth,
   );
   if (receiverLines.isNotEmpty) {
     builder.addSectionTitle('RECEPTOR');
@@ -172,7 +176,8 @@ _InvoicePageLayout _buildLayout(InvoicePdfContent content) {
     builder.addSeparator();
   }
 
-  final conceptLines = _wrapParagraph(content.concept);
+  final paragraphWidth = builder.cardContentWidth - 24.0;
+  final conceptLines = _wrapParagraph(content.concept, paragraphWidth);
   if (conceptLines.isNotEmpty) {
     builder.addSectionTitle('CONCEPTO');
     builder.addParagraphBox(conceptLines);
@@ -183,20 +188,20 @@ _InvoicePageLayout _buildLayout(InvoicePdfContent content) {
   builder.addAmountTable(
     rows: [
       _AmountRow(
-        'Base imponible',
+        'BASE IMPONIBLE',
         _formatMoney(content.netAmount, content.currency),
       ),
       _AmountRow('IVA', _formatMoney(content.ivaAmount, content.currency)),
     ],
-    total: _AmountRow('Total', _formatMoney(content.total, content.currency)),
+    total: _AmountRow('TOTAL', _formatMoney(content.total, content.currency)),
   );
 
   if (content.attachmentImageBytes != null) {
     builder.addSeparator();
     builder.addSectionTitle('ADJUNTOS');
-    builder.addParagraphBox([
-      PixelFont.sanitize('Imagen disponible en la aplicaci?n'),
-    ]);
+    builder.addParagraphBox(
+      _wrapParagraph('Imagen disponible en la aplicacion', paragraphWidth),
+    );
   }
 
   builder.addSeparator();
@@ -205,26 +210,24 @@ _InvoicePageLayout _buildLayout(InvoicePdfContent content) {
   final layout = builder.build();
   layout.rects.insert(
     0,
-    _DrawRect(
+    const _DrawRect(
       left: 0,
       bottom: 0,
       width: pageWidth,
       height: pageHeight,
-      color: const _PdfColor(0.92, 0.98, 0.99),
+      color: _PdfColor(0.93, 0.98, 0.99),
     ),
   );
-
   layout.rects.insert(
     1,
     _DrawRect(
-      left: cardLeft + 4,
-      bottom: layout.cardBottom - 4,
+      left: cardLeft + 6,
+      bottom: layout.cardBottom - 6,
       width: cardWidth,
       height: layout.cardTop - layout.cardBottom,
-      color: const _PdfColor(0.84, 0.93, 0.96),
+      color: const _PdfColor(0.86, 0.95, 0.96),
     ),
   );
-
   layout.rects.insert(
     2,
     _DrawRect(
@@ -312,13 +315,13 @@ class _InvoiceLayoutBuilder {
   final List<_DrawText> _texts = [];
   final List<String> _coverageStrings = [];
 
-  static const _PdfColor _primaryText = _PdfColor(0.08, 0.09, 0.11);
-  static const _PdfColor _mutedText = _PdfColor(0.4, 0.43, 0.48);
-  static const _PdfColor _chipBackground = _PdfColor(0.74, 0.9, 0.93);
-  static const _PdfColor _chipText = _PdfColor(0.12, 0.28, 0.33);
-  static const _PdfColor _separatorColor = _PdfColor(0.83, 0.86, 0.9);
-  static const _PdfColor _boxBackground = _PdfColor(0.86, 0.87, 0.9);
-  static const _PdfColor _tableBackground = _PdfColor(0.94, 0.96, 0.98);
+  static const _PdfColor _primaryText = _PdfColor(0.09, 0.11, 0.13);
+  static const _PdfColor _mutedText = _PdfColor(0.41, 0.44, 0.48);
+  static const _PdfColor _chipBackground = _PdfColor(0.64, 0.91, 0.81);
+  static const _PdfColor _chipText = _PdfColor(0.06, 0.3, 0.23);
+  static const _PdfColor _separatorColor = _PdfColor(0.87, 0.89, 0.92);
+  static const _PdfColor _boxBackground = _PdfColor(0.9, 0.91, 0.94);
+  static const _PdfColor _tableBackground = _PdfColor(0.95, 0.97, 0.99);
   static const _PdfColor _totalBackground = _PdfColor(0.12, 0.39, 0.23);
   static const _PdfColor _totalText = _PdfColor(1, 1, 1);
 
@@ -328,6 +331,12 @@ class _InvoiceLayoutBuilder {
   static const double _sectionFontSize = 12.0;
   static const double _bodyFontSize = 11.0;
   static const double _totalFontSize = 14.0;
+
+  List<String> get coverageStrings => _coverageStrings;
+  double get cardBottom =>
+      minY.isFinite
+          ? minY - paddingBottom
+          : cardTop - paddingTop - paddingBottom;
 
   void addTitle(String text) {
     _addLine(
@@ -373,7 +382,8 @@ class _InvoiceLayoutBuilder {
     final textWidth = PixelFont.measureWidth(sanitized, chipFont);
     final lineHeight = PixelFont.lineHeight(chipFont);
 
-    final rectWidth = textWidth + horizontalPadding * 2;
+    final availableWidth = cardContentWidth;
+    final rectWidth = min(textWidth + horizontalPadding * 2, availableWidth);
     final rectHeight = lineHeight + verticalPadding * 2;
     final rectBottom = cursor - rectHeight;
 
@@ -387,20 +397,22 @@ class _InvoiceLayoutBuilder {
       ),
     );
 
+    final textLeft =
+        cardContentLeft + min(horizontalPadding, (rectWidth - textWidth) / 2);
     _addText(
       sanitized,
       top: rectBottom + rectHeight - verticalPadding,
       fontSize: chipFont,
       color: _chipText,
       gapAfter: 14,
-      leftOffset: horizontalPadding,
+      leftOffset: textLeft - cardContentLeft,
     );
   }
 
   void addSeparator() {
-    const thickness = 1.2;
+    const thickness = 1.0;
     const gapBefore = 10.0;
-    const gapAfter = 14.0;
+    const gapAfter = 16.0;
 
     cursor -= gapBefore;
     final bottom = cursor - thickness;
@@ -441,18 +453,20 @@ class _InvoiceLayoutBuilder {
 
     const horizontalPadding = 12.0;
     const verticalPadding = 10.0;
+    const lineGap = 4.0;
 
     final lineHeight = PixelFont.lineHeight(_bodyFontSize);
     final contentHeight =
-        lines.length * lineHeight + max(0, lines.length - 1) * 4.0;
+        lines.length * lineHeight + max(0, lines.length - 1) * lineGap;
     final boxHeight = contentHeight + 2 * verticalPadding;
+    final boxWidth = cardContentWidth;
     final bottom = cursor - boxHeight;
 
     _rects.add(
       _DrawRect(
         left: cardContentLeft,
         bottom: bottom,
-        width: cardContentWidth,
+        width: boxWidth,
         height: boxHeight,
         color: _boxBackground,
       ),
@@ -465,13 +479,13 @@ class _InvoiceLayoutBuilder {
         top: lineTop,
         fontSize: _bodyFontSize,
         color: _primaryText,
-        gapAfter: 4,
+        gapAfter: lineGap,
         leftOffset: horizontalPadding,
       );
-      lineTop -= lineHeight + 4;
+      lineTop -= lineHeight + lineGap;
     }
 
-    cursor = bottom - 12;
+    cursor = bottom - 14;
     minY = min(minY, bottom);
   }
 
@@ -518,13 +532,14 @@ class _InvoiceLayoutBuilder {
       );
 
       final valueWidth = PixelFont.measureWidth(value, _bodyFontSize);
+      final valueLeft = cardContentWidth - paddingX - valueWidth;
       _addText(
         value,
         top: rowTop,
         fontSize: _bodyFontSize,
         color: _primaryText,
         gapAfter: 0,
-        leftOffset: cardContentWidth - paddingX - valueWidth,
+        leftOffset: max(paddingX, valueLeft),
       );
 
       final bottom = rowTop - lineHeight;
@@ -532,13 +547,13 @@ class _InvoiceLayoutBuilder {
       minY = min(minY, bottom);
     }
 
-    cursor = boxBottom - 16;
+    cursor = boxBottom - 18;
     minY = min(minY, boxBottom);
 
     final totalLabel = PixelFont.sanitize(total.label);
     final totalValue = PixelFont.sanitize(total.value);
 
-    const totalPaddingY = 8.0;
+    const totalPaddingY = 9.0;
     const totalPaddingX = 14.0;
     final totalLineHeight = PixelFont.lineHeight(_totalFontSize);
     final totalHeight = totalLineHeight + totalPaddingY * 2;
@@ -564,13 +579,14 @@ class _InvoiceLayoutBuilder {
     );
 
     final totalWidth = PixelFont.measureWidth(totalValue, _totalFontSize);
+    final totalLeft = cardContentWidth - totalPaddingX - totalWidth;
     _addText(
       totalValue,
       top: totalBottom + totalHeight - totalPaddingY,
       fontSize: _totalFontSize,
       color: _totalText,
       gapAfter: 0,
-      leftOffset: cardContentWidth - totalPaddingX - totalWidth,
+      leftOffset: max(totalPaddingX, totalLeft),
     );
 
     cursor = totalBottom - 20;
@@ -588,13 +604,13 @@ class _InvoiceLayoutBuilder {
 
   _InvoicePageLayout build() {
     final contentBottom = minY.isFinite ? minY : cursor;
-    final cardBottom = contentBottom - paddingBottom;
+    final resolvedCardBottom = contentBottom - paddingBottom;
 
     return _InvoicePageLayout(
       rects: _rects,
       texts: _texts,
       coverageStrings: _coverageStrings,
-      cardBottom: cardBottom,
+      cardBottom: resolvedCardBottom,
       cardTop: cardTop,
     );
   }
@@ -740,39 +756,45 @@ String _formatMoney(double value, String currency) {
   return sanitizedCurrency.isEmpty ? amount : '$amount $sanitizedCurrency';
 }
 
-List<String> _wrapParagraph(String? text) {
+List<String> _wrapParagraph(String? text, double maxWidth) {
   if (text == null || text.trim().isEmpty) {
     return <String>[];
   }
-  return PixelFont.wrap(text, fontSize: 11.0, maxWidth: 36 * 12.0);
+  return PixelFont.wrap(text, fontSize: 11.0, maxWidth: maxWidth);
 }
 
-List<String> _wrapMultiline(String? text) {
+List<String> _wrapMultiline(String? text, double maxWidth) {
   if (text == null || text.trim().isEmpty) {
     return <String>[];
   }
-  final normalized = text.replaceAll('\r\n', '\n');
+  final normalized = text.replaceAll(RegExp(r'\r\n?'), '\n');
+
   final segments = normalized.split('\n');
   final lines = <String>[];
   for (final segment in segments) {
     if (segment.trim().isEmpty) {
       continue;
     }
-    lines.addAll(PixelFont.wrap(segment, fontSize: 11.0, maxWidth: 36 * 12.0));
+    lines.addAll(PixelFont.wrap(segment, fontSize: 11.0, maxWidth: maxWidth));
   }
   return lines;
 }
 
-List<String> _receiverDetails(String? name, String? taxId, String? address) {
+List<String> _receiverDetails(
+  String? name,
+  String? taxId,
+  String? address,
+  double maxWidth,
+) {
   final buffer = <String>[];
   if (name != null && name.trim().isNotEmpty) {
-    buffer.addAll(PixelFont.wrap(name, fontSize: 11.0, maxWidth: 36 * 12.0));
+    buffer.addAll(PixelFont.wrap(name, fontSize: 11.0, maxWidth: maxWidth));
   }
   if (taxId != null && taxId.trim().isNotEmpty) {
     buffer.add(_composeKeyValue('NIF', taxId));
   }
   if (address != null && address.trim().isNotEmpty) {
-    buffer.addAll(PixelFont.wrap(address, fontSize: 11.0, maxWidth: 36 * 12.0));
+    buffer.addAll(PixelFont.wrap(address, fontSize: 11.0, maxWidth: maxWidth));
   }
   return buffer;
 }
