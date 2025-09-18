@@ -11,8 +11,27 @@ class _VatInfo {
   const _VatInfo({this.amount, this.rate});
 }
 
-/// Implementación del [OcrRepository] que utiliza [OcrService]
-/// para extraer y normalizar la información de una imagen.
+class _IndexedValue {
+  final int index;
+  final String value;
+  const _IndexedValue({required this.index, required this.value});
+}
+
+const List<String> _issuerKeywords = <String>[
+  'emisor',
+  'issuer',
+  'proveedor',
+  'supplier',
+];
+const List<String> _receiverKeywords = <String>[
+  'receptor',
+  'receiver',
+  'cliente',
+  'customer',
+];
+
+/// ImplementaciA3n del [OcrRepository] que utiliza [OcrService]
+/// para extraer y normalizar la informaciA3n de una imagen.
 class OcrRepositoryImpl implements OcrRepository {
   final OcrService _service;
 
@@ -34,11 +53,11 @@ class OcrRepositoryImpl implements OcrRepository {
     // ignore: avoid_print
     print('[OCR] Normalized lines: ${lines.length}');
 
-    // Título: primera línea no numérica, o emisor si existe
+    // TAtulo: primera lAnea no numArica, o emisor si existe
     String? title;
     if (lines.isNotEmpty) {
       title = lines.firstWhere(
-        (l) => !RegExp(r'^[-€$0-9 ,.]+$').hasMatch(l),
+        (l) => !RegExp(r'^[-a$0-9 ,.]+$').hasMatch(l),
         orElse: () => lines.first,
       );
     }
@@ -60,7 +79,7 @@ class OcrRepositoryImpl implements OcrRepository {
         ]) ??
         _extractBestAmount(lines, normalized);
 
-    // Si no hay suficientes datos, intenta el patrón en dos líneas (cabecera y valores)
+    // Si no hay suficientes datos, intenta el patrA3n en dos lAneas (cabecera y valores)
     if (baseAmount == null || vatInfo.amount == null || totalAmount == null) {
       final adj = _extractTotalsFromAdjacentLines(lines);
       baseAmount ??= adj.base;
@@ -88,32 +107,223 @@ class OcrRepositoryImpl implements OcrRepository {
     final date = _extractDate(normalized);
 
     // Campos adicionales
-    final issuer = _extractField(normalized, ['Emisor', 'Issuer', 'Proveedor']);
-    final receiver = _extractField(normalized, [
-      'Receptor',
-      'Receiver',
-      'Cliente',
-    ]);
-    final concept = _extractField(normalized, [
-      'Concepto',
-      'Concept',
-      'Descripción',
-      'Descripcion',
-    ]);
+    final issuer = normalizeText(
+      _extractField(normalized, ['Emisor', 'Issuer', 'Proveedor']),
+    );
+    final receiver = normalizeText(
+      _extractField(normalized, ['Receptor', 'Receiver', 'Cliente']),
+    );
+    final concept = normalizeText(
+      _extractField(normalized, [
+        'Concepto',
+        'Concept',
+        'Descripcion',
+        'Descripcion',
+      ]),
+    );
+
+    final invoiceNumber = normalizeText(_extractInvoiceNumber(lines));
+    final taxMatches = _gatherTaxIdMatches(lines);
+    final addressMatches = _gatherAddressMatches(lines);
+    final consumedTaxIndexes = <int>{};
+    final consumedAddressIndexes = <int>{};
+
+    final issuerTaxId = normalizeText(
+      _extractField(normalized, [
+            'NIF Emisor',
+            'CIF Emisor',
+            'VAT Issuer',
+            'Tax Id Supplier',
+          ]) ??
+          _valueForContext(
+            taxMatches,
+            lines,
+            _issuerKeywords,
+            consumedTaxIndexes,
+          ),
+    );
+    final receiverTaxId = normalizeText(
+      _extractField(normalized, [
+            'NIF Receptor',
+            'CIF Receptor',
+            'VAT Receiver',
+            'NIF Cliente',
+          ]) ??
+          _valueForContext(
+            taxMatches,
+            lines,
+            _receiverKeywords,
+            consumedTaxIndexes,
+          ),
+    );
+
+    final issuerAddress = normalizeText(
+      _extractField(normalized, [
+            'Direccion Emisor',
+            'Direccion Emisor',
+            'Domicilio Emisor',
+            'Address Issuer',
+          ]) ??
+          _valueForContext(
+            addressMatches,
+            lines,
+            _issuerKeywords,
+            consumedAddressIndexes,
+          ),
+    );
+    final receiverAddress = normalizeText(
+      _extractField(normalized, [
+            'Direccion Receptor',
+            'Direccion Receptor',
+            'Domicilio Receptor',
+            'Direccion Cliente',
+            'Direccion Cliente',
+            'Address Receiver',
+          ]) ??
+          _valueForContext(
+            addressMatches,
+            lines,
+            _receiverKeywords,
+            consumedAddressIndexes,
+          ),
+    );
+
     final items = _extractItems(lines);
 
     return OcrInvoiceData(
       title: title,
+      invoiceNumber: invoiceNumber,
       amount: amount,
       vatAmount: vatAmount,
       vatRate: vatInfo.rate,
       totalAmount: totalAmount,
       date: date,
       issuer: issuer,
+      issuerTaxId: issuerTaxId,
+      issuerAddress: issuerAddress,
       receiver: receiver,
+      receiverTaxId: receiverTaxId,
+      receiverAddress: receiverAddress,
       concept: concept,
       items: items,
     );
+  }
+
+  String? normalizeText(String? value) {
+    if (value == null) {
+      return null;
+    }
+    final trimmed = value.trim();
+    return trimmed.isEmpty ? null : trimmed;
+  }
+
+  String? _extractInvoiceNumber(List<String> lines) {
+    final patterns = <RegExp>[
+      RegExp(
+        r'(?:factura|invoice)[^0-9a-z]*?(?:n[oo]|no|number|num(?:ero)?|#)?[:#\-\s]*([A-Za-z0-9][A-Za-z0-9\-\./]+)',
+        caseSensitive: false,
+      ),
+      RegExp(
+        r'^n[oo\.]?[:#\-\s]*([A-Za-z0-9][A-Za-z0-9\-\./]+)$',
+        caseSensitive: false,
+      ),
+    ];
+    for (final line in lines) {
+      for (final pattern in patterns) {
+        final match = pattern.firstMatch(line);
+        if (match != null) {
+          final value = match.group(1)?.trim();
+          if (value != null && value.isNotEmpty) {
+            return value;
+          }
+        }
+      }
+    }
+    return null;
+  }
+
+  List<_IndexedValue> _gatherTaxIdMatches(List<String> lines) {
+    final matches = <_IndexedValue>[];
+    final regex = RegExp(
+      r'(?:nif|cif|vat|tax\s*id|id\s*fiscal)[^A-Za-z0-9]*([A-Za-z0-9][A-Za-z0-9\-\./]*)',
+      caseSensitive: false,
+    );
+    for (var i = 0; i < lines.length; i++) {
+      final line = lines[i];
+      final match = regex.firstMatch(line);
+      if (match != null) {
+        var value = match.group(1)?.trim() ?? '';
+        if (value.isEmpty && i + 1 < lines.length) {
+          value = lines[i + 1].trim();
+        }
+        value = value.replaceAll(RegExp(r'[^A-Za-z0-9\-\./]'), '');
+        if (value.isNotEmpty) {
+          matches.add(_IndexedValue(index: i, value: value));
+        }
+      }
+    }
+    return matches;
+  }
+
+  List<_IndexedValue> _gatherAddressMatches(List<String> lines) {
+    final matches = <_IndexedValue>[];
+    final regex = RegExp(
+      r'(?:direccion|direccion|domicilio|address)[:#\-\s]*([^$]*)',
+      caseSensitive: false,
+    );
+    for (var i = 0; i < lines.length; i++) {
+      final line = lines[i];
+      final match = regex.firstMatch(line);
+      if (match != null) {
+        var value = match.group(1)?.trim() ?? '';
+        if (value.isEmpty && i + 1 < lines.length) {
+          final next = lines[i + 1].trim();
+          if (next.isNotEmpty && !next.toLowerCase().contains('factura')) {
+            value = next;
+          }
+        }
+        if (value.isNotEmpty) {
+          matches.add(_IndexedValue(index: i, value: value));
+        }
+      }
+    }
+    return matches;
+  }
+
+  String? _valueForContext(
+    List<_IndexedValue> matches,
+    List<String> lines,
+    List<String> keywords,
+    Set<int> consumed,
+  ) {
+    for (final match in matches) {
+      if (consumed.contains(match.index)) continue;
+      if (_hasKeywordNearby(lines, match.index, keywords)) {
+        consumed.add(match.index);
+        return match.value;
+      }
+    }
+    for (final match in matches) {
+      if (consumed.add(match.index)) {
+        return match.value;
+      }
+    }
+    return null;
+  }
+
+  bool _hasKeywordNearby(List<String> lines, int index, List<String> keywords) {
+    final lowered = keywords.map((k) => k.toLowerCase()).toList();
+    for (var offset = -2; offset <= 2; offset++) {
+      final idx = index + offset;
+      if (idx < 0 || idx >= lines.length) continue;
+      final lowerLine = lines[idx].toLowerCase();
+      for (final keyword in lowered) {
+        if (lowerLine.contains(keyword)) {
+          return true;
+        }
+      }
+    }
+    return false;
   }
 
   String? _extractField(String text, List<String> labels) {
@@ -128,7 +338,7 @@ class OcrRepositoryImpl implements OcrRepository {
           if (parts.length > 1) {
             return parts.sublist(1).join(':').trim();
           }
-          // Si no hay separador, intenta tomar la siguiente línea como valor
+          // Si no hay separador, intenta tomar la siguiente lAnea como valor
           if (i + 1 < lines.length) {
             final next = lines[i + 1].trim();
             if (next.isNotEmpty &&
@@ -172,13 +382,13 @@ class OcrRepositoryImpl implements OcrRepository {
     final amountRe = RegExp(r'(?<!\d)(?:\d{1,3}(?:[.,]\d{3})*[.,]\d{2})(?!\d)');
 
     double? parseAmount(String s) {
-      // Normaliza 1.234,56 o 1,234.56 → 1234.56
+      // Normaliza 1.234,56 o 1,234.56 a 1234.56
       final cleaned = s.replaceAll(' ', '');
       final hasComma = cleaned.contains(',');
       final hasDot = cleaned.contains('.');
       String normalized = cleaned;
       if (hasComma && hasDot) {
-        // Asume el último separador es decimal; elimina el otro
+        // Asume el Aoltimo separador es decimal; elimina el otro
         final lastComma = cleaned.lastIndexOf(',');
         final lastDot = cleaned.lastIndexOf('.');
         if (lastComma > lastDot) {
@@ -192,7 +402,7 @@ class OcrRepositoryImpl implements OcrRepository {
       return double.tryParse(normalized);
     }
 
-    // 1) Busca en líneas con keywords de totales
+    // 1) Busca en lAneas con keywords de totales
     final keywords = [
       'total',
       'importe',
@@ -215,7 +425,7 @@ class OcrRepositoryImpl implements OcrRepository {
       return candidateValues.last; // el mayor suele ser el total
     }
 
-    // 2) Fallback: mayor número con dos decimales en todo el texto
+    // 2) Fallback: mayor nAomero con dos decimales en todo el texto
     final matches =
         amountRe
             .allMatches(text)
@@ -238,7 +448,7 @@ class OcrRepositoryImpl implements OcrRepository {
         for (final m in amountRe.allMatches(line)) {
           final v = _toDouble(m.group(0)!);
           if (v != null) {
-            if (best == null || v > best) best = v; // coge el mayor de la línea
+            if (best == null || v > best) best = v; // coge el mayor de la lAnea
           }
         }
       }
@@ -249,7 +459,7 @@ class OcrRepositoryImpl implements OcrRepository {
   ({double? base, double? vat, double? total}) _extractTotalsFromAdjacentLines(
     List<String> lines,
   ) {
-    // Busca una línea tipo "Subtotal Iva Total" y toma los 2-3 importes de la siguiente
+    // Busca una lAnea tipo "Subtotal Iva Total" y toma los 2-3 importes de la siguiente
     final headerRe = RegExp(r'(subtotal|base|iva|impuesto|total)');
     final amountRe = RegExp(r'(?<!\d)(?:\d{1,3}(?:[.,]\d{3})*[.,]\d{2})(?!\d)');
     for (int i = 0; i < lines.length - 1; i++) {
@@ -279,7 +489,7 @@ class OcrRepositoryImpl implements OcrRepository {
   }
 
   double? _toDouble(String s) {
-    var cleaned = s.replaceAll('EUR', '').replaceAll('€', '').trim();
+    var cleaned = s.replaceAll('EUR', '').replaceAll('a', '').trim();
     cleaned = cleaned.replaceAll(' ', '');
     final hasComma = cleaned.contains(',');
     final hasDot = cleaned.contains('.');
@@ -348,23 +558,23 @@ class OcrRepositoryImpl implements OcrRepository {
     }
 
     final patterns = <RegExp, List<int>>{
-      // 1x Producto (precio en línea siguiente)
-      RegExp(r'^\s*(\d+)\s*[xX×*]\s*([^\d].*?)\s*$'): [1, 2, 0],
+      // 1x Producto (precio en lAnea siguiente)
+      RegExp(r'^\s*(\d+)\s*[xXA*]\s*([^\d].*?)\s*$'): [1, 2, 0],
       // 2 x Manzana 1,50  -> qty(1), product(2), price(3)
-      RegExp(r'^\s*(\d+)\s*[xX×*]\s*([^\d].*?)\s+([\d.,]+)\s*$'): [1, 2, 3],
+      RegExp(r'^\s*(\d+)\s*[xXA*]\s*([^\d].*?)\s+([\d.,]+)\s*$'): [1, 2, 3],
       // Manzana 2 x 1,50 -> product(1), qty(2), price(3)
-      RegExp(r'^\s*([^\d].*?)\s+(\d+)\s*[xX×*]\s*([\d.,]+)\s*$'): [2, 1, 3],
+      RegExp(r'^\s*([^\d].*?)\s+(\d+)\s*[xXA*]\s*([\d.,]+)\s*$'): [2, 1, 3],
       // Manzana    2    1,50 -> product(1), qty(2), price(3)
       RegExp(r'^\s*([^\d].*?)\s{2,}(\d+)\s+([\d.,]+)\s*$'): [2, 1, 3],
       // 2 Manzana    1,50 -> qty(1), product(2), price(3)
       RegExp(r'^\s*(\d+)\s+([^\d].*?)\s{2,}([\d.,]+)\s*$'): [1, 2, 3],
       // Manzana .... 1,50 -> product(1), price(2) (qty=1)
-      RegExp(r'^\s*([^\d].*?)\s+[.·•\- ]{2,}\s*([\d.,]+)\s*$'): [-1, 1, 2],
+      RegExp(r'^\s*([^\d].*?)\s+[.Aa\- ]{2,}\s*([\d.,]+)\s*$'): [-1, 1, 2],
       // Manzana 1,50 -> product(1), price(2) (qty=1)
       RegExp(r'^\s*([^\d].*?)\s+([\d.,]+)\s*$'): [-1, 1, 2],
     };
 
-    // Recorre con índice para poder mirar la siguiente línea
+    // Recorre con Andice para poder mirar la siguiente lAnea
     for (int i = 0; i < lines.length; i++) {
       final line = lines[i].trim();
       if (line.isEmpty) continue;
@@ -383,18 +593,18 @@ class OcrRepositoryImpl implements OcrRepository {
           final product = m.group(productIdx)!.trim();
           double? price;
 
-          // Si el patrón incluye precio, tómalo
+          // Si el patrA3n incluye precio, tA3malo
           if (priceIdx > 0) {
             price = toDouble(m.group(priceIdx) ?? '');
           }
-          // Si no hay precio en la misma línea, busca en la siguiente una línea de solo precio
+          // Si no hay precio en la misma lAnea, busca en la siguiente una lAnea de solo precio
           if (price == null || price == 0) {
             if (i + 1 < lines.length) {
               final next = lines[i + 1].trim();
-              final onlyPrice = RegExp(r'^\s*[€$]?[\s\d.,]+\s*(?:eur|€)?\s*$');
+              final onlyPrice = RegExp(r'^\s*[a$]?[\s\d.,]+\s*(?:eur|a)?\s*$');
               if (onlyPrice.hasMatch(next)) {
                 price = toDouble(next);
-                i++; // consumir la línea de precio
+                i++; // consumir la lAnea de precio
               }
             }
           }

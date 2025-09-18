@@ -43,11 +43,16 @@ class Invoice {
   final double netAmount;
   final double iva;
   final InvoiceStatus status;
+  final String? invoiceNumber;
   final String? issuer;
+  final String? issuerTaxId;
+  final String? issuerAddress;
   final String? receiver;
   final String? receiverTaxId;
   final String? receiverAddress;
   final String? concept;
+  final double? vatRate;
+  final String currency;
   final File? image; // Solo para carga
   final String? imageUrl; // Para mostrar desde la red
 
@@ -58,16 +63,22 @@ class Invoice {
     required this.netAmount,
     required this.iva,
     required this.status,
+    this.invoiceNumber,
     this.issuer,
+    this.issuerTaxId,
+    this.issuerAddress,
     this.receiver,
     this.receiverTaxId,
     this.receiverAddress,
     this.concept,
+    this.vatRate,
+    this.currency = 'EUR',
     this.image,
     this.imageUrl,
   });
 
   double get total => netAmount + iva;
+
   Invoice copyWith({
     String? id,
     String? title,
@@ -75,11 +86,16 @@ class Invoice {
     double? netAmount,
     double? iva,
     InvoiceStatus? status,
+    String? invoiceNumber,
     String? issuer,
+    String? issuerTaxId,
+    String? issuerAddress,
     String? receiver,
     String? receiverTaxId,
     String? receiverAddress,
     String? concept,
+    double? vatRate,
+    String? currency,
     File? image,
     String? imageUrl,
   }) {
@@ -90,11 +106,16 @@ class Invoice {
       netAmount: netAmount ?? this.netAmount,
       iva: iva ?? this.iva,
       status: status ?? this.status,
+      invoiceNumber: invoiceNumber ?? this.invoiceNumber,
       issuer: issuer ?? this.issuer,
+      issuerTaxId: issuerTaxId ?? this.issuerTaxId,
+      issuerAddress: issuerAddress ?? this.issuerAddress,
       receiver: receiver ?? this.receiver,
       receiverTaxId: receiverTaxId ?? this.receiverTaxId,
       receiverAddress: receiverAddress ?? this.receiverAddress,
       concept: concept ?? this.concept,
+      vatRate: vatRate ?? this.vatRate,
+      currency: currency ?? this.currency,
       image: image ?? this.image,
       imageUrl: imageUrl ?? this.imageUrl,
     );

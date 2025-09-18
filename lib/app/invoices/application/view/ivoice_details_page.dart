@@ -129,7 +129,7 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
                                         spacing: 16,
                                         runSpacing: 6,
                                         children: [
-                                          _kv('N.º', invoice.id ?? '—', theme),
+                                          _kv('N.Ao', invoice.id ?? 'a', theme),
                                           _kv(
                                             'Fecha',
                                             _formatDate(invoice.date),
@@ -164,22 +164,40 @@ class _InvoiceDetailPageState extends State<InvoiceDetailPage> {
                             LayoutBuilder(
                               builder: (context, c) {
                                 final isWide = c.maxWidth > 560;
+                                final issuerLines = <String>[
+                                  if (invoice.issuer != null &&
+                                      invoice.issuer!.trim().isNotEmpty)
+                                    invoice.issuer!.trim(),
+                                  if (invoice.issuerTaxId != null &&
+                                      invoice.issuerTaxId!.trim().isNotEmpty)
+                                    'NIF: \${invoice.issuerTaxId}',
+                                  if (invoice.issuerAddress != null &&
+                                      invoice.issuerAddress!.trim().isNotEmpty)
+                                    invoice.issuerAddress!.trim(),
+                                ];
+                                final receiverLines = <String>[
+                                  if (invoice.receiver != null &&
+                                      invoice.receiver!.trim().isNotEmpty)
+                                    invoice.receiver!.trim(),
+                                  if (invoice.receiverTaxId != null &&
+                                      invoice.receiverTaxId!.trim().isNotEmpty)
+                                    'NIF: \${invoice.receiverTaxId}',
+                                  if (invoice.receiverAddress != null &&
+                                      invoice.receiverAddress!
+                                          .trim()
+                                          .isNotEmpty)
+                                    invoice.receiverAddress!.trim(),
+                                ];
                                 final children = <Widget>[
-                                  if (invoice.issuer != null)
+                                  if (issuerLines.isNotEmpty)
                                     _PartyBox(
                                       title: 'Emisor',
-                                      value: invoice.issuer!,
+                                      value: issuerLines.join('\n'),
                                     ),
-                                  if (invoice.receiver != null)
+                                  if (receiverLines.isNotEmpty)
                                     _PartyBox(
                                       title: 'Receptor',
-                                      value: [
-                                        invoice.receiver!,
-                                        if (invoice.receiverTaxId != null)
-                                          'NIF: ${invoice.receiverTaxId}',
-                                        if (invoice.receiverAddress != null)
-                                          invoice.receiverAddress!,
-                                      ].join('\n'),
+                                      value: receiverLines.join('\n'),
                                     ),
                                 ];
                                 if (!isWide) {

@@ -4,45 +4,12 @@ import 'dart:typed_data';
 
 import 'package:gestr/core/config/compliance_constants.dart';
 import 'package:gestr/core/pdf/aeat_xmp.dart';
+import 'invoice_pdf_content.dart';
 import 'package:gestr/core/pdf/pdf_timestamp_utils.dart';
 import 'package:gestr/core/pdf/pdfa_document_builder.dart';
 import 'package:gestr/core/pdf/pdfa_generator.dart';
 import 'package:gestr/core/pdf/pixel_font.dart';
 import 'package:gestr/domain/entities/invoice_model.dart';
-
-class InvoicePdfContent {
-  const InvoicePdfContent({
-    required this.title,
-    required this.issueDate,
-    required this.netAmount,
-    required this.ivaAmount,
-    required this.status,
-    this.invoiceNumber,
-    this.issuerName,
-    this.receiverName,
-    this.receiverTaxId,
-    this.receiverAddress,
-    this.concept,
-    this.currency = 'EUR',
-    this.attachmentImageBytes,
-  });
-
-  final String title;
-  final DateTime issueDate;
-  final double netAmount;
-  final double ivaAmount;
-  final InvoiceStatus status;
-  final String? invoiceNumber;
-  final String? issuerName;
-  final String? receiverName;
-  final String? receiverTaxId;
-  final String? receiverAddress;
-  final String? concept;
-  final String currency;
-  final Uint8List? attachmentImageBytes;
-
-  double get total => netAmount + ivaAmount;
-}
 
 class InvoicePdfBuilder {
   const InvoicePdfBuilder._();
@@ -154,8 +121,10 @@ _InvoicePageLayout _buildLayout(InvoicePdfContent content) {
 
   builder.addSeparator();
 
-  final issuerLines = _wrapMultiline(
+  final issuerLines = _partyDetails(
     content.issuerName,
+    content.issuerTaxId,
+    content.issuerAddress,
     builder.cardContentWidth,
   );
   if (issuerLines.isNotEmpty) {
@@ -164,7 +133,7 @@ _InvoicePageLayout _buildLayout(InvoicePdfContent content) {
     builder.addSeparator();
   }
 
-  final receiverLines = _receiverDetails(
+  final receiverLines = _partyDetails(
     content.receiverName,
     content.receiverTaxId,
     content.receiverAddress,
@@ -179,7 +148,8 @@ _InvoicePageLayout _buildLayout(InvoicePdfContent content) {
   final paragraphWidth = builder.cardContentWidth - 24.0;
   final conceptLines = _wrapParagraph(content.concept, paragraphWidth);
   if (conceptLines.isNotEmpty) {
-    builder.addSectionTitle('CONCEPTO');
+    final isPedido = _isPedido(content.concept);
+    builder.addSectionTitle(isPedido ? 'PEDIDO' : 'CONCEPTO');
     builder.addParagraphBox(conceptLines);
     builder.addSeparator();
   }
@@ -191,7 +161,10 @@ _InvoicePageLayout _buildLayout(InvoicePdfContent content) {
         'BASE IMPONIBLE',
         _formatMoney(content.netAmount, content.currency),
       ),
-      _AmountRow('IVA', _formatMoney(content.ivaAmount, content.currency)),
+      _AmountRow(
+        _formatVatLabel(content.vatRate),
+        _formatMoney(content.ivaAmount, content.currency),
+      ),
     ],
     total: _AmountRow('TOTAL', _formatMoney(content.total, content.currency)),
   );
@@ -240,6 +213,13 @@ _InvoicePageLayout _buildLayout(InvoicePdfContent content) {
   );
 
   return layout;
+}
+
+bool _isPedido(String? concept) {
+  if (concept == null) return false;
+  if (concept.contains('\n')) return true;
+  final lower = concept.toLowerCase();
+  return lower.contains(' x ') && lower.contains('@');
 }
 
 String _buildContentStream(_InvoicePageLayout layout) {
@@ -731,6 +711,18 @@ class _AmountRow {
   final String value;
 }
 
+String _formatVatLabel(double? vatRate) {
+  if (vatRate == null) {
+    return 'IVA';
+  }
+  final rate = vatRate.abs();
+  var text = rate.toStringAsFixed(2);
+  while (text.contains('.') && (text.endsWith('0') || text.endsWith('.'))) {
+    text = text.substring(0, text.length - 1);
+  }
+  return 'IVA ($text%)';
+}
+
 String _composeKeyValue(String key, String value) {
   final sanitizedKey = PixelFont.sanitize(key);
   final sanitizedValue = PixelFont.sanitize(value);
@@ -763,24 +755,7 @@ List<String> _wrapParagraph(String? text, double maxWidth) {
   return PixelFont.wrap(text, fontSize: 11.0, maxWidth: maxWidth);
 }
 
-List<String> _wrapMultiline(String? text, double maxWidth) {
-  if (text == null || text.trim().isEmpty) {
-    return <String>[];
-  }
-  final normalized = text.replaceAll(RegExp(r'\r\n?'), '\n');
-
-  final segments = normalized.split('\n');
-  final lines = <String>[];
-  for (final segment in segments) {
-    if (segment.trim().isEmpty) {
-      continue;
-    }
-    lines.addAll(PixelFont.wrap(segment, fontSize: 11.0, maxWidth: maxWidth));
-  }
-  return lines;
-}
-
-List<String> _receiverDetails(
+List<String> _partyDetails(
   String? name,
   String? taxId,
   String? address,

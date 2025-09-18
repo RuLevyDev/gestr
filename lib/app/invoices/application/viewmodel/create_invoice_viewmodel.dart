@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
@@ -9,21 +10,30 @@ import 'package:gestr/app/invoices/bloc/invoice_event.dart';
 import 'package:gestr/domain/entities/invoice_model.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:gestr/domain/entities/self_employed_user.dart';
+import 'package:gestr/domain/entities/client.dart';
+import 'package:gestr/domain/entities/supplier.dart';
+import 'package:gestr/app/relationships/clients/application/view/create_client_sheet.dart';
+import 'package:gestr/app/relationships/suppliers/application/view/create_supplier_sheet.dart';
+import 'package:gestr/domain/usecases/client/client_usecases.dart';
+import 'package:gestr/domain/usecases/supplier/supplier_usecases.dart';
 import 'package:gestr/domain/usecases/user/self_employed_user_usecases.dart';
 import 'package:gestr/data/ocr/ocr_service.dart';
 import 'package:gestr/data/repositories/ocr/ocr_repository_impl.dart';
 import 'package:gestr/domain/usecases/ocr/ocr_usecases.dart';
 import 'package:gestr/core/config/compliance_constants.dart';
 import 'package:gestr/core/image/aeat_image_support.dart';
+import 'package:gestr/app/invoices/application/pdf/invoice_pdf_content.dart';
 import 'package:gestr/core/pdf/aeat_xmp.dart';
 import 'package:gestr/core/pdf/pdfa_generator.dart';
 
 // import 'package:pdf/widgets.dart' as pw;
 import 'package:gestr/core/pdf/pdfa_utils.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:gestr/app/invoices/application/pdf/invoice_pdf_builder.dart';
+import 'package:gestr/app/invoices/application/pdf/invoice_pdf_v14_builder.dart';
 
 // import 'package:printing/printing.dart';
+
+enum InvoiceDirection { issued, received }
 
 mixin CreateInvoiceViewModelMixin<T extends StatefulWidget> on State<T> {
   final formKey = GlobalKey<FormState>();
@@ -34,6 +44,7 @@ mixin CreateInvoiceViewModelMixin<T extends StatefulWidget> on State<T> {
   DateTime invoiceDate = DateTime.now();
   double amount = 0.0;
   double iva = 0.0;
+  double vatRate = 21.0; // porcentaje (0-100)
   bool isAmountIncludingIva = false;
   bool showAdvancedFields = false;
   InvoiceStatus status = InvoiceStatus.pending;
@@ -44,6 +55,7 @@ mixin CreateInvoiceViewModelMixin<T extends StatefulWidget> on State<T> {
 
   // User profile
   SelfEmployedUser? selfEmployedUser;
+  InvoiceDirection direction = InvoiceDirection.issued;
 
   // pw.ThemeData? _invoicePdfTheme;
 
@@ -51,6 +63,12 @@ mixin CreateInvoiceViewModelMixin<T extends StatefulWidget> on State<T> {
   final TextEditingController issuerController = TextEditingController();
   final TextEditingController receiverController = TextEditingController();
   final TextEditingController conceptController = TextEditingController();
+  final TextEditingController invoiceNumberController = TextEditingController();
+  final TextEditingController receiverTaxIdController = TextEditingController();
+  final TextEditingController receiverAddressController =
+      TextEditingController();
+  final TextEditingController issuerTaxIdController = TextEditingController();
+  final TextEditingController issuerAddressController = TextEditingController();
   // Controllers para importes que se actualizan por OCR
   final TextEditingController amountController = TextEditingController();
   final TextEditingController ivaController = TextEditingController();
@@ -59,13 +77,28 @@ mixin CreateInvoiceViewModelMixin<T extends StatefulWidget> on State<T> {
   String? issuer;
   String? receiver;
   String? concept;
+  String? invoiceNumber;
+  String? issuerTaxId;
+  String? issuerAddress;
   String? receiverTaxId;
   String? receiverAddress;
+
+  // Contrapartidas
+  Timer? _counterpartyDebounce;
+  List<Client> _clients = [];
+  List<Client> _filteredClients = [];
+  List<Supplier> _suppliers = [];
+  List<Supplier> _filteredSuppliers = [];
+  ClientUseCases? _clientUseCasesRef;
+  SupplierUseCases? _supplierUseCasesRef;
+
+  List<Client> get filteredClients => _filteredClients;
+  List<Supplier> get filteredSuppliers => _filteredSuppliers;
 
   // Getters
   double get total => amount + iva;
 
-  // Validación y cálculo
+  // ValidaciÃ³n y cÃ¡lculo
   bool validateForm() {
     final isValid = formKey.currentState?.validate() ?? false;
     if (isValid) {
@@ -85,6 +118,50 @@ mixin CreateInvoiceViewModelMixin<T extends StatefulWidget> on State<T> {
     _syncAmountControllers();
   }
 
+  void setDirection(InvoiceDirection target) {
+    if (direction == target) return;
+    setState(() {
+      direction = target;
+      _filteredClients = [];
+      _filteredSuppliers = [];
+      _applySelfDataInternal();
+    });
+  }
+
+  void _applySelfDataInternal() {
+    if (selfEmployedUser == null) return;
+    final me = selfEmployedUser!;
+    if (direction == InvoiceDirection.issued) {
+      issuer = me.fullName;
+      issuerController.text = me.fullName;
+      issuerTaxId = me.dni;
+      issuerTaxIdController.text = me.dni;
+      issuerAddress = me.address;
+      issuerAddressController.text = me.address;
+      // Clear counterparty (receiver)
+      receiver = null;
+      receiverController.clear();
+      receiverTaxId = null;
+      receiverTaxIdController.clear();
+      receiverAddress = null;
+      receiverAddressController.clear();
+    } else {
+      receiver = me.fullName;
+      receiverController.text = me.fullName;
+      receiverTaxId = me.dni;
+      receiverTaxIdController.text = me.dni;
+      receiverAddress = me.address;
+      receiverAddressController.text = me.address;
+      // Clear counterparty (issuer)
+      issuer = null;
+      issuerController.clear();
+      issuerTaxId = null;
+      issuerTaxIdController.clear();
+      issuerAddress = null;
+      issuerAddressController.clear();
+    }
+  }
+
   Future<void> _loadUser() async {
     final result = await context.read<SelfEmployedUserUseCases>().getUser(
       userId,
@@ -92,20 +169,272 @@ mixin CreateInvoiceViewModelMixin<T extends StatefulWidget> on State<T> {
     result.fold((_) {}, (user) {
       setState(() {
         selfEmployedUser = user;
+        // Usa el IVA por defecto del perfil si existe (0.0-0.21)
+        try {
+          final defRate = user.defaultExpenseVatRate;
+          if (defRate >= 0 && defRate <= 1) {
+            vatRate = (defRate * 100).clamp(0, 100);
+          }
+        } catch (_) {}
+        _applySelfDataInternal();
       });
     });
   }
 
-  void updateIva() {
+  void updateIva() => _recalcFromControllers();
+
+  void _recalcFromControllers() {
+    final rate = (vatRate.clamp(0, 100)) / 100.0;
+    // Leer importe del controlador (puede representar base o total segun el switch)
+    final rawAmount = amountController.text.trim().replaceAll(',', '.');
+    final input = double.tryParse(rawAmount) ?? 0.0;
     if (isAmountIncludingIva) {
-      double neto = amount / 1.21;
-      iva = amount - neto;
-      amount = neto;
-      _syncAmountControllers();
+      final gross = input;
+      final net = rate > 0 ? (gross / (1 + rate)) : gross;
+      amount = net;
+      iva = (gross - net).clamp(0, double.infinity);
+      // Mantener el campo de importe mostrando lo que escribe el usuario (total)
+      // Solo sincronizamos el campo IVA para que muestre el calculado en modo lectura.
+      ivaController.text = iva > 0 ? iva.toStringAsFixed(2) : '';
+    } else {
+      // Modo base imponible: amount es el valor del campo y el IVA se toma del campo IVA
+      amount = input;
+      final rawIva = ivaController.text.trim().replaceAll(',', '.');
+      iva = double.tryParse(rawIva) ?? 0.0;
     }
   }
 
-  // Conversión a entidad Invoice
+  // Recalcula amount/iva desde líneas de pedido (qty, price)
+  void syncAmountFromItemTuples(List<MapEntry<double, double>> items) {
+    double base = 0.0;
+    for (final it in items) {
+      base += (it.key * it.value);
+    }
+    final rate = (vatRate.clamp(0, 100)) / 100.0;
+    if (isAmountIncludingIva) {
+      amount = base;
+      iva = (base * rate).clamp(0, double.infinity);
+    } else {
+      amount = base;
+    }
+    _syncAmountControllers();
+  }
+
+  // Carga de datos
+  Future<void> loadClients(ClientUseCases useCases) async {
+    _clientUseCasesRef = useCases;
+    final list = await useCases.fetch(userId);
+    if (!mounted) return;
+    setState(() {
+      _clients = list;
+    });
+  }
+
+  Future<void> loadSuppliers(SupplierUseCases useCases) async {
+    _supplierUseCasesRef = useCases;
+    final list = await useCases.fetch(userId);
+    if (!mounted) return;
+    setState(() {
+      _suppliers = list;
+    });
+  }
+
+  // Inicializa los usecases desde el contexto y carga datos
+  void initPartnersFromContext() {
+    _clientUseCasesRef ??= context.read<ClientUseCases>();
+    _supplierUseCasesRef ??= context.read<SupplierUseCases>();
+    unawaited(loadClients(_clientUseCasesRef!));
+    unawaited(loadSuppliers(_supplierUseCasesRef!));
+  }
+
+  // Handlers de contrapartida (cliente/proveedor)
+  void onClientChanged(String value) {
+    _counterpartyDebounce?.cancel();
+    _counterpartyDebounce = Timer(const Duration(milliseconds: 300), () {
+      if (!mounted) return;
+      final q = value.toLowerCase();
+      setState(() {
+        receiver = value;
+        receiverTaxId = null;
+        receiverAddress = null;
+        receiverTaxIdController.clear();
+        receiverAddressController.clear();
+        _filteredClients =
+            _clients.where((c) => c.name.toLowerCase().contains(q)).toList();
+      });
+    });
+  }
+
+  void selectClient(Client client) {
+    setState(() {
+      receiverController.text = client.name;
+      receiver = client.name;
+      receiverTaxId = client.taxId;
+      receiverAddress = client.fiscalAddress;
+      receiverTaxIdController.text = client.taxId ?? '';
+      receiverAddressController.text = client.fiscalAddress ?? '';
+      _filteredClients = [];
+    });
+  }
+
+  Future<void> onClientSubmitted(String value) async {
+    final match = _clients.firstWhere(
+      (c) => c.name.toLowerCase() == value.toLowerCase(),
+      orElse: () => const Client(name: ''),
+    );
+    if (match.id != null && match.name.isNotEmpty) {
+      selectClient(match);
+      return;
+    }
+
+    final should = await showDialog<bool>(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Cliente no encontrado'),
+            content: Text('Deseas registrar "$value" como nuevo cliente?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('No'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text('Si'),
+              ),
+            ],
+          ),
+    );
+    if (!mounted) return;
+
+    if (should == true) {
+      await showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        builder: (_) => CreateClientSheet(initialName: value),
+      );
+      final useCases = _clientUseCasesRef;
+      if (useCases != null) {
+        await loadClients(useCases);
+        final created = _clients.firstWhere(
+          (c) => c.name.toLowerCase() == value.toLowerCase(),
+          orElse: () => const Client(name: ''),
+        );
+        if (created.id != null && created.name.isNotEmpty) {
+          selectClient(created);
+          return;
+        }
+      }
+    }
+
+    setState(() {
+      receiver = value;
+      receiverTaxId = null;
+      receiverAddress = null;
+      receiverTaxIdController.clear();
+      receiverAddressController.clear();
+      _filteredClients = [];
+    });
+  }
+
+  void onSupplierChanged(String value) {
+    _counterpartyDebounce?.cancel();
+    _counterpartyDebounce = Timer(const Duration(milliseconds: 300), () {
+      if (!mounted) return;
+      final query = value.toLowerCase();
+      setState(() {
+        issuer = value;
+        issuerTaxId = null;
+        issuerAddress = null;
+        issuerTaxIdController.clear();
+        issuerAddressController.clear();
+        _filteredSuppliers =
+            _suppliers
+                .where((s) => s.name.toLowerCase().contains(query))
+                .toList();
+      });
+    });
+  }
+
+  void selectSupplier(Supplier supplier) {
+    setState(() {
+      issuerController.text = supplier.name;
+      issuer = supplier.name;
+      issuerTaxId = supplier.taxId;
+      issuerAddress = supplier.fiscalAddress;
+      issuerTaxIdController.text = supplier.taxId ?? '';
+      issuerAddressController.text = supplier.fiscalAddress ?? '';
+      _filteredSuppliers = [];
+    });
+  }
+
+  Future<void> onSupplierSubmitted(String value) async {
+    final match = _suppliers.firstWhere(
+      (s) => s.name.toLowerCase() == value.toLowerCase(),
+      orElse: () => const Supplier(name: ''),
+    );
+    if (match.id != null && match.name.isNotEmpty) {
+      selectSupplier(match);
+      return;
+    }
+
+    final should = await showDialog<bool>(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Proveedor no encontrado'),
+            content: Text('Deseas registrar "$value" como nuevo proveedor?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('No'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text('Si'),
+              ),
+            ],
+          ),
+    );
+    if (!mounted) return;
+
+    if (should == true) {
+      await showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        builder: (_) => CreateSupplierSheet(initialName: value),
+      );
+      final useCases = _supplierUseCasesRef;
+      if (useCases != null) {
+        await loadSuppliers(useCases);
+        final created = _suppliers.firstWhere(
+          (s) => s.name.toLowerCase() == value.toLowerCase(),
+          orElse: () => const Supplier(name: ''),
+        );
+        if (created.id != null && created.name.isNotEmpty) {
+          selectSupplier(created);
+          return;
+        }
+      }
+    }
+
+    setState(() {
+      issuer = value;
+      issuerTaxId = null;
+      issuerAddress = null;
+      issuerTaxIdController.clear();
+      issuerAddressController.clear();
+      _filteredSuppliers = [];
+    });
+  }
+
+  String? normalizeText(String? value) {
+    if (value == null) return null;
+    final trimmed = value.trim();
+    return trimmed.isEmpty ? null : trimmed;
+  }
+
+  // ConversiÃ³n a entidad Invoice
   Invoice toInvoice({String? id}) {
     return Invoice(
       id: id,
@@ -146,16 +475,24 @@ mixin CreateInvoiceViewModelMixin<T extends StatefulWidget> on State<T> {
       issuer = null;
       receiver = null;
       concept = null;
+      invoiceNumber = null;
       receiverTaxId = null;
       receiverAddress = null;
+      issuerTaxId = null;
+      issuerAddress = null;
       issuerController.clear();
       receiverController.clear();
       conceptController.clear();
+      invoiceNumberController.clear();
+      issuerTaxIdController.clear();
+      issuerAddressController.clear();
+      receiverTaxIdController.clear();
+      receiverAddressController.clear();
       invoiceDate = DateTime.now();
     });
   }
 
-  // Selección de imagen
+  // SelecciÃ³n de imagen
   Future<void> pickImage({ImageSource source = ImageSource.camera}) async {
     final pickedFile = await picker.pickImage(source: source);
     if (pickedFile != null) {
@@ -174,7 +511,7 @@ mixin CreateInvoiceViewModelMixin<T extends StatefulWidget> on State<T> {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
-                content: Text('No se pudo extraer información de la imagen'),
+                content: Text('No se pudo extraer informaciÃ³n de la imagen'),
               ),
             );
           }
@@ -217,11 +554,11 @@ mixin CreateInvoiceViewModelMixin<T extends StatefulWidget> on State<T> {
             conceptController.text = data.concept!;
             concept = data.concept;
           }
-          // Si hay ítems OCR, rellenar el concepto como listado si aún vacío
+          // Si hay Ã­tems OCR, rellenar el concepto como listado si aÃºn vacÃ­o
           if (data.items.isNotEmpty && conceptController.text.isEmpty) {
             final lines = [
               for (final it in data.items)
-                '${it.quantity} x ${it.product} - ${it.price.toStringAsFixed(2)} €',
+                '${it.quantity} x ${it.product} - ${it.price.toStringAsFixed(2)} ',
             ];
             final text = lines.join('\n');
             conceptController.text = text;
@@ -255,9 +592,15 @@ mixin CreateInvoiceViewModelMixin<T extends StatefulWidget> on State<T> {
 
   @override
   void dispose() {
+    _counterpartyDebounce?.cancel();
     issuerController.dispose();
     receiverController.dispose();
     conceptController.dispose();
+    invoiceNumberController.dispose();
+    receiverTaxIdController.dispose();
+    receiverAddressController.dispose();
+    issuerTaxIdController.dispose();
+    issuerAddressController.dispose();
     amountController.dispose();
     ivaController.dispose();
     _ocrService.dispose();
@@ -269,7 +612,7 @@ mixin CreateInvoiceViewModelMixin<T extends StatefulWidget> on State<T> {
     ivaController.text = iva > 0 ? iva.toStringAsFixed(2) : '';
   }
 
-  // Selección de fecha
+  // SelecciÃ³n de fecha
   Future<void> selectDate() async {
     final picked = await showDatePicker(
       context: context,
@@ -324,7 +667,7 @@ mixin CreateInvoiceViewModelMixin<T extends StatefulWidget> on State<T> {
   //   return _invoicePdfTheme;
   // }
 
-  // Generación y compartición de PDF
+  // GeneraciÃ³n y comparticiÃ³n de PDF
   Future<void> generateAndSharePdf() async {
     final Uint8List? imageBytes =
         invoiceImage != null
@@ -340,15 +683,17 @@ mixin CreateInvoiceViewModelMixin<T extends StatefulWidget> on State<T> {
     final trimmedReceiverTaxId = receiverTaxId?.trim();
     final trimmedReceiverAddress = receiverAddress?.trim();
 
-    final pdfBytes = await InvoicePdfBuilder.build(
+    final pdfBytes = await InvoicePdfStandardBuilder.build(
       InvoicePdfContent(
         title: resolvedTitle,
-        invoiceNumber: '—',
+        invoiceNumber: invoiceNumber?.trim(),
         issueDate: invoiceDate,
         netAmount: amount,
         ivaAmount: iva,
         status: status,
         issuerName: trimmedIssuer,
+        issuerTaxId: issuerTaxId?.trim(),
+        issuerAddress: issuerAddress?.trim(),
         receiverName: trimmedReceiver,
         receiverTaxId: trimmedReceiverTaxId,
         receiverAddress: trimmedReceiverAddress,
@@ -429,7 +774,7 @@ mixin CreateInvoiceViewModelMixin<T extends StatefulWidget> on State<T> {
     }
 
     await SharePlus.instance.share(
-      ShareParams(files: files, text: 'Aquí está tu factura generada'),
+      ShareParams(files: files, text: 'AquÃ­ estÃ¡ tu factura generada'),
     );
   }
 }

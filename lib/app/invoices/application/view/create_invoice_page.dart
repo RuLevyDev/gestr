@@ -3,17 +3,17 @@ import 'dart:ui';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:gestr/app/invoices/application/viewmodel/create_invoice_viewmodel.dart';
-import 'package:gestr/app/relationships/clients/application/view/create_client_sheet.dart';
 import 'package:gestr/core/utils/background_light.dart';
 import 'package:gestr/core/utils/dialog_background.dart';
-import 'package:gestr/domain/entities/client.dart';
-import 'package:gestr/domain/entities/invoice_model.dart';
-import 'package:gestr/domain/usecases/client/client_usecases.dart';
-import 'package:provider/provider.dart';
-import 'package:gestr/domain/entities/supplier.dart';
-import 'package:gestr/domain/usecases/supplier/supplier_usecases.dart';
-import 'package:gestr/app/relationships/suppliers/application/view/create_supplier_sheet.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+// Use cases and providers are now initialized in the mixin
+
+import 'package:gestr/app/invoices/application/view/widgets/concept_section.dart';
+import 'package:gestr/app/invoices/application/view/widgets/amount_section.dart';
+import 'package:gestr/app/invoices/application/view/widgets/direction_toggle.dart';
+// counterparty field and advanced fields are composed by CounterpartySection
+import 'package:gestr/app/invoices/application/view/widgets/self_summary.dart';
+import 'package:gestr/app/invoices/application/view/widgets/counterparty_section.dart';
+import 'package:gestr/app/invoices/application/view/widgets/items_amount_binder.dart';
 
 class CreateInvoicePage extends StatefulWidget {
   const CreateInvoicePage({super.key});
@@ -24,184 +24,25 @@ class CreateInvoicePage extends StatefulWidget {
 
 class _CreateInvoicePageState extends State<CreateInvoicePage>
     with CreateInvoiceViewModelMixin {
-  late final ClientUseCases _clientUseCases;
-  List<Client> _clients = [];
-  List<Client> _filteredClients = [];
-  Timer? _debounce;
-  late final SupplierUseCases _supplierUseCases;
-  List<Supplier> _suppliers = [];
-  List<Supplier> _filteredSuppliers = [];
+  bool _showSelfSummaryCard = false;
+  bool _itemsMode = false;
+  void toggleItemsMode() => setState(() => _itemsMode = !_itemsMode);
+  void addItemRow() {}
+  void removeItemRow(ConceptItemRowData row) {}
+
+  // Items → importes: desacoplado al widget ItemsAmountBinder
 
   @override
   void initState() {
     super.initState();
-    _clientUseCases = context.read<ClientUseCases>();
-    _loadClients();
-    _supplierUseCases = context.read<SupplierUseCases>();
-    _loadSuppliers();
+    initPartnersFromContext();
   }
 
-  Future<void> _loadClients() async {
-    final list = await _clientUseCases.fetch(userId);
-    setState(() {
-      _clients = list;
-    });
-  }
+  // Datos de clientes/proveedores se cargan desde el mixin
 
-  Future<void> _loadSuppliers() async {
-    final uid = FirebaseAuth.instance.currentUser?.uid;
-    if (uid == null) return;
-    final list = await _supplierUseCases.fetch(uid);
-    setState(() {
-      _suppliers = list;
-    });
-  }
+  // No resources to dispose here; children widgets handle their own state
 
-  void _onClientChanged(String value) {
-    _debounce?.cancel();
-    _debounce = Timer(const Duration(milliseconds: 300), () {
-      final q = value.toLowerCase();
-      setState(() {
-        receiver = value;
-        _filteredClients =
-            _clients.where((c) => c.name.toLowerCase().contains(q)).toList();
-      });
-    });
-  }
-
-  void _selectClient(Client c) {
-    setState(() {
-      receiverController.text = c.name;
-      receiver = c.name;
-      receiverTaxId = c.taxId;
-      receiverAddress = c.fiscalAddress;
-      _filteredClients = [];
-    });
-  }
-
-  Future<void> _onClientSubmitted(String value) async {
-    final match = _clients.firstWhere(
-      (c) => c.name.toLowerCase() == value.toLowerCase(),
-      orElse: () => const Client(name: ''),
-    );
-    if (match.id == null || match.name.isEmpty) {
-      final should = await showDialog<bool>(
-        context: context,
-        builder:
-            (context) => AlertDialog(
-              title: const Text('Cliente no encontrado'),
-              content: Text('¿Deseas registrar "$value" como nuevo cliente?'),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context, false),
-                  child: const Text('No'),
-                ),
-                TextButton(
-                  onPressed: () => Navigator.pop(context, true),
-                  child: const Text('Sí'),
-                ),
-              ],
-            ),
-      );
-      if (!mounted) return;
-      if (should == true) {
-        await showModalBottomSheet(
-          context: context,
-          isScrollControlled: true,
-          builder: (_) => CreateClientSheet(initialName: value),
-        );
-        await _loadClients();
-        final created = _clients.firstWhere(
-          (c) => c.name.toLowerCase() == value.toLowerCase(),
-          orElse: () => const Client(name: ''),
-        );
-        if (created.id != null) {
-          _selectClient(created);
-        }
-      } else {
-        setState(() {
-          receiver = value;
-          receiverTaxId = null;
-          receiverAddress = null;
-        });
-      }
-    } else {
-      _selectClient(match);
-    }
-  }
-
-  void _onSupplierChanged(String value) {
-    setState(() {
-      issuer = value;
-      _filteredSuppliers =
-          _suppliers
-              .where((s) => s.name.toLowerCase().contains(value.toLowerCase()))
-              .toList();
-    });
-  }
-
-  void _selectSupplier(Supplier s) {
-    setState(() {
-      issuerController.text = s.name;
-      issuer = s.name;
-      _filteredSuppliers = [];
-    });
-  }
-
-  Future<void> _onSupplierSubmitted(String value) async {
-    final match = _suppliers.firstWhere(
-      (s) => s.name.toLowerCase() == value.toLowerCase(),
-      orElse: () => const Supplier(name: ''),
-    );
-    if (match.id == null || match.name.isEmpty) {
-      final should = await showDialog<bool>(
-        context: context,
-        builder:
-            (context) => AlertDialog(
-              title: const Text('Proveedor no encontrado'),
-              content: Text('¿Deseas registrar "$value" como nuevo proveedor?'),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context, false),
-                  child: const Text('No'),
-                ),
-                TextButton(
-                  onPressed: () => Navigator.pop(context, true),
-                  child: const Text('Sí'),
-                ),
-              ],
-            ),
-      );
-      if (!mounted) return;
-      if (should == true) {
-        await showModalBottomSheet(
-          context: context,
-          isScrollControlled: true,
-          builder: (_) => CreateSupplierSheet(initialName: value),
-        );
-        await _loadSuppliers();
-        final created = _suppliers.firstWhere(
-          (s) => s.name.toLowerCase() == value.toLowerCase(),
-          orElse: () => const Supplier(name: ''),
-        );
-        if (created.id != null) {
-          _selectSupplier(created);
-        }
-      } else {
-        setState(() {
-          issuer = value;
-        });
-      }
-    } else {
-      _selectSupplier(match);
-    }
-  }
-
-  @override
-  void dispose() {
-    _debounce?.cancel();
-    super.dispose();
-  }
+  // Direction toggle moved to widgets/direction_toggle.dart
 
   @override
   Widget build(BuildContext context) {
@@ -225,7 +66,7 @@ class _CreateInvoicePageState extends State<CreateInvoicePage>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Container cristal translúcido morado para título hasta separador
+                  // Container cristal translucido morado para titulo hasta separador
                   ClipRRect(
                     borderRadius: BorderRadius.circular(16),
                     child: BackdropFilter(
@@ -245,10 +86,18 @@ class _CreateInvoicePageState extends State<CreateInvoicePage>
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // Mostrar fecha encima del título a la derecha
+                            // Mostrar fecha encima del tAtulo a la derecha
                             Row(
-                              mainAxisAlignment: MainAxisAlignment.end,
                               children: [
+                                Expanded(
+                                  child: Align(
+                                    alignment: Alignment.centerLeft,
+                                    child: DirectionToggle(
+                                      direction: direction,
+                                      onChanged: setDirection,
+                                    ),
+                                  ),
+                                ),
                                 Text(
                                   'Fecha:  ${DateFormat('yyyy-MM-dd').format(invoiceDate)}',
                                   style: const TextStyle(
@@ -258,11 +107,11 @@ class _CreateInvoicePageState extends State<CreateInvoicePage>
                                 ),
                               ],
                             ),
-                            // Campo título
+                            // Campo tAtulo
                             TextFormField(
                               key: ValueKey(amount),
                               decoration: InputDecoration(
-                                labelText: 'Título',
+                                labelText: 'Titulo',
                                 enabledBorder: UnderlineInputBorder(
                                   borderSide: BorderSide(
                                     color: theme.colorScheme.onSurface,
@@ -280,7 +129,7 @@ class _CreateInvoicePageState extends State<CreateInvoicePage>
                                           : null,
                               onSaved: (value) => title = value,
                             ),
-                            // Switch para mostrar datos avanzados justo debajo del título
+                            // Switch para mostrar datos avanzados justo debajo del tAtulo
                             SwitchListTile(
                               title: const Text(
                                 'Mostrar datos avanzados (emisor, receptor, concepto)',
@@ -294,382 +143,247 @@ class _CreateInvoicePageState extends State<CreateInvoicePage>
                               },
                               activeThumbColor: theme.colorScheme.tertiary,
                             ),
-                            TextFormField(
-                              controller: receiverController,
-                              decoration: const InputDecoration(
-                                labelText: 'Receptor',
-                              ),
-                              onChanged: _onClientChanged,
-                              onFieldSubmitted: _onClientSubmitted,
-                            ),
-                            if (_filteredClients.isNotEmpty)
-                              Container(
-                                constraints: const BoxConstraints(
-                                  maxHeight: 150,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: theme.colorScheme.surface,
-                                  border: Border.all(
-                                    color: theme.colorScheme.primary,
-                                    width: 0.5,
-                                  ),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: ListView(
-                                  shrinkWrap: true,
-                                  children:
-                                      _filteredClients
-                                          .map(
-                                            (c) => ListTile(
-                                              title: Text(c.name),
-                                              onTap: () => _selectClient(c),
-                                            ),
-                                          )
+                            CounterpartySection(
+                              isIssued: direction == InvoiceDirection.issued,
+                              theme: theme,
+                              label:
+                                  direction == InvoiceDirection.issued
+                                      ? 'Cliente'
+                                      : 'Proveedor',
+                              nameController:
+                                  direction == InvoiceDirection.issued
+                                      ? receiverController
+                                      : issuerController,
+                              receiverTaxIdController: receiverTaxIdController,
+                              receiverAddressController:
+                                  receiverAddressController,
+                              issuerTaxIdController: issuerTaxIdController,
+                              issuerAddressController: issuerAddressController,
+                              showAdvancedFields: showAdvancedFields,
+                              suggestions:
+                                  (direction == InvoiceDirection.issued)
+                                      ? filteredClients
+                                          .map((c) => c.name)
+                                          .toList()
+                                      : filteredSuppliers
+                                          .map((s) => s.name)
                                           .toList(),
-                                ),
-                              ),
-                            if (receiverTaxId != null ||
-                                receiverAddress != null) ...[
-                              const SizedBox(height: 8),
-                              if (receiverTaxId != null)
-                                Text(
-                                  'NIF: $receiverTaxId',
-                                  style: const TextStyle(fontSize: 12),
-                                ),
-                              if (receiverAddress != null)
-                                Text(
-                                  receiverAddress!,
-                                  style: const TextStyle(fontSize: 12),
-                                ),
-                            ],
-                            if (showAdvancedFields) ...[
-                              TextFormField(
-                                controller: issuerController,
-                                decoration: InputDecoration(
-                                  labelText: 'Emisor',
-                                  enabledBorder: UnderlineInputBorder(
-                                    borderSide: BorderSide(
-                                      color: theme.colorScheme.onSurface,
-                                    ),
+                              onChanged: (value) {
+                                if (direction == InvoiceDirection.issued) {
+                                  onClientChanged(value);
+                                } else {
+                                  onSupplierChanged(value);
+                                }
+                              },
+                              onSubmitted: (value) {
+                                if (direction == InvoiceDirection.issued) {
+                                  unawaited(onClientSubmitted(value));
+                                } else {
+                                  unawaited(onSupplierSubmitted(value));
+                                }
+                              },
+                              onTapSuggestion: (index) {
+                                if (direction == InvoiceDirection.issued) {
+                                  selectClient(filteredClients[index]);
+                                } else {
+                                  selectSupplier(filteredSuppliers[index]);
+                                }
+                              },
+                              invoiceNumberController: invoiceNumberController,
+                              onInvoiceNumberChanged:
+                                  (value) => setState(
+                                    () => invoiceNumber = normalizeText(value),
                                   ),
-                                  focusedBorder: const UnderlineInputBorder(
-                                    borderSide: BorderSide(color: Colors.white),
+                              onInvoiceNumberSaved:
+                                  (value) => invoiceNumber = value,
+                              onReceiverTaxIdChanged:
+                                  (value) => setState(
+                                    () => receiverTaxId = normalizeText(value),
                                   ),
-                                ),
-                                onChanged: _onSupplierChanged,
-                                onFieldSubmitted: _onSupplierSubmitted,
-                                onSaved: (value) => issuer = value,
-                              ),
-                              if (_filteredSuppliers.isNotEmpty)
-                                Container(
-                                  height: 150,
-                                  padding: const EdgeInsets.only(top: 8),
-                                  child: ListView(
-                                    children:
-                                        _filteredSuppliers
-                                            .map(
-                                              (s) => ListTile(
-                                                title: Text(s.name),
-                                                onTap: () => _selectSupplier(s),
-                                              ),
-                                            )
-                                            .toList(),
+                              onReceiverAddressChanged:
+                                  (value) => setState(
+                                    () =>
+                                        receiverAddress = normalizeText(value),
                                   ),
-                                ),
-                              const SizedBox(height: 12),
-
-                              const SizedBox(height: 12),
-                              TextFormField(
-                                controller: conceptController,
-                                decoration: InputDecoration(
-                                  labelText: 'Concepto',
-                                  enabledBorder: UnderlineInputBorder(
-                                    borderSide: BorderSide(
-                                      color: theme.colorScheme.onSurface,
-                                    ),
+                              onIssuerTaxIdChanged:
+                                  (value) => setState(
+                                    () => issuerTaxId = normalizeText(value),
                                   ),
-                                  focusedBorder: UnderlineInputBorder(
-                                    borderSide: BorderSide(color: Colors.white),
+                              onIssuerAddressChanged:
+                                  (value) => setState(
+                                    () => issuerAddress = normalizeText(value),
                                   ),
-                                ),
-                                maxLines: 3,
-                                onSaved: (value) => concept = value,
-                              ),
-                              const SizedBox(height: 24),
-                            ],
-                            const SizedBox(height: 24),
+                            ),
                           ],
                         ),
                       ),
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  const Divider(
-                    color: Colors.tealAccent,
-                    thickness: 1,
-                    height: 1,
+                  const SizedBox(height: 16),
+                  SwitchListTile.adaptive(
+                    contentPadding: EdgeInsets.zero,
+                    title: const Text('Mostrar mis datos'),
+                    value: _showSelfSummaryCard,
+                    onChanged: (value) {
+                      setState(() => _showSelfSummaryCard = value);
+                    },
+                    dense: true,
                   ),
-                  const SizedBox(height: 8),
-                  // Container cristal translúcido morado para el resto (importe, switches, botones...)
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(16),
-                    child: BackdropFilter(
-                      filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                      child: Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.secondary.withValues(
-                            alpha: 0.1,
+                  if (_showSelfSummaryCard)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      child:
+                          selfEmployedUser != null
+                              ? SelfSummaryCard(
+                                direction: direction,
+                                user: selfEmployedUser!,
+                                theme: theme,
+                              )
+                              : SelfSummarySkeleton(theme: theme),
+                    ),
+                  const SizedBox(height: 16),
+                  // Concepto/Pedido + sincro de importes con el mixin
+                  ItemsAmountBinder(
+                    itemsMode: _itemsMode,
+                    toggleItemsMode: toggleItemsMode,
+                    conceptController: conceptController,
+                    onTuplesChanged:
+                        (tuples) => syncAmountFromItemTuples(tuples),
+                    onConceptTextChanged:
+                        (text) => setState(() {
+                          if (_itemsMode) {
+                            concept = text;
+                          }
+                        }),
+                  ),
+                  const SizedBox(height: 24),
+
+                  if (invoiceImage != null)
+                    Column(
+                      children: [
+                        Image.file(invoiceImage!, height: 150),
+                        const SizedBox(height: 12),
+                        TextButton.icon(
+                          onPressed: () => setState(() => invoiceImage = null),
+                          icon: Icon(
+                            Icons.delete_outline,
+                            color: theme.colorScheme.onSurface,
                           ),
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(
-                            color: Colors.tealAccent.withValues(alpha: 0.3),
-                            width: 1,
+                          label: const Text('Eliminar imagen'),
+                        ),
+                      ],
+                    ),
+
+                  // Sección de importes desacoplada
+                  AmountSection(
+                    amountController: amountController,
+                    ivaController: ivaController,
+                    amount: amount,
+                    iva: iva,
+                    vatRate: vatRate,
+                    includeIva: isAmountIncludingIva,
+                    onAmountChanged: (v) {
+                      final parsed = double.tryParse(v.replaceAll(',', '.'));
+                      setState(() {
+                        amount = parsed ?? 0.0;
+                        updateIva();
+                      });
+                    },
+                    onIncludeIvaChanged: (val) {
+                      setState(() {
+                        isAmountIncludingIva = val;
+                        updateIva();
+                      });
+                    },
+                    onVatRateChanged: (r) {
+                      setState(() {
+                        vatRate = r;
+                        updateIva();
+                      });
+                    },
+                    onIvaChanged: (v) {
+                      final parsed = double.tryParse(v.replaceAll(',', '.'));
+                      setState(() {
+                        iva = parsed ?? 0.0;
+                        updateIva();
+                      });
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  const SizedBox(height: 16),
+                  // Botones en fila
+                  Row(
+                    children: [
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: selectDate,
+                          icon: const Icon(Icons.calendar_today_outlined),
+                          label: const Text(
+                            'Fecha',
+                            style: TextStyle(fontSize: 16),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.deepPurple,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 24,
+                              vertical: 14,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
                           ),
                         ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // Switch importe incluye IVA
-                            SwitchListTile(
-                              title: const Text('El importe neto incluye IVA'),
-                              value: isAmountIncludingIva,
-                              onChanged: (val) {
-                                setState(() {
-                                  isAmountIncludingIva = val;
-                                  updateIva();
-                                });
-                              },
-                              activeThumbColor: theme.colorScheme.tertiary,
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: pickImage,
+                          icon: const Icon(Icons.camera_alt),
+                          label: const Text(
+                            'Escaner',
+                            style: TextStyle(fontSize: 16),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.teal,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 24,
+                              vertical: 14,
                             ),
-                            // Campo importe neto
-                            TextFormField(
-                              decoration: InputDecoration(
-                                labelText: 'Importe neto (€)',
-                                enabledBorder: UnderlineInputBorder(
-                                  borderSide: BorderSide(
-                                    color: theme.colorScheme.onSurface,
-                                  ),
-                                ),
-                                focusedBorder: UnderlineInputBorder(
-                                  borderSide: BorderSide(color: Colors.white),
-                                ),
-                              ),
-                              // style: const TextStyle(color: Colors.white),
-                              keyboardType:
-                                  const TextInputType.numberWithOptions(
-                                    decimal: true,
-                                  ),
-                              initialValue:
-                                  amount > 0 ? amount.toStringAsFixed(2) : null,
-                              validator: (value) {
-                                if (value == null) return 'Requerido';
-                                final d = double.tryParse(value);
-                                if (d == null || d < 0) return 'Valor inválido';
-                                return null;
-                              },
-                              onChanged: (value) {
-                                final d = double.tryParse(value);
-                                if (d != null) {
-                                  setState(() {
-                                    amount = d;
-                                    if (isAmountIncludingIva) {
-                                      updateIva();
-                                    }
-                                  });
-                                }
-                              },
-                              onSaved: (value) {
-                                amount = double.tryParse(value ?? '0') ?? 0;
-                                if (isAmountIncludingIva) {
-                                  updateIva();
-                                }
-                              },
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
                             ),
-
-                            // Campo IVA oculto con Visibility
-                            Visibility(
-                              visible: !isAmountIncludingIva,
-                              child: TextFormField(
-                                key: ValueKey(iva),
-                                decoration: InputDecoration(
-                                  labelText: 'IVA (€)',
-                                  enabledBorder: UnderlineInputBorder(
-                                    borderSide: BorderSide(
-                                      color: theme.colorScheme.onSurface,
-                                    ),
-                                  ),
-                                  focusedBorder: UnderlineInputBorder(
-                                    borderSide: BorderSide(color: Colors.white),
-                                  ),
-                                ),
-
-                                keyboardType:
-                                    const TextInputType.numberWithOptions(
-                                      decimal: true,
-                                    ),
-                                initialValue:
-                                    iva > 0 ? iva.toStringAsFixed(2) : '0',
-                                enabled: !isAmountIncludingIva,
-                                validator: (value) {
-                                  if (value == null) return 'Requerido';
-                                  final d = double.tryParse(value);
-                                  if (d == null || d < 0) {
-                                    return 'Valor inválido';
-                                  }
-                                  return null;
-                                },
-                                onChanged: (value) {
-                                  final d = double.tryParse(value);
-                                  if (d != null && !isAmountIncludingIva) {
-                                    setState(() {
-                                      iva = d;
-                                    });
-                                  }
-                                },
-                                onSaved: (value) {
-                                  iva = double.tryParse(value ?? '0') ?? 0;
-                                },
-                              ),
-                            ),
-
-                            const SizedBox(height: 24),
-
-                            DropdownButtonFormField<InvoiceStatus>(
-                              decoration: const InputDecoration(
-                                labelText: 'Estado',
-                              ),
-                              initialValue: status,
-                              dropdownColor: theme.colorScheme.secondary,
-                              items:
-                                  [InvoiceStatus.pending, InvoiceStatus.sent]
-                                      .map(
-                                        (e) => DropdownMenuItem(
-                                          value: e,
-                                          child: Text(e.labelEs),
-                                        ),
-                                      )
-                                      .toList(),
-                              onChanged: (value) {
-                                if (value != null) {
-                                  setState(() {
-                                    status = value;
-                                    if (status == InvoiceStatus.sent) {
-                                      showAdvancedFields = true;
-                                      if (selfEmployedUser != null) {
-                                        issuerController.text =
-                                            selfEmployedUser!.fullName;
-                                        issuer = selfEmployedUser!.fullName;
-                                      }
-                                    }
-                                  });
-                                }
-                              },
-                            ),
-
-                            const SizedBox(height: 24),
-
-                            if (invoiceImage != null)
-                              Column(
-                                children: [
-                                  Image.file(invoiceImage!, height: 150),
-                                  const SizedBox(height: 12),
-                                  TextButton.icon(
-                                    onPressed:
-                                        () =>
-                                            setState(() => invoiceImage = null),
-                                    icon: Icon(
-                                      Icons.delete_outline,
-                                      color: theme.colorScheme.onSurface,
-                                    ),
-                                    label: const Text('Eliminar imagen'),
-                                  ),
-                                ],
-                              ),
-
-                            // Botones en fila
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: ElevatedButton.icon(
-                                    onPressed: selectDate,
-                                    icon: const Icon(
-                                      Icons.calendar_today_outlined,
-                                    ),
-                                    label: const Text(
-                                      'Fecha',
-                                      style: TextStyle(fontSize: 16),
-                                    ),
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.deepPurple,
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 24,
-                                        vertical: 14,
-                                      ),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(10),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 16),
-                                Expanded(
-                                  child: ElevatedButton.icon(
-                                    onPressed: pickImage,
-                                    icon: const Icon(Icons.camera_alt),
-                                    label: const Text(
-                                      'Escaner',
-                                      style: TextStyle(fontSize: 16),
-                                    ),
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.teal,
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 24,
-                                        vertical: 14,
-                                      ),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(10),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-
-                            const SizedBox(height: 32),
-
-                            ElevatedButton.icon(
-                              onPressed: () {
-                                if (formKey.currentState!.validate()) {
-                                  formKey.currentState!.save();
-                                  // generateAndSharePdf();
-                                  submitInvoice();
-                                  Navigator.pop(context);
-                                }
-                              },
-                              // icon: const Icon(Icons.share),
-                              label: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  const Text(
-                                    'Guardar',
-                                    style: TextStyle(fontSize: 18),
-                                  ),
-                                ],
-                              ),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: theme.colorScheme.primary,
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 32,
-                                  vertical: 16,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                              ),
-                            ),
-                          ],
+                          ),
                         ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 32),
+
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      if (formKey.currentState!.validate()) {
+                        // Concepto por items ya sincronizado desde ItemsAmountBinder
+                        formKey.currentState!.save();
+                        submitInvoice();
+                        Navigator.pop(context);
+                      }
+                    },
+                    // icon: const Icon(Icons.share),
+                    label: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Text('Guardar', style: TextStyle(fontSize: 18)),
+                      ],
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: theme.colorScheme.primary,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 32,
+                        vertical: 16,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
                       ),
                     ),
                   ),

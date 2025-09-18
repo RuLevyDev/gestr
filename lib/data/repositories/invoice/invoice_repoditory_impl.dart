@@ -45,9 +45,16 @@ class InvoiceRepositoryImpl implements InvoiceRepository {
             netAmount: (data['netAmount'] ?? 0).toDouble(),
             iva: (data['iva'] ?? 0).toDouble(),
             status: status,
+            invoiceNumber: data['invoiceNumber'],
             issuer: data['issuer'],
+            issuerTaxId: data['issuerTaxId'],
+            issuerAddress: data['issuerAddress'],
             receiver: data['receiver'],
+            receiverTaxId: data['receiverTaxId'],
+            receiverAddress: data['receiverAddress'],
             concept: data['concept'],
+            vatRate: _parseNullableDouble(data['vatRate']),
+            currency: (data['currency'] as String?) ?? 'EUR',
             imageUrl: data['imageUrl'],
           );
         }),
@@ -79,9 +86,16 @@ class InvoiceRepositoryImpl implements InvoiceRepository {
             'netAmount': invoice.netAmount,
             'iva': invoice.iva,
             'status': invoice.status.name,
+            'invoiceNumber': invoice.invoiceNumber,
             'issuer': invoice.issuer,
+            'issuerTaxId': invoice.issuerTaxId,
+            'issuerAddress': invoice.issuerAddress,
             'receiver': invoice.receiver,
+            'receiverTaxId': invoice.receiverTaxId,
+            'receiverAddress': invoice.receiverAddress,
             'concept': invoice.concept,
+            'vatRate': invoice.vatRate,
+            'currency': invoice.currency,
             'imageUrl': imageUrl,
           });
     } catch (e) {
@@ -143,9 +157,16 @@ class InvoiceRepositoryImpl implements InvoiceRepository {
         'netAmount': invoice.netAmount,
         'iva': invoice.iva,
         'status': invoice.status.name,
+        'invoiceNumber': invoice.invoiceNumber,
         'issuer': invoice.issuer,
+        'issuerTaxId': invoice.issuerTaxId,
+        'issuerAddress': invoice.issuerAddress,
         'receiver': invoice.receiver,
+        'receiverTaxId': invoice.receiverTaxId,
+        'receiverAddress': invoice.receiverAddress,
         'concept': invoice.concept,
+        'vatRate': invoice.vatRate,
+        'currency': invoice.currency,
         'imageUrl': imageUrl,
       });
     } catch (e) {
@@ -217,14 +238,31 @@ class InvoiceRepositoryImpl implements InvoiceRepository {
         netAmount: (data['netAmount'] ?? 0).toDouble(),
         iva: (data['iva'] ?? 0).toDouble(),
         status: _parseStatus(data['status']),
+        invoiceNumber: data['invoiceNumber'],
         issuer: data['issuer'],
+        issuerTaxId: data['issuerTaxId'],
+        issuerAddress: data['issuerAddress'],
         receiver: data['receiver'],
+        receiverTaxId: data['receiverTaxId'],
+        receiverAddress: data['receiverAddress'],
         concept: data['concept'],
+        vatRate: _parseNullableDouble(data['vatRate']),
+        currency: (data['currency'] as String?) ?? 'EUR',
         imageUrl: data['imageUrl'],
       );
     } catch (e) {
       throw Exception("Error al obtener la factura por ID: $e");
     }
+  }
+
+  double? _parseNullableDouble(Object? value) {
+    if (value is num) {
+      return value.toDouble();
+    }
+    if (value is String) {
+      return double.tryParse(value);
+    }
+    return null;
   }
 
   InvoiceStatus _parseStatus(String? status) {
