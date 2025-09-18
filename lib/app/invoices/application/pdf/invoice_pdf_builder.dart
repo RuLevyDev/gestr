@@ -67,6 +67,7 @@ class InvoicePdfBuilder {
 
 const double _kPdfaFontSize = 12.0;
 const double _kMaxTextWidth = 36 * 12.0;
+const String _sectionSeparator = '------------------------------';
 
 List<String> _buildLines(InvoicePdfContent content) {
   final lines = <String>[];
@@ -76,21 +77,42 @@ List<String> _buildLines(InvoicePdfContent content) {
   if (sanitizedTitle.isNotEmpty) {
     lines.add(sanitizedTitle);
   }
-  lines.add('');
 
+  lines.add(_sectionSeparator);
+  lines.add(PdfaGenerator.sanitizeLine('DATOS GENERALES'));
+  lines.add(_composeKeyValue('ESTADO', content.status.labelEs));
   lines.add(
     _composeKeyValue('NUMERO', content.invoiceNumber ?? 'No disponible'),
   );
   lines.add(_composeKeyValue('FECHA', _formatDate(content.issueDate)));
-  lines.add(_composeKeyValue('ESTADO', content.status.labelEs));
+  lines.add(_composeKeyValue('MONEDA', content.currency));
+  lines.add('');
+
+  lines.add(_sectionSeparator);
+  lines.add(PdfaGenerator.sanitizeLine('RESUMEN IMPORTE'));
+  lines.add(
+    _composeKeyValue(
+      'BASE IMPONIBLE',
+      _formatMoney(content.netAmount, content.currency),
+    ),
+  );
+  lines.add(
+    _composeKeyValue('IVA', _formatMoney(content.ivaAmount, content.currency)),
+  );
+  lines.add(
+    _composeKeyValue(
+      'TOTAL A COBRAR',
+      _formatMoney(content.total, content.currency),
+    ),
+  );
   lines.add('');
 
   final issuerLines = _wrapMultiline(content.issuerName);
   if (issuerLines.isNotEmpty) {
-    lines
-      ..add('EMISOR:')
-      ..addAll(issuerLines)
-      ..add('');
+    lines.add(_sectionSeparator);
+    lines.add(PdfaGenerator.sanitizeLine('DATOS EMISOR'));
+    lines.addAll(issuerLines);
+    lines.add('');
   }
 
   final receiverLines = _receiverDetails(
@@ -99,42 +121,29 @@ List<String> _buildLines(InvoicePdfContent content) {
     content.receiverAddress,
   );
   if (receiverLines.isNotEmpty) {
-    lines
-      ..add('RECEPTOR:')
-      ..addAll(receiverLines)
-      ..add('');
+    lines.add(_sectionSeparator);
+    lines.add(PdfaGenerator.sanitizeLine('DATOS RECEPTOR'));
+    lines.addAll(receiverLines);
+    lines.add('');
   }
 
   final conceptLines = _wrapParagraph(content.concept);
   if (conceptLines.isNotEmpty) {
-    lines
-      ..add('CONCEPTO:')
-      ..addAll(conceptLines)
-      ..add('');
+    lines.add(_sectionSeparator);
+    lines.add(PdfaGenerator.sanitizeLine('CONCEPTO'));
+    lines.addAll(conceptLines);
+    lines.add('');
   }
-
-  lines
-    ..add(
-      _composeKeyValue(
-        'BASE IMPONIBLE',
-        _formatMoney(content.netAmount, content.currency),
-      ),
-    )
-    ..add(
-      _composeKeyValue(
-        'IVA',
-        _formatMoney(content.ivaAmount, content.currency),
-      ),
-    )
-    ..add(
-      _composeKeyValue('TOTAL', _formatMoney(content.total, content.currency)),
-    );
 
   if (content.attachmentImageBytes != null) {
-    lines
-      ..add('')
-      ..add('ADJUNTO: CONSULTAR EN LA APLICACION');
+    lines.add(_sectionSeparator);
+    lines.add(PdfaGenerator.sanitizeLine('ADJUNTOS'));
+    lines.add(PdfaGenerator.sanitizeLine('IMAGEN DISPONIBLE EN LA APLICACION'));
+    lines.add('');
   }
+
+  lines.add(_sectionSeparator);
+  lines.add(PdfaGenerator.sanitizeLine('GENERADO POR GESTR APP'));
 
   return lines;
 }
