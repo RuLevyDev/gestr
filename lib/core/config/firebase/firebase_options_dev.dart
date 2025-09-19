@@ -8,13 +8,13 @@ import 'package:flutter/foundation.dart'
 ///
 /// Example:
 /// ```dart
-/// import 'firebase_options.dart';
+/// import 'firebase_options_dev.dart';
 /// // ...
 /// await Firebase.initializeApp(
-///   options: DevFirebaseOptions.currentPlatform,
+///   options: DefaultFirebaseOptions.currentPlatform,
 /// );
 /// ```
-class DevFirebaseOptions {
+class DefaultFirebaseOptions {
   static FirebaseOptions get currentPlatform {
     if (kIsWeb) {
       return web;
@@ -26,28 +26,28 @@ class DevFirebaseOptions {
         return ios;
       case TargetPlatform.macOS:
         throw UnsupportedError(
-          'DevFirebaseOptions have not been configured for macos - '
+          'DefaultFirebaseOptions have not been configured for macos - '
           'you can reconfigure this by running the FlutterFire CLI again.',
         );
       case TargetPlatform.windows:
         throw UnsupportedError(
-          'DevFirebaseOptions have not been configured for windows - '
+          'DefaultFirebaseOptions have not been configured for windows - '
           'you can reconfigure this by running the FlutterFire CLI again.',
         );
       case TargetPlatform.linux:
         throw UnsupportedError(
-          'DevFirebaseOptions have not been configured for linux - '
+          'DefaultFirebaseOptions have not been configured for linux - '
           'you can reconfigure this by running the FlutterFire CLI again.',
         );
       default:
         throw UnsupportedError(
-          'DevFirebaseOptions are not supported for this platform.',
+          'DefaultFirebaseOptions are not supported for this platform.',
         );
     }
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'GOOGLE_API_KEY_DEV_WEB',
+    apiKey: 'AIzaSyA881j18DCjXPUHKD3kw4JkPOVuWagGHl0',
     appId: '1:663748995058:web:a8a2179d4ddceffe89ad6b',
     messagingSenderId: '663748995058',
     projectId: 'gestr-dev',
@@ -57,7 +57,7 @@ class DevFirebaseOptions {
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'GOOGLE_API_KEY_DEV_ANDROID',
+    apiKey: 'AIzaSyB75lZmLRwTTPM2hV3G3XttGQ6IPUBAK9Q',
     appId: '1:663748995058:android:d3834c037dffc08e89ad6b',
     messagingSenderId: '663748995058',
     projectId: 'gestr-dev',
@@ -65,15 +65,14 @@ class DevFirebaseOptions {
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'GOOGLE_API_KEY_DEV_IOS',
+    apiKey: 'AIzaSyA2oKhY8pcGUj8S9VR-SsFS9XF4kah7N6s',
     appId: '1:663748995058:ios:8485adf9f09c0c2089ad6b',
     messagingSenderId: '663748995058',
     projectId: 'gestr-dev',
     storageBucket: 'gestr-dev.firebasestorage.app',
-    androidClientId:
-        '663748995058-85q059tbvfd4ng34v2sppf7a5qabn1e6.apps.googleusercontent.com',
-    iosClientId:
-        '663748995058-6crk8qvj1uvm9s2p9m21afddg3ggr7u2.apps.googleusercontent.com',
+    androidClientId: '663748995058-85q059tbvfd4ng34v2sppf7a5qabn1e6.apps.googleusercontent.com',
+    iosClientId: '663748995058-6crk8qvj1uvm9s2p9m21afddg3ggr7u2.apps.googleusercontent.com',
     iosBundleId: 'com.example.gestr',
   );
+
 }

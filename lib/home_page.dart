@@ -76,9 +76,10 @@ class _HomePageState extends State<HomePage>
                   tooltip: 'Exportar SII',
                   icon: Icon(
                     Icons.file_download_outlined,
-                    color: isDark
-                        ? Colors.tealAccent.withValues(alpha: 0.8)
-                        : Colors.purpleAccent.withValues(alpha: 0.8),
+                    color:
+                        isDark
+                            ? Colors.tealAccent.withValues(alpha: 0.8)
+                            : Colors.purpleAccent.withValues(alpha: 0.8),
                   ),
                   onPressed: () => _openSiiExportDialog(context),
                 ),
@@ -175,7 +176,9 @@ Future<void> _openSiiExportDialog(BuildContext context) async {
             }
             if (end!.isBefore(start!)) {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('El fin debe ser posterior al inicio')),
+                const SnackBar(
+                  content: Text('El fin debe ser posterior al inicio'),
+                ),
               );
               return;
             }
@@ -185,19 +188,32 @@ Future<void> _openSiiExportDialog(BuildContext context) async {
               final users = context.read<SelfEmployedUserRepository>();
               final sii = SiiUseCases(invoices, users);
               final uid = FirebaseAuth.instance.currentUser!.uid;
-              final jsonStr = (book == 'issued')
-                  ? await sii.exportIssuedJson(uid, start: start, end: end)
-                  : await sii.exportReceivedJson(uid, start: start, end: end);
+              final jsonStr =
+                  (book == 'issued')
+                      ? await sii.exportIssuedJson(uid, start: start, end: end)
+                      : await sii.exportReceivedJson(
+                        uid,
+                        start: start,
+                        end: end,
+                      );
 
-              final name = 'SII_${book == 'issued' ? 'expedidas' : 'recibidas'}_${start!.toIso8601String().substring(0, 10)}_${end!.toIso8601String().substring(0, 10)}.json';
+              final name =
+                  'SII_${book == 'issued' ? 'expedidas' : 'recibidas'}_${start!.toIso8601String().substring(0, 10)}_${end!.toIso8601String().substring(0, 10)}.json';
               final bytes = Uint8List.fromList(utf8.encode(jsonStr));
-              final xfile = XFile.fromData(bytes, name: name, mimeType: 'application/json');
-              await Share.shareXFiles([xfile], text: 'Exportación SII ($name)');
+              final xfile = XFile.fromData(
+                bytes,
+                name: name,
+                mimeType: 'application/json',
+              );
+              await SharePlus.instance.share(
+                ShareParams(files: [xfile], text: 'Exportación SII ($name)'),
+              );
               if (context.mounted) Navigator.of(ctx).pop();
             } catch (e) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Error al exportar: $e')),
-              );
+              if (!context.mounted) return;
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(SnackBar(content: Text('Error al exportar: $e')));
             } finally {
               if (ctx.mounted) setState(() => busy = false);
             }
@@ -209,12 +225,19 @@ Future<void> _openSiiExportDialog(BuildContext context) async {
               mainAxisSize: MainAxisSize.min,
               children: [
                 DropdownButtonFormField<String>(
-                  value: book,
+                  initialValue: book,
                   items: const [
-                    DropdownMenuItem(value: 'issued', child: Text('Libro de expedidas (emitidas)')),
-                    DropdownMenuItem(value: 'received', child: Text('Libro de recibidas')),
+                    DropdownMenuItem(
+                      value: 'issued',
+                      child: Text('Libro de expedidas (emitidas)'),
+                    ),
+                    DropdownMenuItem(
+                      value: 'received',
+                      child: Text('Libro de recibidas'),
+                    ),
                   ],
-                  onChanged: busy ? null : (v) => setState(() => book = v ?? 'issued'),
+                  onChanged:
+                      busy ? null : (v) => setState(() => book = v ?? 'issued'),
                 ),
                 const SizedBox(height: 12),
                 Row(
@@ -222,18 +245,22 @@ Future<void> _openSiiExportDialog(BuildContext context) async {
                     Expanded(
                       child: OutlinedButton(
                         onPressed: busy ? null : pickStart,
-                        child: Text(start == null
-                            ? 'Inicio'
-                            : '${start!.year}-${start!.month.toString().padLeft(2, '0')}-${start!.day.toString().padLeft(2, '0')}'),
+                        child: Text(
+                          start == null
+                              ? 'Inicio'
+                              : '${start!.year}-${start!.month.toString().padLeft(2, '0')}-${start!.day.toString().padLeft(2, '0')}',
+                        ),
                       ),
                     ),
                     const SizedBox(width: 8),
                     Expanded(
                       child: OutlinedButton(
                         onPressed: busy ? null : pickEnd,
-                        child: Text(end == null
-                            ? 'Fin'
-                            : '${end!.year}-${end!.month.toString().padLeft(2, '0')}-${end!.day.toString().padLeft(2, '0')}'),
+                        child: Text(
+                          end == null
+                              ? 'Fin'
+                              : '${end!.year}-${end!.month.toString().padLeft(2, '0')}-${end!.day.toString().padLeft(2, '0')}',
+                        ),
                       ),
                     ),
                   ],
@@ -247,13 +274,14 @@ Future<void> _openSiiExportDialog(BuildContext context) async {
               ),
               FilledButton.icon(
                 onPressed: busy ? null : doExport,
-                icon: busy
-                    ? const SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.file_download_outlined),
+                icon:
+                    busy
+                        ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                        : const Icon(Icons.file_download_outlined),
                 label: const Text('Exportar'),
               ),
             ],

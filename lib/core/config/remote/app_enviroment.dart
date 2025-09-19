@@ -5,7 +5,7 @@ import 'package:yaml/yaml.dart';
 
 import '../firebase/firebase_options_dev.dart' as dev;
 // import '/config/firebase/firebase_options_test.dart' as test;
-import '../firebase/firebase_options_prod.dart' as prod;
+import '../firebase/firebase_options.dart' as prod;
 // import '/config/firebase/firebase_options_local.dart' as local;
 
 enum ReleaseType { local, dev, test, prod }
@@ -72,9 +72,9 @@ class AppEnvironment {
     }
 
     final options = switch (releaseType) {
-      ReleaseType.local => dev.DevFirebaseOptions.currentPlatform,
-      ReleaseType.dev => dev.DevFirebaseOptions.currentPlatform,
-      ReleaseType.test => dev.DevFirebaseOptions.currentPlatform,
+      ReleaseType.local => dev.DefaultFirebaseOptions.currentPlatform,
+      ReleaseType.dev => dev.DefaultFirebaseOptions.currentPlatform,
+      ReleaseType.test => dev.DefaultFirebaseOptions.currentPlatform,
       ReleaseType.prod => prod.DefaultFirebaseOptions.currentPlatform,
     };
 
