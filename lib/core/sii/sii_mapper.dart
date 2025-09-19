@@ -8,6 +8,14 @@ class SiiMapper {
     final opDate = inv.operationDate ?? inv.date;
     final number = _resolveNumber(inv);
     final lines = inv.taxLines ?? _deriveSingle(inv);
+    final receiverIdType = _resolveIdType(
+      inv.receiverIdType,
+      inv.receiverTaxId,
+    );
+    final receiverCountry = _resolveCountry(
+      inv.receiverCountryCode,
+      inv.receiverTaxId,
+    );
     return <String, dynamic>{
       'tipoFactura': _resolveTipoFactura(inv),
       'fechaExpedicion': _fmtDate(inv.date),
@@ -20,10 +28,10 @@ class SiiMapper {
         'pais': me.countryCode,
       },
       'receptor': {
-        'tipoId': inv.receiverTaxId != null ? 'NIF' : null,
+        if (receiverIdType != null) 'tipoId': receiverIdType,
         'idFiscal': inv.receiverTaxId,
         'nombre': inv.receiver,
-        // El país del receptor no está en el modelo actual
+        if (receiverCountry != null) 'pais': receiverCountry,
       },
       'desgloseIva': [
         for (final t in lines)
@@ -33,7 +41,7 @@ class SiiMapper {
             'cuota': _round2(t.quota),
             if (t.recargoEquivalencia != null)
               'recargoEquivalencia': _round2(t.recargoEquivalencia!),
-          }
+          },
       ],
       'inversionSujetoPasivo': inv.reverseCharge == true,
       'exencion': inv.exemptionType,
@@ -41,21 +49,33 @@ class SiiMapper {
     };
   }
 
-  static Map<String, dynamic> mapReceived(Invoice inv) {
+  static Map<String, dynamic> mapReceived(Invoice inv, SelfEmployedUser me) {
     final opDate = inv.operationDate ?? inv.date;
     final number = _resolveNumber(inv);
     final lines = inv.taxLines ?? _deriveSingle(inv);
+    final issuerIdType = _resolveIdType(inv.issuerIdType, inv.issuerTaxId);
+    final issuerCountry = _resolveCountry(
+      inv.issuerCountryCode,
+      inv.issuerTaxId,
+    );
     return <String, dynamic>{
       'tipoFactura': _resolveTipoFactura(inv),
       'fechaExpedicion': _fmtDate(inv.date),
       'fechaOperacion': _fmtDate(opDate),
       'numeroFactura': number,
       'emisor': {
-        'tipoId': inv.issuerTaxId != null ? 'NIF' : null,
+        if (issuerIdType != null) 'tipoId': issuerIdType,
         'idFiscal': inv.issuerTaxId,
         'nombre': inv.issuer,
+        if (issuerCountry != null) 'pais': issuerCountry,
       },
-      'receptor': null, // el receptor somos nosotros
+      'receptor': {
+        'tipoId': me.idType,
+        'idFiscal': me.dni,
+        'nombre': me.fullName,
+        'pais': me.countryCode,
+      },
+
       'desgloseIva': [
         for (final t in lines)
           {
@@ -64,7 +84,7 @@ class SiiMapper {
             'cuota': _round2(t.quota),
             if (t.recargoEquivalencia != null)
               'recargoEquivalencia': _round2(t.recargoEquivalencia!),
-          }
+          },
       ],
       'inversionSujetoPasivo': inv.reverseCharge == true,
       'exencion': inv.exemptionType,
@@ -108,5 +128,26 @@ class SiiMapper {
     // Por ahora tratamos todas como factura completa normal (F1)
     return 'F1';
   }
-}
 
+  static String? _resolveIdType(String? raw, String? taxId) {
+    final trimmed = raw?.trim();
+    if (trimmed != null && trimmed.isNotEmpty) {
+      return trimmed;
+    }
+    if (taxId == null || taxId.trim().isEmpty) {
+      return null;
+    }
+    return 'NIF';
+  }
+
+  static String? _resolveCountry(String? raw, String? taxId) {
+    final trimmed = raw?.trim();
+    if (trimmed != null && trimmed.isNotEmpty) {
+      return trimmed;
+    }
+    if (taxId == null || taxId.trim().isEmpty) {
+      return null;
+    }
+    return 'ES';
+  }
+}

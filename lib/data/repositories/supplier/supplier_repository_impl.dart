@@ -23,6 +23,8 @@ class SupplierRepositoryImpl implements SupplierRepository {
         phone: m['phone'],
         taxId: m['taxId'],
         fiscalAddress: m['fiscalAddress'],
+        countryCode: m['countryCode'],
+        idType: m['idType'],
         orderItems:
             (m['orderItems'] as List<dynamic>?)
                 ?.map(
@@ -52,6 +54,8 @@ class SupplierRepositoryImpl implements SupplierRepository {
       'phone': supplier.phone,
       'taxId': supplier.taxId,
       'fiscalAddress': supplier.fiscalAddress,
+      'countryCode': supplier.countryCode,
+      'idType': supplier.idType,
       'orderItems': supplier.orderItems.map((i) => i.toMap()).toList(),
       'orders': supplier.orders.map((o) => o.toMap()).toList(),
     });
@@ -66,6 +70,8 @@ class SupplierRepositoryImpl implements SupplierRepository {
       'phone': supplier.phone,
       'taxId': supplier.taxId,
       'fiscalAddress': supplier.fiscalAddress,
+      'countryCode': supplier.countryCode,
+      'idType': supplier.idType,
       'orderItems': supplier.orderItems.map((i) => i.toMap()).toList(),
       'orders': supplier.orders.map((o) => o.toMap()).toList(),
     });
@@ -88,6 +94,8 @@ class SupplierRepositoryImpl implements SupplierRepository {
       phone: m['phone'],
       taxId: m['taxId'],
       fiscalAddress: m['fiscalAddress'],
+      countryCode: m['countryCode'],
+      idType: m['idType'],
       orderItems:
           (m['orderItems'] as List<dynamic>?)
               ?.map(

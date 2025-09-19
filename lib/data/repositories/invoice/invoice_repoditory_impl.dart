@@ -10,10 +10,8 @@ class InvoiceRepositoryImpl implements InvoiceRepository {
   final FirebaseFirestore firestore;
   final FirebaseStorage storage;
 
-  InvoiceRepositoryImpl(
-    this.firestore, {
-    FirebaseStorage? storage,
-  }) : storage = storage ?? FirebaseStorage.instance;
+  InvoiceRepositoryImpl(this.firestore, {FirebaseStorage? storage})
+    : storage = storage ?? FirebaseStorage.instance;
 
   // Obtener todas las facturas de un usuario
   @override
@@ -46,25 +44,31 @@ class InvoiceRepositoryImpl implements InvoiceRepository {
             id: doc.id,
             title: data['title'],
             date: date,
-            operationDate: (data['operationDate'] is Timestamp)
-                ? (data['operationDate'] as Timestamp).toDate()
-                : null,
+            operationDate:
+                (data['operationDate'] is Timestamp)
+                    ? (data['operationDate'] as Timestamp).toDate()
+                    : null,
             netAmount: (data['netAmount'] ?? 0).toDouble(),
             iva: (data['iva'] ?? 0).toDouble(),
             status: status,
             invoiceNumber: data['invoiceNumber'],
             series: data['series'],
-            sequentialNumber: (data['sequentialNumber'] is int)
-                ? data['sequentialNumber'] as int
-                : (data['sequentialNumber'] is num)
+            sequentialNumber:
+                (data['sequentialNumber'] is int)
+                    ? data['sequentialNumber'] as int
+                    : (data['sequentialNumber'] is num)
                     ? (data['sequentialNumber'] as num).toInt()
                     : null,
             issuer: data['issuer'],
             issuerTaxId: data['issuerTaxId'],
             issuerAddress: data['issuerAddress'],
+            issuerCountryCode: data['issuerCountryCode'],
+            issuerIdType: data['issuerIdType'],
             receiver: data['receiver'],
             receiverTaxId: data['receiverTaxId'],
             receiverAddress: data['receiverAddress'],
+            receiverCountryCode: data['receiverCountryCode'],
+            receiverIdType: data['receiverIdType'],
             concept: data['concept'],
             vatRate: _parseNullableDouble(data['vatRate']),
             currency: (data['currency'] as String?) ?? 'EUR',
@@ -97,13 +101,14 @@ class InvoiceRepositoryImpl implements InvoiceRepository {
       // Derivar campos SII mínimos y numeración
       final direction = invoice.direction ?? 'issued';
       final operationDate = invoice.operationDate ?? invoice.date;
-      final taxLines = (invoice.taxLines != null && invoice.taxLines!.isNotEmpty)
-          ? invoice.taxLines!
-          : _deriveSingleTaxLine(invoice);
+      final taxLines =
+          (invoice.taxLines != null && invoice.taxLines!.isNotEmpty)
+              ? invoice.taxLines!
+              : _deriveSingleTaxLine(invoice);
 
       String? series = invoice.series;
       int? sequentialNumber = invoice.sequentialNumber;
-     
+
       if (direction == 'issued') {
         final numbering = await ensureIssuedInvoiceNumbering(
           userId,
@@ -131,22 +136,29 @@ class InvoiceRepositoryImpl implements InvoiceRepository {
             'issuer': invoice.issuer,
             'issuerTaxId': invoice.issuerTaxId,
             'issuerAddress': invoice.issuerAddress,
+            'issuerCountryCode': invoice.issuerCountryCode,
+            'issuerIdType': invoice.issuerIdType,
             'receiver': invoice.receiver,
             'receiverTaxId': invoice.receiverTaxId,
             'receiverAddress': invoice.receiverAddress,
+            'receiverCountryCode': invoice.receiverCountryCode,
+            'receiverIdType': invoice.receiverIdType,
             'concept': invoice.concept,
             'vatRate': invoice.vatRate,
             'currency': invoice.currency,
             'direction': direction,
-            'taxLines': taxLines
-                .map((t) => {
-                      'rate': t.rate,
-                      'base': t.base,
-                      'quota': t.quota,
-                      if (t.recargoEquivalencia != null)
-                        'recargoEquivalencia': t.recargoEquivalencia,
-                    })
-                .toList(),
+            'taxLines':
+                taxLines
+                    .map(
+                      (t) => {
+                        'rate': t.rate,
+                        'base': t.base,
+                        'quota': t.quota,
+                        if (t.recargoEquivalencia != null)
+                          'recargoEquivalencia': t.recargoEquivalencia,
+                      },
+                    )
+                    .toList(),
             'reverseCharge': invoice.reverseCharge ?? false,
             'exemptionType': invoice.exemptionType,
             'specialRegime': invoice.specialRegime,
@@ -206,11 +218,17 @@ class InvoiceRepositoryImpl implements InvoiceRepository {
       }
 
       // Mantener campos SII coherentes al actualizar
-      final direction = invoice.direction ?? (doc.data()!['direction'] as String? ?? 'issued');
-      final operationDate = invoice.operationDate ?? (doc.data()!['operationDate'] as Timestamp?)?.toDate() ?? invoice.date;
-      final taxLines = (invoice.taxLines != null && invoice.taxLines!.isNotEmpty)
-          ? invoice.taxLines!
-          : _deriveSingleTaxLine(invoice);
+      final direction =
+          invoice.direction ??
+          (doc.data()!['direction'] as String? ?? 'issued');
+      final operationDate =
+          invoice.operationDate ??
+          (doc.data()!['operationDate'] as Timestamp?)?.toDate() ??
+          invoice.date;
+      final taxLines =
+          (invoice.taxLines != null && invoice.taxLines!.isNotEmpty)
+              ? invoice.taxLines!
+              : _deriveSingleTaxLine(invoice);
 
       await docRef.update({
         'title': invoice.title,
@@ -226,23 +244,32 @@ class InvoiceRepositoryImpl implements InvoiceRepository {
         'issuer': invoice.issuer,
         'issuerTaxId': invoice.issuerTaxId,
         'issuerAddress': invoice.issuerAddress,
+        'issuerCountryCode': invoice.issuerCountryCode,
+        'issuerIdType': invoice.issuerIdType,
         'receiver': invoice.receiver,
         'receiverTaxId': invoice.receiverTaxId,
         'receiverAddress': invoice.receiverAddress,
+        'receiverCountryCode': invoice.receiverCountryCode,
+        'receiverIdType': invoice.receiverIdType,
         'concept': invoice.concept,
         'vatRate': invoice.vatRate,
         'currency': invoice.currency,
         'direction': direction,
-        'taxLines': taxLines
-            .map((t) => {
-                  'rate': t.rate,
-                  'base': t.base,
-                  'quota': t.quota,
-                  if (t.recargoEquivalencia != null)
-                    'recargoEquivalencia': t.recargoEquivalencia,
-                })
-            .toList(),
-        'reverseCharge': invoice.reverseCharge ?? (doc.data()!['reverseCharge'] as bool? ?? false),
+        'taxLines':
+            taxLines
+                .map(
+                  (t) => {
+                    'rate': t.rate,
+                    'base': t.base,
+                    'quota': t.quota,
+                    if (t.recargoEquivalencia != null)
+                      'recargoEquivalencia': t.recargoEquivalencia,
+                  },
+                )
+                .toList(),
+        'reverseCharge':
+            invoice.reverseCharge ??
+            (doc.data()!['reverseCharge'] as bool? ?? false),
         'exemptionType': invoice.exemptionType ?? doc.data()!['exemptionType'],
         'specialRegime': invoice.specialRegime ?? doc.data()!['specialRegime'],
         'imageUrl': imageUrl,
@@ -313,25 +340,31 @@ class InvoiceRepositoryImpl implements InvoiceRepository {
         id: doc.id,
         title: data['title'],
         date: (data['date'] as Timestamp).toDate(),
-        operationDate: (data['operationDate'] is Timestamp)
-            ? (data['operationDate'] as Timestamp).toDate()
-            : null,
+        operationDate:
+            (data['operationDate'] is Timestamp)
+                ? (data['operationDate'] as Timestamp).toDate()
+                : null,
         netAmount: (data['netAmount'] ?? 0).toDouble(),
         iva: (data['iva'] ?? 0).toDouble(),
         status: _parseStatus(data['status']),
         invoiceNumber: data['invoiceNumber'],
         series: data['series'],
-        sequentialNumber: (data['sequentialNumber'] is int)
-            ? data['sequentialNumber'] as int
-            : (data['sequentialNumber'] is num)
+        sequentialNumber:
+            (data['sequentialNumber'] is int)
+                ? data['sequentialNumber'] as int
+                : (data['sequentialNumber'] is num)
                 ? (data['sequentialNumber'] as num).toInt()
                 : null,
         issuer: data['issuer'],
         issuerTaxId: data['issuerTaxId'],
         issuerAddress: data['issuerAddress'],
+        issuerCountryCode: data['issuerCountryCode'],
+        issuerIdType: data['issuerIdType'],
         receiver: data['receiver'],
         receiverTaxId: data['receiverTaxId'],
         receiverAddress: data['receiverAddress'],
+        receiverCountryCode: data['receiverCountryCode'],
+        receiverIdType: data['receiverIdType'],
         concept: data['concept'],
         vatRate: _parseNullableDouble(data['vatRate']),
         currency: (data['currency'] as String?) ?? 'EUR',
@@ -362,15 +395,21 @@ class InvoiceRepositoryImpl implements InvoiceRepository {
       final out = <TaxLine>[];
       for (final e in raw) {
         if (e is Map && e.containsKey('base') && e.containsKey('quota')) {
-          final rate = (e['rate'] is num)
-              ? (e['rate'] as num).toDouble()
-              : 0.0;
+          final rate = (e['rate'] is num) ? (e['rate'] as num).toDouble() : 0.0;
           final base = (e['base'] as num).toDouble();
           final quota = (e['quota'] as num).toDouble();
-          final rec = (e['recargoEquivalencia'] is num)
-              ? (e['recargoEquivalencia'] as num).toDouble()
-              : null;
-          out.add(TaxLine(rate: rate, base: base, quota: quota, recargoEquivalencia: rec));
+          final rec =
+              (e['recargoEquivalencia'] is num)
+                  ? (e['recargoEquivalencia'] as num).toDouble()
+                  : null;
+          out.add(
+            TaxLine(
+              rate: rate,
+              base: base,
+              quota: quota,
+              recargoEquivalencia: rec,
+            ),
+          );
         }
       }
       return out.isEmpty ? null : out;
@@ -379,7 +418,8 @@ class InvoiceRepositoryImpl implements InvoiceRepository {
   }
 
   List<TaxLine> _deriveSingleTaxLine(Invoice invoice) {
-    final double base = (invoice.netAmount).clamp(0, double.infinity).toDouble();
+    final double base =
+        (invoice.netAmount).clamp(0, double.infinity).toDouble();
     final double quota = (invoice.iva).clamp(0, double.infinity).toDouble();
     double rate;
     if (invoice.vatRate != null && invoice.vatRate! > 0) {
@@ -390,18 +430,26 @@ class InvoiceRepositoryImpl implements InvoiceRepository {
     return [TaxLine(rate: rate, base: base, quota: quota)];
   }
 
-   @visibleForTesting
+  @visibleForTesting
   Future<({String series, int sequentialNumber, int year})>
-      ensureIssuedInvoiceNumbering(
+  ensureIssuedInvoiceNumbering(
     String userId,
     Invoice invoice, {
     String? initialSeries,
   }) async {
     final year = (invoice.operationDate ?? invoice.date).year;
-    final resolvedSeries = initialSeries ?? await resolveDefaultSeries(userId, year);
-    final resolvedSequential =
-        await allocateSequentialNumber(userId, resolvedSeries, year);
-    return (series: resolvedSeries, sequentialNumber: resolvedSequential, year: year);
+    final resolvedSeries =
+        initialSeries ?? await resolveDefaultSeries(userId, year);
+    final resolvedSequential = await allocateSequentialNumber(
+      userId,
+      resolvedSeries,
+      year,
+    );
+    return (
+      series: resolvedSeries,
+      sequentialNumber: resolvedSequential,
+      year: year,
+    );
   }
 
   @protected
@@ -416,9 +464,12 @@ class InvoiceRepositoryImpl implements InvoiceRepository {
     }
   }
 
-   @protected
+  @protected
   Future<int> allocateSequentialNumber(
-      String userId, String series, int year) async {
+    String userId,
+    String series,
+    int year,
+  ) async {
     final counterRef = firestore
         .collection('users')
         .doc(userId)

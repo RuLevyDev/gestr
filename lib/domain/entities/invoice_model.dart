@@ -64,9 +64,13 @@ class Invoice {
   final String? issuer;
   final String? issuerTaxId;
   final String? issuerAddress;
+  final String? issuerCountryCode;
+  final String? issuerIdType;
   final String? receiver;
   final String? receiverTaxId;
   final String? receiverAddress;
+  final String? receiverCountryCode;
+  final String? receiverIdType;
   final String? concept;
   final double? vatRate;
   final String currency;
@@ -92,9 +96,13 @@ class Invoice {
     this.issuer,
     this.issuerTaxId,
     this.issuerAddress,
+    this.issuerCountryCode,
+    this.issuerIdType,
     this.receiver,
     this.receiverTaxId,
     this.receiverAddress,
+    this.receiverCountryCode,
+    this.receiverIdType,
     this.concept,
     this.vatRate,
     this.currency = 'EUR',
@@ -123,9 +131,13 @@ class Invoice {
     String? issuer,
     String? issuerTaxId,
     String? issuerAddress,
+    String? issuerCountryCode,
+    String? issuerIdType,
     String? receiver,
     String? receiverTaxId,
     String? receiverAddress,
+    String? receiverCountryCode,
+    String? receiverIdType,
     String? concept,
     double? vatRate,
     String? currency,
@@ -151,9 +163,13 @@ class Invoice {
       issuer: issuer ?? this.issuer,
       issuerTaxId: issuerTaxId ?? this.issuerTaxId,
       issuerAddress: issuerAddress ?? this.issuerAddress,
+      issuerCountryCode: issuerCountryCode ?? this.issuerCountryCode,
+      issuerIdType: issuerIdType ?? this.issuerIdType,
       receiver: receiver ?? this.receiver,
       receiverTaxId: receiverTaxId ?? this.receiverTaxId,
       receiverAddress: receiverAddress ?? this.receiverAddress,
+      receiverCountryCode: receiverCountryCode ?? this.receiverCountryCode,
+      receiverIdType: receiverIdType ?? this.receiverIdType,
       concept: concept ?? this.concept,
       vatRate: vatRate ?? this.vatRate,
       currency: currency ?? this.currency,

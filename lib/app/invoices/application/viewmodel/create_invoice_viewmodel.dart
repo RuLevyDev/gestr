@@ -82,6 +82,10 @@ mixin CreateInvoiceViewModelMixin<T extends StatefulWidget> on State<T> {
   String? issuerAddress;
   String? receiverTaxId;
   String? receiverAddress;
+  String? issuerCountryCode;
+  String? issuerIdType;
+  String? receiverCountryCode;
+  String? receiverIdType;
 
   // Contrapartidas
   Timer? _counterpartyDebounce;
@@ -138,6 +142,8 @@ mixin CreateInvoiceViewModelMixin<T extends StatefulWidget> on State<T> {
       issuerTaxIdController.text = me.dni;
       issuerAddress = me.address;
       issuerAddressController.text = me.address;
+      issuerCountryCode = me.countryCode;
+      issuerIdType = me.idType;
       // Clear counterparty (receiver)
       receiver = null;
       receiverController.clear();
@@ -145,6 +151,8 @@ mixin CreateInvoiceViewModelMixin<T extends StatefulWidget> on State<T> {
       receiverTaxIdController.clear();
       receiverAddress = null;
       receiverAddressController.clear();
+      receiverCountryCode = null;
+      receiverIdType = null;
     } else {
       receiver = me.fullName;
       receiverController.text = me.fullName;
@@ -152,6 +160,8 @@ mixin CreateInvoiceViewModelMixin<T extends StatefulWidget> on State<T> {
       receiverTaxIdController.text = me.dni;
       receiverAddress = me.address;
       receiverAddressController.text = me.address;
+      receiverCountryCode = me.countryCode;
+      receiverIdType = me.idType;
       // Clear counterparty (issuer)
       issuer = null;
       issuerController.clear();
@@ -159,6 +169,8 @@ mixin CreateInvoiceViewModelMixin<T extends StatefulWidget> on State<T> {
       issuerTaxIdController.clear();
       issuerAddress = null;
       issuerAddressController.clear();
+      issuerCountryCode = null;
+      issuerIdType = null;
     }
   }
 
@@ -259,6 +271,8 @@ mixin CreateInvoiceViewModelMixin<T extends StatefulWidget> on State<T> {
         receiverAddress = null;
         receiverTaxIdController.clear();
         receiverAddressController.clear();
+        receiverCountryCode = null;
+        receiverIdType = null;
         _filteredClients =
             _clients.where((c) => c.name.toLowerCase().contains(q)).toList();
       });
@@ -273,6 +287,8 @@ mixin CreateInvoiceViewModelMixin<T extends StatefulWidget> on State<T> {
       receiverAddress = client.fiscalAddress;
       receiverTaxIdController.text = client.taxId ?? '';
       receiverAddressController.text = client.fiscalAddress ?? '';
+      receiverCountryCode = client.countryCode;
+      receiverIdType = client.idType;
       _filteredClients = [];
     });
   }
@@ -333,6 +349,8 @@ mixin CreateInvoiceViewModelMixin<T extends StatefulWidget> on State<T> {
       receiverAddress = null;
       receiverTaxIdController.clear();
       receiverAddressController.clear();
+      receiverCountryCode = null;
+      receiverIdType = null;
       _filteredClients = [];
     });
   }
@@ -364,6 +382,8 @@ mixin CreateInvoiceViewModelMixin<T extends StatefulWidget> on State<T> {
       issuerAddress = supplier.fiscalAddress;
       issuerTaxIdController.text = supplier.taxId ?? '';
       issuerAddressController.text = supplier.fiscalAddress ?? '';
+      issuerCountryCode = null;
+      issuerIdType = null;
       _filteredSuppliers = [];
     });
   }
@@ -424,6 +444,8 @@ mixin CreateInvoiceViewModelMixin<T extends StatefulWidget> on State<T> {
       issuerAddress = null;
       issuerTaxIdController.clear();
       issuerAddressController.clear();
+      issuerCountryCode = null;
+      issuerIdType = null;
       _filteredSuppliers = [];
     });
   }
@@ -434,7 +456,7 @@ mixin CreateInvoiceViewModelMixin<T extends StatefulWidget> on State<T> {
     return trimmed.isEmpty ? null : trimmed;
   }
 
-  // ConversiÃ³n a entidad Invoice
+  // Conversionn a entidad Invoice
   Invoice toInvoice({String? id}) {
     return Invoice(
       id: id,
@@ -449,9 +471,13 @@ mixin CreateInvoiceViewModelMixin<T extends StatefulWidget> on State<T> {
       issuer: issuer,
       issuerTaxId: normalizeText(issuerTaxIdController.text),
       issuerAddress: normalizeText(issuerAddressController.text),
+      issuerCountryCode: issuerCountryCode,
+      issuerIdType: issuerIdType,
       receiver: receiver,
       receiverTaxId: normalizeText(receiverTaxIdController.text),
       receiverAddress: normalizeText(receiverAddressController.text),
+      receiverCountryCode: receiverCountryCode,
+      receiverIdType: receiverIdType,
       concept: concept,
       direction: direction == InvoiceDirection.issued ? 'issued' : 'received',
       image: invoiceImage,
@@ -486,6 +512,10 @@ mixin CreateInvoiceViewModelMixin<T extends StatefulWidget> on State<T> {
       receiverAddress = null;
       issuerTaxId = null;
       issuerAddress = null;
+      issuerCountryCode = null;
+      issuerIdType = null;
+      receiverCountryCode = null;
+      receiverIdType = null;
       issuerController.clear();
       receiverController.clear();
       conceptController.clear();
@@ -498,7 +528,7 @@ mixin CreateInvoiceViewModelMixin<T extends StatefulWidget> on State<T> {
     });
   }
 
-  // SelecciÃ³n de imagen
+  // Seleccion de imagen
   Future<void> pickImage({ImageSource source = ImageSource.camera}) async {
     final pickedFile = await picker.pickImage(source: source);
     if (pickedFile != null) {
@@ -551,10 +581,14 @@ mixin CreateInvoiceViewModelMixin<T extends StatefulWidget> on State<T> {
           if (data.issuer != null) {
             issuerController.text = data.issuer!;
             issuer = data.issuer;
+            issuerCountryCode = null;
+            issuerIdType = null;
           }
           if (data.receiver != null) {
             receiverController.text = data.receiver!;
             receiver = data.receiver;
+            receiverCountryCode = null;
+            receiverIdType = null;
           }
           if (data.concept != null && (conceptController.text.isEmpty)) {
             conceptController.text = data.concept!;

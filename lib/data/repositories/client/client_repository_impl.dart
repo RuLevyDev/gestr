@@ -21,6 +21,8 @@ class ClientRepositoryImpl implements ClientRepository {
         phone: m['phone'],
         taxId: m['taxId'],
         fiscalAddress: m['fiscalAddress'],
+        countryCode: m['countryCode'],
+        idType: m['idType'],
       );
     }).toList();
   }
@@ -33,6 +35,8 @@ class ClientRepositoryImpl implements ClientRepository {
       'phone': client.phone,
       'taxId': client.taxId,
       'fiscalAddress': client.fiscalAddress,
+      'countryCode': client.countryCode,
+      'idType': client.idType,
     });
   }
 
@@ -45,6 +49,8 @@ class ClientRepositoryImpl implements ClientRepository {
       'phone': client.phone,
       'taxId': client.taxId,
       'fiscalAddress': client.fiscalAddress,
+      'countryCode': client.countryCode,
+      'idType': client.idType,
     });
   }
 
@@ -65,6 +71,8 @@ class ClientRepositoryImpl implements ClientRepository {
       phone: m['phone'],
       taxId: m['taxId'],
       fiscalAddress: m['fiscalAddress'],
+      countryCode: m['countryCode'],
+      idType: m['idType'],
     );
   }
 }

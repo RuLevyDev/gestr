@@ -30,10 +30,10 @@ class SiiUseCases {
     DateTime? start,
     DateTime? end,
   }) async {
-    await _getUser(userId); // por simetría; no usado ahora
+    final me = await _getUser(userId);
     final list = await _getInvoices(userId, start: start, end: end);
     final received = list.where((i) => (i.direction ?? 'issued') == 'received');
-    final mapped = received.map((i) => SiiMapper.mapReceived(i)).toList();
+    final mapped = received.map((i) => SiiMapper.mapReceived(i, me)).toList();
     return jsonEncode({'libro': 'Recibidas', 'registros': mapped});
   }
 
@@ -53,9 +53,9 @@ class SiiUseCases {
       final eOk = end == null || !d.isAfter(end);
       return sOk && eOk;
     }
+
     return (start == null && end == null)
         ? list
         : list.where((i) => inRange(i.date)).toList();
   }
 }
-
