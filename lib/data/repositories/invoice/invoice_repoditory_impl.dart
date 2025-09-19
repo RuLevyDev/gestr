@@ -4,12 +4,16 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:gestr/domain/entities/invoice_model.dart';
 import 'package:gestr/domain/repositories/invoice/invoice_reposiroty.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:meta/meta.dart';
 
 class InvoiceRepositoryImpl implements InvoiceRepository {
   final FirebaseFirestore firestore;
   final FirebaseStorage storage;
 
-  InvoiceRepositoryImpl(this.firestore) : storage = FirebaseStorage.instance;
+  InvoiceRepositoryImpl(
+    this.firestore, {
+    FirebaseStorage? storage,
+  }) : storage = storage ?? FirebaseStorage.instance;
 
   // Obtener todas las facturas de un usuario
   @override
@@ -99,12 +103,15 @@ class InvoiceRepositoryImpl implements InvoiceRepository {
 
       String? series = invoice.series;
       int? sequentialNumber = invoice.sequentialNumber;
-      int? year;
+     
       if (direction == 'issued') {
-        final now = DateTime.now();
-        year = now.year;
-        series = series ?? await _resolveDefaultSeries(userId, year);
-        sequentialNumber = await _allocateSequentialNumber(userId, series!, year);
+        final numbering = await ensureIssuedInvoiceNumbering(
+          userId,
+          invoice,
+          initialSeries: series,
+        );
+        series = numbering.series;
+        sequentialNumber = numbering.sequentialNumber;
       }
 
       await firestore
@@ -383,7 +390,22 @@ class InvoiceRepositoryImpl implements InvoiceRepository {
     return [TaxLine(rate: rate, base: base, quota: quota)];
   }
 
-  Future<String> _resolveDefaultSeries(String userId, int year) async {
+   @visibleForTesting
+  Future<({String series, int sequentialNumber, int year})>
+      ensureIssuedInvoiceNumbering(
+    String userId,
+    Invoice invoice, {
+    String? initialSeries,
+  }) async {
+    final year = (invoice.operationDate ?? invoice.date).year;
+    final resolvedSeries = initialSeries ?? await resolveDefaultSeries(userId, year);
+    final resolvedSequential =
+        await allocateSequentialNumber(userId, resolvedSeries, year);
+    return (series: resolvedSeries, sequentialNumber: resolvedSequential, year: year);
+  }
+
+  @protected
+  Future<String> resolveDefaultSeries(String userId, int year) async {
     try {
       final userDoc = await firestore.collection('users').doc(userId).get();
       final data = userDoc.data() ?? {};
@@ -394,7 +416,9 @@ class InvoiceRepositoryImpl implements InvoiceRepository {
     }
   }
 
-  Future<int> _allocateSequentialNumber(String userId, String series, int year) async {
+   @protected
+  Future<int> allocateSequentialNumber(
+      String userId, String series, int year) async {
     final counterRef = firestore
         .collection('users')
         .doc(userId)

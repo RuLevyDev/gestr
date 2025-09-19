@@ -72,9 +72,9 @@ class AppEnvironment {
     }
 
     final options = switch (releaseType) {
-      ReleaseType.local => dev.DefaultFirebaseOptions.currentPlatform,
-      ReleaseType.dev => dev.DefaultFirebaseOptions.currentPlatform,
-      ReleaseType.test => dev.DefaultFirebaseOptions.currentPlatform,
+      ReleaseType.local => dev.DevFirebaseOptions.currentPlatform,
+      ReleaseType.dev => dev.DevFirebaseOptions.currentPlatform,
+      ReleaseType.test => dev.DevFirebaseOptions.currentPlatform,
       ReleaseType.prod => prod.DefaultFirebaseOptions.currentPlatform,
     };
 
@@ -91,7 +91,10 @@ class AppEnvironment {
     }
 
     try {
-      _firebaseInitFuture = Firebase.initializeApp(options: options);
+      _firebaseInitFuture = Firebase.initializeApp(
+        name: "GesTr-dev",
+        options: options,
+      );
       await _firebaseInitFuture;
     } on FirebaseException catch (e) {
       if (e.code == 'duplicate-app') {
