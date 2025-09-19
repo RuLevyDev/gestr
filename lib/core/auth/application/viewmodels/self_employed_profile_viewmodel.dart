@@ -13,6 +13,7 @@ mixin SelfEmployedProfileDialogViewModelMixin<T extends StatefulWidget>
   final startDateController = TextEditingController();
   final addressController = TextEditingController();
   final ibanController = TextEditingController();
+  final defaultSeriesController = TextEditingController(text: 'A');
 
   bool usesElectronicInvoicing = false;
   String taxationMethod = 'Estimación directa';
@@ -89,6 +90,11 @@ mixin SelfEmployedProfileDialogViewModelMixin<T extends StatefulWidget>
         defaultExpenseVatRate: defaultExpenseVatRate,
         defaultExpenseAmountIsGross: defaultExpenseAmountIsGross,
         defaultExpenseDeductible: defaultExpenseDeductible,
+        defaultInvoiceSeries: (defaultSeriesController.text.trim().isEmpty)
+            ? 'A'
+            : defaultSeriesController.text.trim(),
+        countryCode: 'ES',
+        idType: 'NIF',
       );
       context.read<SelfEmployedBloc>().add(SaveSelfEmployedUser(user));
     }
@@ -102,6 +108,7 @@ mixin SelfEmployedProfileDialogViewModelMixin<T extends StatefulWidget>
     startDateController.dispose();
     addressController.dispose();
     ibanController.dispose();
+    defaultSeriesController.dispose();
     super.dispose();
   }
 }

@@ -42,10 +42,19 @@ class InvoiceRepositoryImpl implements InvoiceRepository {
             id: doc.id,
             title: data['title'],
             date: date,
+            operationDate: (data['operationDate'] is Timestamp)
+                ? (data['operationDate'] as Timestamp).toDate()
+                : null,
             netAmount: (data['netAmount'] ?? 0).toDouble(),
             iva: (data['iva'] ?? 0).toDouble(),
             status: status,
             invoiceNumber: data['invoiceNumber'],
+            series: data['series'],
+            sequentialNumber: (data['sequentialNumber'] is int)
+                ? data['sequentialNumber'] as int
+                : (data['sequentialNumber'] is num)
+                    ? (data['sequentialNumber'] as num).toInt()
+                    : null,
             issuer: data['issuer'],
             issuerTaxId: data['issuerTaxId'],
             issuerAddress: data['issuerAddress'],
@@ -55,6 +64,11 @@ class InvoiceRepositoryImpl implements InvoiceRepository {
             concept: data['concept'],
             vatRate: _parseNullableDouble(data['vatRate']),
             currency: (data['currency'] as String?) ?? 'EUR',
+            direction: data['direction'] as String?,
+            taxLines: _parseTaxLines(data['taxLines']),
+            reverseCharge: data['reverseCharge'] as bool?,
+            exemptionType: data['exemptionType'] as String?,
+            specialRegime: data['specialRegime'] as String?,
             imageUrl: data['imageUrl'],
           );
         }),
@@ -76,6 +90,23 @@ class InvoiceRepositoryImpl implements InvoiceRepository {
         imageUrl = await _uploadImage(invoice.image!, 'invoices');
       }
 
+      // Derivar campos SII mínimos y numeración
+      final direction = invoice.direction ?? 'issued';
+      final operationDate = invoice.operationDate ?? invoice.date;
+      final taxLines = (invoice.taxLines != null && invoice.taxLines!.isNotEmpty)
+          ? invoice.taxLines!
+          : _deriveSingleTaxLine(invoice);
+
+      String? series = invoice.series;
+      int? sequentialNumber = invoice.sequentialNumber;
+      int? year;
+      if (direction == 'issued') {
+        final now = DateTime.now();
+        year = now.year;
+        series = series ?? await _resolveDefaultSeries(userId, year);
+        sequentialNumber = await _allocateSequentialNumber(userId, series!, year);
+      }
+
       await firestore
           .collection('users')
           .doc(userId)
@@ -83,10 +114,13 @@ class InvoiceRepositoryImpl implements InvoiceRepository {
           .add({
             'title': invoice.title,
             'date': invoice.date,
+            'operationDate': operationDate,
             'netAmount': invoice.netAmount,
             'iva': invoice.iva,
             'status': invoice.status.name,
             'invoiceNumber': invoice.invoiceNumber,
+            'series': series,
+            'sequentialNumber': sequentialNumber,
             'issuer': invoice.issuer,
             'issuerTaxId': invoice.issuerTaxId,
             'issuerAddress': invoice.issuerAddress,
@@ -96,6 +130,19 @@ class InvoiceRepositoryImpl implements InvoiceRepository {
             'concept': invoice.concept,
             'vatRate': invoice.vatRate,
             'currency': invoice.currency,
+            'direction': direction,
+            'taxLines': taxLines
+                .map((t) => {
+                      'rate': t.rate,
+                      'base': t.base,
+                      'quota': t.quota,
+                      if (t.recargoEquivalencia != null)
+                        'recargoEquivalencia': t.recargoEquivalencia,
+                    })
+                .toList(),
+            'reverseCharge': invoice.reverseCharge ?? false,
+            'exemptionType': invoice.exemptionType,
+            'specialRegime': invoice.specialRegime,
             'imageUrl': imageUrl,
           });
     } catch (e) {
@@ -151,13 +198,24 @@ class InvoiceRepositoryImpl implements InvoiceRepository {
         imageUrl = await _uploadImage(invoice.image!, 'invoices');
       }
 
+      // Mantener campos SII coherentes al actualizar
+      final direction = invoice.direction ?? (doc.data()!['direction'] as String? ?? 'issued');
+      final operationDate = invoice.operationDate ?? (doc.data()!['operationDate'] as Timestamp?)?.toDate() ?? invoice.date;
+      final taxLines = (invoice.taxLines != null && invoice.taxLines!.isNotEmpty)
+          ? invoice.taxLines!
+          : _deriveSingleTaxLine(invoice);
+
       await docRef.update({
         'title': invoice.title,
         'date': invoice.date,
+        'operationDate': operationDate,
         'netAmount': invoice.netAmount,
         'iva': invoice.iva,
         'status': invoice.status.name,
         'invoiceNumber': invoice.invoiceNumber,
+        if (invoice.series != null) 'series': invoice.series,
+        if (invoice.sequentialNumber != null)
+          'sequentialNumber': invoice.sequentialNumber,
         'issuer': invoice.issuer,
         'issuerTaxId': invoice.issuerTaxId,
         'issuerAddress': invoice.issuerAddress,
@@ -167,6 +225,19 @@ class InvoiceRepositoryImpl implements InvoiceRepository {
         'concept': invoice.concept,
         'vatRate': invoice.vatRate,
         'currency': invoice.currency,
+        'direction': direction,
+        'taxLines': taxLines
+            .map((t) => {
+                  'rate': t.rate,
+                  'base': t.base,
+                  'quota': t.quota,
+                  if (t.recargoEquivalencia != null)
+                    'recargoEquivalencia': t.recargoEquivalencia,
+                })
+            .toList(),
+        'reverseCharge': invoice.reverseCharge ?? (doc.data()!['reverseCharge'] as bool? ?? false),
+        'exemptionType': invoice.exemptionType ?? doc.data()!['exemptionType'],
+        'specialRegime': invoice.specialRegime ?? doc.data()!['specialRegime'],
         'imageUrl': imageUrl,
       });
     } catch (e) {
@@ -235,10 +306,19 @@ class InvoiceRepositoryImpl implements InvoiceRepository {
         id: doc.id,
         title: data['title'],
         date: (data['date'] as Timestamp).toDate(),
+        operationDate: (data['operationDate'] is Timestamp)
+            ? (data['operationDate'] as Timestamp).toDate()
+            : null,
         netAmount: (data['netAmount'] ?? 0).toDouble(),
         iva: (data['iva'] ?? 0).toDouble(),
         status: _parseStatus(data['status']),
         invoiceNumber: data['invoiceNumber'],
+        series: data['series'],
+        sequentialNumber: (data['sequentialNumber'] is int)
+            ? data['sequentialNumber'] as int
+            : (data['sequentialNumber'] is num)
+                ? (data['sequentialNumber'] as num).toInt()
+                : null,
         issuer: data['issuer'],
         issuerTaxId: data['issuerTaxId'],
         issuerAddress: data['issuerAddress'],
@@ -248,6 +328,11 @@ class InvoiceRepositoryImpl implements InvoiceRepository {
         concept: data['concept'],
         vatRate: _parseNullableDouble(data['vatRate']),
         currency: (data['currency'] as String?) ?? 'EUR',
+        direction: data['direction'] as String?,
+        taxLines: _parseTaxLines(data['taxLines']),
+        reverseCharge: data['reverseCharge'] as bool?,
+        exemptionType: data['exemptionType'] as String?,
+        specialRegime: data['specialRegime'] as String?,
         imageUrl: data['imageUrl'],
       );
     } catch (e) {
@@ -263,6 +348,75 @@ class InvoiceRepositoryImpl implements InvoiceRepository {
       return double.tryParse(value);
     }
     return null;
+  }
+
+  List<TaxLine>? _parseTaxLines(Object? raw) {
+    if (raw is List) {
+      final out = <TaxLine>[];
+      for (final e in raw) {
+        if (e is Map && e.containsKey('base') && e.containsKey('quota')) {
+          final rate = (e['rate'] is num)
+              ? (e['rate'] as num).toDouble()
+              : 0.0;
+          final base = (e['base'] as num).toDouble();
+          final quota = (e['quota'] as num).toDouble();
+          final rec = (e['recargoEquivalencia'] is num)
+              ? (e['recargoEquivalencia'] as num).toDouble()
+              : null;
+          out.add(TaxLine(rate: rate, base: base, quota: quota, recargoEquivalencia: rec));
+        }
+      }
+      return out.isEmpty ? null : out;
+    }
+    return null;
+  }
+
+  List<TaxLine> _deriveSingleTaxLine(Invoice invoice) {
+    final double base = (invoice.netAmount).clamp(0, double.infinity).toDouble();
+    final double quota = (invoice.iva).clamp(0, double.infinity).toDouble();
+    double rate;
+    if (invoice.vatRate != null && invoice.vatRate! > 0) {
+      rate = invoice.vatRate!;
+    } else {
+      rate = base > 0 ? (quota / base) : 0.0;
+    }
+    return [TaxLine(rate: rate, base: base, quota: quota)];
+  }
+
+  Future<String> _resolveDefaultSeries(String userId, int year) async {
+    try {
+      final userDoc = await firestore.collection('users').doc(userId).get();
+      final data = userDoc.data() ?? {};
+      final series = (data['defaultInvoiceSeries'] as String?) ?? 'A';
+      return series;
+    } catch (_) {
+      return 'A';
+    }
+  }
+
+  Future<int> _allocateSequentialNumber(String userId, String series, int year) async {
+    final counterRef = firestore
+        .collection('users')
+        .doc(userId)
+        .collection('invoice_counters')
+        .doc('$series-$year');
+    return await firestore.runTransaction<int>((tx) async {
+      final snap = await tx.get(counterRef);
+      int next;
+      if (snap.exists) {
+        final last = (snap.data()!['last'] as num?)?.toInt() ?? 0;
+        next = last + 1;
+      } else {
+        next = 1;
+      }
+      tx.set(counterRef, {
+        'series': series,
+        'year': year,
+        'last': next,
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+      return next;
+    });
   }
 
   InvoiceStatus _parseStatus(String? status) {

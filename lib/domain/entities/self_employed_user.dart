@@ -13,6 +13,9 @@ class SelfEmployedUser {
   final double defaultExpenseVatRate; // 0-0.21
   final bool defaultExpenseAmountIsGross;
   final bool defaultExpenseDeductible;
+  final String defaultInvoiceSeries; // para numeración SII (p.ej., "A")
+  final String countryCode; // ISO-3166-1 alpha-2 (p.ej., "ES")
+  final String idType; // tipo de identificación fiscal (p.ej., "NIF")
 
   SelfEmployedUser({
     required this.uid,
@@ -27,6 +30,9 @@ class SelfEmployedUser {
     this.defaultExpenseVatRate = 0.0,
     this.defaultExpenseAmountIsGross = true,
     this.defaultExpenseDeductible = true,
+    this.defaultInvoiceSeries = 'A',
+    this.countryCode = 'ES',
+    this.idType = 'NIF',
   });
 
   factory SelfEmployedUser.fromJson(Map<String, dynamic> json) {
@@ -45,6 +51,9 @@ class SelfEmployedUser {
           (json['defaultExpenseAmountIsGross'] ?? true) as bool,
       defaultExpenseDeductible:
           (json['defaultExpenseDeductible'] ?? true) as bool,
+      defaultInvoiceSeries: (json['defaultInvoiceSeries'] as String?) ?? 'A',
+      countryCode: (json['countryCode'] as String?) ?? 'ES',
+      idType: (json['idType'] as String?) ?? 'NIF',
     );
   }
 
@@ -62,6 +71,9 @@ class SelfEmployedUser {
       'defaultExpenseVatRate': defaultExpenseVatRate,
       'defaultExpenseAmountIsGross': defaultExpenseAmountIsGross,
       'defaultExpenseDeductible': defaultExpenseDeductible,
+      'defaultInvoiceSeries': defaultInvoiceSeries,
+      'countryCode': countryCode,
+      'idType': idType,
     };
   }
 }

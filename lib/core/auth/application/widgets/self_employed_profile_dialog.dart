@@ -174,6 +174,14 @@ class _SelfEmployedProfileDialogState extends State<SelfEmployedProfileDialog>
                                   validator: validateIBAN,
                                 ),
                                 SizedBox(height: 8),
+                                TextFormField(
+                                  controller: defaultSeriesController,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Serie por defecto (emitidas)',
+                                    helperText: 'Se usará para numerar facturas emitidas',
+                                  ),
+                                ),
+                                SizedBox(height: 8),
                                 DropdownButtonFormField<String>(
                                   decoration: InputDecoration(
                                     labelText: 'Método de tributación',

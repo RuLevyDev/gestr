@@ -8,6 +8,8 @@ class Supplier {
   final String? phone;
   final String? taxId;
   final String? fiscalAddress;
+  final String? countryCode; // ISO-3166-1 alpha-2 (e.g., ES)
+  final String? idType; // e.g., NIF, NIE, VAT, OTHER
   final List<SupplierOrderItem> orderItems;
   final List<SupplierOrder> orders;
 
@@ -18,6 +20,8 @@ class Supplier {
     this.phone,
     this.taxId,
     this.fiscalAddress,
+    this.countryCode,
+    this.idType,
     this.orderItems = const [],
     this.orders = const [],
   });
