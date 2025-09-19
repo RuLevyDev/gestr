@@ -418,9 +418,8 @@ class InvoiceRepositoryImpl implements InvoiceRepository {
   }
 
   List<TaxLine> _deriveSingleTaxLine(Invoice invoice) {
-    final double base =
-        (invoice.netAmount).clamp(0, double.infinity).toDouble();
-    final double quota = (invoice.iva).clamp(0, double.infinity).toDouble();
+    final double base = invoice.netAmount;
+    final double quota = invoice.iva;
     double rate;
     if (invoice.vatRate != null && invoice.vatRate! > 0) {
       rate = invoice.vatRate!;
@@ -428,6 +427,11 @@ class InvoiceRepositoryImpl implements InvoiceRepository {
       rate = base > 0 ? (quota / base) : 0.0;
     }
     return [TaxLine(rate: rate, base: base, quota: quota)];
+  }
+
+  @visibleForTesting
+  List<TaxLine> deriveSingleTaxLineForTesting(Invoice invoice) {
+    return _deriveSingleTaxLine(invoice);
   }
 
   @visibleForTesting

@@ -93,6 +93,34 @@ void main() {
       expect(repository.capturedSequentialYear, 2021);
     },
   );
+  test(
+    'deriveSingleTaxLineForTesting preserves negative base and quota for rectifying invoices',
+    () {
+      final repository = _TestableInvoiceRepositoryImpl(
+        firestore: dummyFirestore,
+        storage: dummyStorage,
+        seriesToReturn: 'R',
+        sequentialToReturn: 1,
+      );
+
+      final rectifyingInvoice = Invoice(
+        title: 'Rectifying invoice',
+        date: DateTime(2024, 3, 10),
+        netAmount: -100,
+        iva: -21,
+        status: InvoiceStatus.pending,
+      );
+
+      final taxLines = repository.deriveSingleTaxLineForTesting(
+        rectifyingInvoice,
+      );
+
+      expect(taxLines, hasLength(1));
+      final taxLine = taxLines.single;
+      expect(taxLine.base, rectifyingInvoice.netAmount);
+      expect(taxLine.quota, rectifyingInvoice.iva);
+    },
+  );
 
   test(
     'ensureIssuedInvoiceNumbering prioritizes operation date year when available',
