@@ -66,6 +66,9 @@ class FixedPayment {
   final FixedPaymentCategory category;
   final File? image;
   final String? imageUrl;
+  final DateTime? voidedAt;
+  final String? voidedBy;
+  final String? voidReason;
 
   FixedPayment({
     this.id,
@@ -81,6 +84,9 @@ class FixedPayment {
     this.category = FixedPaymentCategory.other,
     this.image,
     this.imageUrl,
+    this.voidedAt,
+    this.voidedBy,
+    this.voidReason,
   });
 }
 

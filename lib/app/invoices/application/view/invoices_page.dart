@@ -8,7 +8,7 @@ import 'package:gestr/app/invoices/application/viewmodel/invoice_page_mixin.dart
 import 'package:gestr/app/invoices/bloc/invoice_bloc.dart';
 import 'package:gestr/app/invoices/bloc/invoice_event.dart';
 import 'package:gestr/app/invoices/bloc/invoice_state.dart';
-import 'package:gestr/app/invoices/widgets/fixed_payments_card.dart';
+import 'package:gestr/app/fixedpayments/application/widgets/fixed_payments_card.dart';
 import 'package:gestr/app/invoices/widgets/invoice_card.dart';
 
 class InvoicesPage extends StatefulWidget {

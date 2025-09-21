@@ -30,9 +30,12 @@ class InvoiceRepositoryImpl implements InvoiceRepository {
 
       final invoices = await Future.wait(
         snapshot.docs.map((doc) async {
-          final data = doc.data();
+          final data = Map<String, dynamic>.from(doc.data());
+          if (data['voidedAt'] != null) {
+            return null;
+          }
           var status = _parseStatus(data['status']);
-          final date = (data['date'] as Timestamp).toDate();
+          final date = _parseTimestamp(data['date']);
           final invoiceDate = DateTime(date.year, date.month, date.day);
 
           if (status == InvoiceStatus.sent && invoiceDate.isBefore(today)) {
@@ -40,49 +43,11 @@ class InvoiceRepositoryImpl implements InvoiceRepository {
             status = InvoiceStatus.overdue;
           }
 
-          return Invoice(
-            id: doc.id,
-            title: data['title'],
-            date: date,
-            operationDate:
-                (data['operationDate'] is Timestamp)
-                    ? (data['operationDate'] as Timestamp).toDate()
-                    : null,
-            netAmount: (data['netAmount'] ?? 0).toDouble(),
-            iva: (data['iva'] ?? 0).toDouble(),
-            status: status,
-            invoiceNumber: data['invoiceNumber'],
-            series: data['series'],
-            sequentialNumber:
-                (data['sequentialNumber'] is int)
-                    ? data['sequentialNumber'] as int
-                    : (data['sequentialNumber'] is num)
-                    ? (data['sequentialNumber'] as num).toInt()
-                    : null,
-            issuer: data['issuer'],
-            issuerTaxId: data['issuerTaxId'],
-            issuerAddress: data['issuerAddress'],
-            issuerCountryCode: data['issuerCountryCode'],
-            issuerIdType: data['issuerIdType'],
-            receiver: data['receiver'],
-            receiverTaxId: data['receiverTaxId'],
-            receiverAddress: data['receiverAddress'],
-            receiverCountryCode: data['receiverCountryCode'],
-            receiverIdType: data['receiverIdType'],
-            concept: data['concept'],
-            vatRate: _parseNullableDouble(data['vatRate']),
-            currency: (data['currency'] as String?) ?? 'EUR',
-            direction: data['direction'] as String?,
-            taxLines: _parseTaxLines(data['taxLines']),
-            reverseCharge: data['reverseCharge'] as bool?,
-            exemptionType: data['exemptionType'] as String?,
-            specialRegime: data['specialRegime'] as String?,
-            imageUrl: data['imageUrl'],
-          );
+          return _mapInvoiceFromData(doc.id, data, statusOverride: status);
         }),
       );
 
-      return invoices;
+      return invoices.whereType<Invoice>().toList();
     } catch (e) {
       throw Exception("Error al obtener las facturas: $e");
     }
@@ -163,15 +128,23 @@ class InvoiceRepositoryImpl implements InvoiceRepository {
             'exemptionType': invoice.exemptionType,
             'specialRegime': invoice.specialRegime,
             'imageUrl': imageUrl,
+            'voidedAt': null,
+            'voidedBy': null,
+            'voidReason': null,
           });
     } catch (e) {
       throw Exception("Error al crear la factura: $e");
     }
   }
 
-  // Eliminar factura de un usuario
+  // Marcar factura como anulada para un usuario
   @override
-  Future<void> deleteInvoice(String userId, String invoiceId) async {
+  Future<Invoice> voidInvoice(
+    String userId,
+    String invoiceId, {
+    String? voidedBy,
+    String? voidReason,
+  }) async {
     try {
       final docRef = firestore
           .collection('users')
@@ -179,17 +152,21 @@ class InvoiceRepositoryImpl implements InvoiceRepository {
           .collection('invoices')
           .doc(invoiceId);
 
-      final doc = await docRef.get();
+      await docRef.update({
+        'voidedAt': FieldValue.serverTimestamp(),
+        'voidedBy': voidedBy ?? userId,
+        'voidReason': voidReason,
+      });
 
-      if (doc.exists && doc.data()!['imageUrl'] != null) {
-        final imageUrl = doc.data()!['imageUrl'] as String;
-        final ref = storage.refFromURL(imageUrl);
-        await ref.delete();
+      final updated = await docRef.get();
+      if (!updated.exists) {
+        throw Exception('Factura no encontrada');
       }
 
-      await docRef.delete();
+      final data = Map<String, dynamic>.from(updated.data()!);
+      return _mapInvoiceFromData(updated.id, data);
     } catch (e) {
-      throw Exception("Error al eliminar la factura: $e");
+      throw Exception("Error al anular la factura: $e");
     }
   }
 
@@ -273,6 +250,9 @@ class InvoiceRepositoryImpl implements InvoiceRepository {
         'exemptionType': invoice.exemptionType ?? doc.data()!['exemptionType'],
         'specialRegime': invoice.specialRegime ?? doc.data()!['specialRegime'],
         'imageUrl': imageUrl,
+        'voidedAt': invoice.voidedAt,
+        'voidedBy': invoice.voidedBy,
+        'voidReason': invoice.voidReason,
       });
     } catch (e) {
       throw Exception("Error al actualizar la factura: $e");
@@ -335,49 +315,93 @@ class InvoiceRepositoryImpl implements InvoiceRepository {
 
       if (!doc.exists) return null;
 
-      final data = doc.data()!;
-      return Invoice(
-        id: doc.id,
-        title: data['title'],
-        date: (data['date'] as Timestamp).toDate(),
-        operationDate:
-            (data['operationDate'] is Timestamp)
-                ? (data['operationDate'] as Timestamp).toDate()
-                : null,
-        netAmount: (data['netAmount'] ?? 0).toDouble(),
-        iva: (data['iva'] ?? 0).toDouble(),
-        status: _parseStatus(data['status']),
-        invoiceNumber: data['invoiceNumber'],
-        series: data['series'],
-        sequentialNumber:
-            (data['sequentialNumber'] is int)
-                ? data['sequentialNumber'] as int
-                : (data['sequentialNumber'] is num)
-                ? (data['sequentialNumber'] as num).toInt()
-                : null,
-        issuer: data['issuer'],
-        issuerTaxId: data['issuerTaxId'],
-        issuerAddress: data['issuerAddress'],
-        issuerCountryCode: data['issuerCountryCode'],
-        issuerIdType: data['issuerIdType'],
-        receiver: data['receiver'],
-        receiverTaxId: data['receiverTaxId'],
-        receiverAddress: data['receiverAddress'],
-        receiverCountryCode: data['receiverCountryCode'],
-        receiverIdType: data['receiverIdType'],
-        concept: data['concept'],
-        vatRate: _parseNullableDouble(data['vatRate']),
-        currency: (data['currency'] as String?) ?? 'EUR',
-        direction: data['direction'] as String?,
-        taxLines: _parseTaxLines(data['taxLines']),
-        reverseCharge: data['reverseCharge'] as bool?,
-        exemptionType: data['exemptionType'] as String?,
-        specialRegime: data['specialRegime'] as String?,
-        imageUrl: data['imageUrl'],
-      );
+      final data = Map<String, dynamic>.from(doc.data()!);
+      return _mapInvoiceFromData(doc.id, data);
     } catch (e) {
       throw Exception("Error al obtener la factura por ID: $e");
     }
+  }
+
+  Invoice _mapInvoiceFromData(
+    String id,
+    Map<String, dynamic> data, {
+    InvoiceStatus? statusOverride,
+  }) {
+    final status = statusOverride ?? _parseStatus(data['status'] as String?);
+    final date = _parseTimestamp(data['date']);
+    final operationDateRaw = data['operationDate'];
+    final operationDate =
+        operationDateRaw != null ? _parseTimestamp(operationDateRaw) : null;
+    final sequentialRaw = data['sequentialNumber'];
+    int? sequentialNumber;
+    if (sequentialRaw is int) {
+      sequentialNumber = sequentialRaw;
+    } else if (sequentialRaw is num) {
+      sequentialNumber = sequentialRaw.toInt();
+    }
+    final voidedAtRaw = data['voidedAt'];
+    DateTime? voidedAt;
+    if (voidedAtRaw is Timestamp) {
+      voidedAt = voidedAtRaw.toDate();
+    } else if (voidedAtRaw is DateTime) {
+      voidedAt = voidedAtRaw;
+    } else if (voidedAtRaw is String) {
+      voidedAt = DateTime.tryParse(voidedAtRaw);
+    }
+
+    return Invoice(
+      id: id,
+      title: data['title'] as String? ?? '',
+      date: date,
+      operationDate: operationDate,
+      netAmount: (data['netAmount'] as num?)?.toDouble() ?? 0,
+      iva: (data['iva'] as num?)?.toDouble() ?? 0,
+      status: status,
+      invoiceNumber: data['invoiceNumber'] as String?,
+      series: data['series'] as String?,
+      sequentialNumber: sequentialNumber,
+      issuer: data['issuer'] as String?,
+      issuerTaxId: data['issuerTaxId'] as String?,
+      issuerAddress: data['issuerAddress'] as String?,
+      issuerCountryCode: data['issuerCountryCode'] as String?,
+      issuerIdType: data['issuerIdType'] as String?,
+      receiver: data['receiver'] as String?,
+      receiverTaxId: data['receiverTaxId'] as String?,
+      receiverAddress: data['receiverAddress'] as String?,
+      receiverCountryCode: data['receiverCountryCode'] as String?,
+      receiverIdType: data['receiverIdType'] as String?,
+      concept: data['concept'] as String?,
+      vatRate: _parseNullableDouble(data['vatRate']),
+      currency: (data['currency'] as String?) ?? 'EUR',
+      direction: data['direction'] as String?,
+      taxLines: _parseTaxLines(data['taxLines']),
+      reverseCharge: data['reverseCharge'] as bool?,
+      exemptionType: data['exemptionType'] as String?,
+      specialRegime: data['specialRegime'] as String?,
+      imageUrl: data['imageUrl'] as String?,
+      voidedAt: voidedAt,
+      voidedBy: data['voidedBy'] as String?,
+      voidReason: data['voidReason'] as String?,
+    );
+  }
+
+  DateTime _parseTimestamp(Object? value) {
+    if (value is Timestamp) {
+      return value.toDate();
+    }
+    if (value is DateTime) {
+      return value;
+    }
+    if (value is String) {
+      final parsed = DateTime.tryParse(value);
+      if (parsed != null) {
+        return parsed;
+      }
+    }
+    if (value is num) {
+      return DateTime.fromMillisecondsSinceEpoch(value.toInt());
+    }
+    return DateTime.now();
   }
 
   double? _parseNullableDouble(Object? value) {

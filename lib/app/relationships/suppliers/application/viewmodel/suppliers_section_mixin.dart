@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gestr/app/relationships/suppliers/application/view/suppliers_section.dart';
 import 'package:gestr/app/relationships/suppliers/bloc/supplier_bloc.dart';
 import 'package:gestr/app/relationships/suppliers/bloc/supplier_event.dart';
+import 'package:gestr/app/widgets/void_confirmation_dialog.dart';
 import 'package:gestr/domain/entities/supplier.dart';
 
 mixin SuppliersSectionMixin on State<SuppliersSection> {
@@ -54,31 +55,21 @@ mixin SuppliersSectionMixin on State<SuppliersSection> {
   }
 
   Future<bool> confirmDelete(Supplier supplier) async {
-    final ok =
-        await showDialog<bool>(
-          context: context,
-          builder:
-              (dialogContext) => AlertDialog(
-                title: const Text('Eliminar proveedor'),
-                content: Text('¿Eliminar "${supplier.name}"?'),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(dialogContext, false),
-                    child: const Text('Cancelar'),
-                  ),
-                  FilledButton(
-                    onPressed: () => Navigator.pop(dialogContext, true),
-                    child: const Text('Eliminar'),
-                  ),
-                ],
-              ),
-        ) ??
-        false;
-    if (!mounted) return false;
-    if (ok && supplier.id != null) {
-      context.read<SupplierBloc>().add(SupplierEvent.delete(supplier.id!));
-      return true;
+    final reason = await showVoidConfirmationDialog(
+      context: context,
+      title: 'Anular proveedor',
+      message: '¿Quieres anular "${supplier.name}"?',
+    );
+    if (!mounted || supplier.id == null || reason == null) {
+      return false;
     }
-    return false;
+    final trimmedReason = reason.trim();
+    context.read<SupplierBloc>().add(
+      SupplierEvent.delete(
+        supplier.id!,
+        voidReason: trimmedReason.isEmpty ? null : trimmedReason,
+      ),
+    );
+    return true;
   }
 }

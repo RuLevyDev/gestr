@@ -19,8 +19,18 @@ class FixedPaymentUseCases {
     return _repository.updateFixedPayment(userId, payment);
   }
 
-  Future<void> deleteFixedPayment(String userId, String paymentId) {
-    return _repository.deleteFixedPayment(userId, paymentId);
+  Future<FixedPayment> voidFixedPayment(
+    String userId,
+    String paymentId, {
+    String? voidedBy,
+    String? voidReason,
+  }) {
+    return _repository.voidFixedPayment(
+      userId,
+      paymentId,
+      voidedBy: voidedBy,
+      voidReason: voidReason,
+    );
   }
 
   Future<FixedPayment?> getFixedPaymentById(String userId, String id) {

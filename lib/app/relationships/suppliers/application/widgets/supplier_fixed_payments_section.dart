@@ -5,7 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:gestr/app/fixedpayments/bloc/fixed_payments_bloc.dart';
 import 'package:gestr/app/fixedpayments/bloc/fixed_payment_state.dart';
-import 'package:gestr/app/invoices/widgets/fixed_payments_card.dart';
+import 'package:gestr/app/fixedpayments/application/widgets/fixed_payments_card.dart';
 import 'package:gestr/app/relationships/suppliers/application/widgets/empty_message.dart';
 
 class SupplierFixedPaymentsSection extends StatelessWidget {

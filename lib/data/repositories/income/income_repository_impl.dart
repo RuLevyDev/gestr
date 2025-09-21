@@ -12,16 +12,16 @@ class IncomeRepositoryImpl implements IncomeRepository {
   @override
   Future<List<Income>> getIncomes(String userId) async {
     final snap = await _col(userId).orderBy('date', descending: true).get();
-    return snap.docs.map((d) {
-      final m = d.data();
-      return Income(
-        id: d.id,
-        title: m['title'] ?? '',
-        date: (m['date'] as Timestamp).toDate(),
-        amount: (m['amount'] ?? 0).toDouble(),
-        source: m['source'],
-      );
-    }).toList();
+
+    final items = <Income>[];
+    for (final doc in snap.docs) {
+      final data = doc.data();
+      if (data['voidedAt'] != null) {
+        continue;
+      }
+      items.add(_mapIncome(doc.id, data));
+    }
+    return items;
   }
 
   @override
@@ -31,12 +31,30 @@ class IncomeRepositoryImpl implements IncomeRepository {
       'date': income.date,
       'amount': income.amount,
       'source': income.source,
+      'voidedAt': null,
+      'voidedBy': null,
+      'voidReason': null,
     });
   }
 
   @override
-  Future<void> deleteIncome(String userId, String incomeId) async {
-    await _col(userId).doc(incomeId).delete();
+  Future<Income> voidIncome(
+    String userId,
+    String incomeId, {
+    String? voidedBy,
+    String? voidReason,
+  }) async {
+    final docRef = _col(userId).doc(incomeId);
+    await docRef.update({
+      'voidedAt': FieldValue.serverTimestamp(),
+      'voidedBy': voidedBy ?? userId,
+      'voidReason': voidReason,
+    });
+    final updated = await docRef.get();
+    if (!updated.exists) {
+      throw Exception('Ingreso no encontrado');
+    }
+    return _mapIncome(updated.id, updated.data()!);
   }
 
   @override
@@ -44,13 +62,8 @@ class IncomeRepositoryImpl implements IncomeRepository {
     final doc = await _col(userId).doc(id).get();
     if (!doc.exists) return null;
     final m = doc.data()!;
-    return Income(
-      id: doc.id,
-      title: m['title'] ?? '',
-      date: (m['date'] as Timestamp).toDate(),
-      amount: (m['amount'] ?? 0).toDouble(),
-      source: m['source'],
-    );
+
+    return _mapIncome(doc.id, m);
   }
 
   @override
@@ -61,6 +74,31 @@ class IncomeRepositoryImpl implements IncomeRepository {
       'date': income.date,
       'amount': income.amount,
       'source': income.source,
+      'voidedAt': income.voidedAt,
+      'voidedBy': income.voidedBy,
+      'voidReason': income.voidReason,
     });
+  }
+
+  Income _mapIncome(String id, Map<String, dynamic> data) {
+    final voidedAtRaw = data['voidedAt'];
+    DateTime? voidedAt;
+    if (voidedAtRaw is Timestamp) {
+      voidedAt = voidedAtRaw.toDate();
+    } else if (voidedAtRaw is DateTime) {
+      voidedAt = voidedAtRaw;
+    } else if (voidedAtRaw is String) {
+      voidedAt = DateTime.tryParse(voidedAtRaw);
+    }
+    return Income(
+      id: id,
+      title: data['title'] as String? ?? '',
+      date: (data['date'] as Timestamp).toDate(),
+      amount: (data['amount'] as num?)?.toDouble() ?? 0,
+      source: data['source'] as String?,
+      voidedAt: voidedAt,
+      voidedBy: data['voidedBy'] as String?,
+      voidReason: data['voidReason'] as String?,
+    );
   }
 }

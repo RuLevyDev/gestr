@@ -7,6 +7,9 @@ class Client {
   final String? fiscalAddress;
   final String? countryCode; // ISO-3166-1 alpha-2 (e.g., ES)
   final String? idType; // e.g., NIF, NIE, VAT, OTHER
+  final DateTime? voidedAt;
+  final String? voidedBy;
+  final String? voidReason;
 
   const Client({
     this.id,
@@ -17,5 +20,8 @@ class Client {
     this.fiscalAddress,
     this.countryCode,
     this.idType,
+    this.voidedAt,
+    this.voidedBy,
+    this.voidReason,
   });
 }

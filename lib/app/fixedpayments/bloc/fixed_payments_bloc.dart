@@ -32,7 +32,11 @@ class FixedPaymentBloc extends Bloc<FixedPaymentEvent, FixedPaymentState> {
         await _handleUpdate(event.fixedPayment!, emit);
         break;
       case FixedPaymentEventType.delete:
-        await _handleDelete(event.paymentId!, emit);
+        await _handleDelete(
+          event.paymentId!,
+          emit,
+          voidReason: event.voidReason,
+        );
         break;
       case FixedPaymentEventType.getById:
         await _handleGetById(event.paymentId!, emit);
@@ -59,14 +63,20 @@ class FixedPaymentBloc extends Bloc<FixedPaymentEvent, FixedPaymentState> {
 
   Future<void> _handleDelete(
     String paymentId,
-    Emitter<FixedPaymentState> emit,
-  ) async {
+    Emitter<FixedPaymentState> emit, {
+    String? voidReason,
+  }) async {
     try {
-      await useCases.deleteFixedPayment(userId, paymentId);
+      await useCases.voidFixedPayment(
+        userId,
+        paymentId,
+        voidedBy: userId,
+        voidReason: voidReason,
+      );
       final payments = await useCases.fetchFixedPayments(userId);
       emit(FixedPaymentLoaded(payments));
     } catch (_) {
-      emit(FixedPaymentError("No se pudo eliminar el pago fijo."));
+      emit(FixedPaymentError("No se pudo anular el pago fijo."));
     }
   }
 

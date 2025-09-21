@@ -5,6 +5,7 @@ import 'package:gestr/app/invoices/bloc/invoice_event.dart';
 import 'package:gestr/domain/entities/invoice_model.dart';
 import 'package:gestr/core/image/aeat_image_support.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:gestr/app/widgets/void_confirmation_dialog.dart';
 import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
@@ -100,11 +101,23 @@ class InvoiceCard extends StatelessWidget {
                 icon: Icons.share,
               ),
               SlidableAction(
-                onPressed: (context) {
-                  if (onDelete != null) onDelete!();
-                  context.read<InvoiceBloc>().add(
-                    InvoiceEvent.delete(invoice.id!),
+                onPressed: (actionContext) async {
+                  final id = invoice.id;
+                  if (id == null) return;
+                  final reason = await showVoidConfirmationDialog(
+                    context: actionContext,
+                    title: 'Anular factura',
+                    message: '¿Quieres anular "${invoice.title}"?',
                   );
+                  if (reason == null || !actionContext.mounted) return;
+                  final trimmedReason = reason.trim();
+                  actionContext.read<InvoiceBloc>().add(
+                    InvoiceEvent.delete(
+                      id,
+                      voidReason: trimmedReason.isEmpty ? null : trimmedReason,
+                    ),
+                  );
+                  if (onDelete != null) onDelete!();
                 },
                 backgroundColor: Colors.transparent,
                 foregroundColor: Colors.redAccent,

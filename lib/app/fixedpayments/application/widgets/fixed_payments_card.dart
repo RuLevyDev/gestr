@@ -5,6 +5,7 @@ import 'package:gestr/core/image/aeat_image_support.dart';
 import 'package:gestr/app/fixedpayments/bloc/fixed_payment_event.dart';
 import 'package:gestr/app/fixedpayments/bloc/fixed_payments_bloc.dart';
 import 'package:gestr/domain/entities/fixed_payments_model.dart';
+import 'package:gestr/app/widgets/void_confirmation_dialog.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -89,11 +90,23 @@ class FixedPaymentCard extends StatelessWidget {
                   icon: Icons.share,
                 ),
               SlidableAction(
-                onPressed: (context) {
-                  if (onDelete != null) onDelete!();
-                  context.read<FixedPaymentBloc>().add(
-                    FixedPaymentEvent.delete(payment.id!),
+                onPressed: (actionContext) async {
+                  final id = payment.id;
+                  if (id == null) return;
+                  final reason = await showVoidConfirmationDialog(
+                    context: actionContext,
+                    title: 'Anular pago fijo',
+                    message: '¿Quieres anular "${payment.title}"?',
                   );
+                  if (reason == null || !actionContext.mounted) return;
+                  final trimmedReason = reason.trim();
+                  actionContext.read<FixedPaymentBloc>().add(
+                    FixedPaymentEvent.delete(
+                      id,
+                      voidReason: trimmedReason.isEmpty ? null : trimmedReason,
+                    ),
+                  );
+                  if (onDelete != null) onDelete!();
                 },
                 backgroundColor: Colors.transparent,
                 foregroundColor: Colors.redAccent,

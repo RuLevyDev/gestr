@@ -10,8 +10,13 @@ class ClientUseCases {
       _repo.createClient(userId, client);
   Future<void> update(String userId, Client client) =>
       _repo.updateClient(userId, client);
-  Future<void> delete(String userId, String id) =>
-      _repo.deleteClient(userId, id);
+  Future<Client> voidClient(
+    String userId,
+    String id, {
+    String? voidedBy,
+    String? voidReason,
+  }) =>
+      _repo.voidClient(userId, id, voidedBy: voidedBy, voidReason: voidReason);
   Future<Client?> getById(String userId, String id) =>
       _repo.getClientById(userId, id);
 }

@@ -7,18 +7,20 @@ class ClientEvent extends Equatable {
   final ClientEventType type;
   final Client? client;
   final String? id;
+  final String? voidReason;
 
-  const ClientEvent._(this.type, {this.client, this.id});
+  const ClientEvent._(this.type, {this.client, this.id, this.voidReason});
   const ClientEvent.fetch() : this._(ClientEventType.fetch);
   const ClientEvent.refresh() : this._(ClientEventType.refresh);
   const ClientEvent.create(Client client)
     : this._(ClientEventType.create, client: client);
   const ClientEvent.update(Client client)
     : this._(ClientEventType.update, client: client);
-  const ClientEvent.delete(String id) : this._(ClientEventType.delete, id: id);
+  const ClientEvent.delete(String id, {String? voidReason})
+    : this._(ClientEventType.delete, id: id, voidReason: voidReason);
   const ClientEvent.getById(String id)
     : this._(ClientEventType.getById, id: id);
 
   @override
-  List<Object?> get props => [type, client, id];
+  List<Object?> get props => [type, client, id, voidReason];
 }

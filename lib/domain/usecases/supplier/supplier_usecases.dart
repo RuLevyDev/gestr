@@ -10,8 +10,17 @@ class SupplierUseCases {
       _repo.createSupplier(userId, supplier);
   Future<void> update(String userId, Supplier supplier) =>
       _repo.updateSupplier(userId, supplier);
-  Future<void> delete(String userId, String id) =>
-      _repo.deleteSupplier(userId, id);
+  Future<Supplier> voidSupplier(
+    String userId,
+    String id, {
+    String? voidedBy,
+    String? voidReason,
+  }) => _repo.voidSupplier(
+    userId,
+    id,
+    voidedBy: voidedBy,
+    voidReason: voidReason,
+  );
   Future<Supplier?> getById(String userId, String id) =>
       _repo.getSupplierById(userId, id);
 }

@@ -27,7 +27,11 @@ class InvoiceBloc extends Bloc<InvoiceEvent, InvoiceState> {
         await _handleCreate(event.invoice!, emit);
         break;
       case InvoiceEventType.delete:
-        await _handleDelete(event.invoiceId!, emit);
+        await _handleDelete(
+          event.invoiceId!,
+          emit,
+          voidReason: event.voidReason,
+        );
         break;
       case InvoiceEventType.getById:
         await _handleGetById(event.invoiceId!, emit);
@@ -57,14 +61,20 @@ class InvoiceBloc extends Bloc<InvoiceEvent, InvoiceState> {
 
   Future<void> _handleDelete(
     String invoiceId,
-    Emitter<InvoiceState> emit,
-  ) async {
+    Emitter<InvoiceState> emit, {
+    String? voidReason,
+  }) async {
     try {
-      await useCases.deleteInvoice(userId, invoiceId);
+      await useCases.voidInvoice(
+        userId,
+        invoiceId,
+        voidedBy: userId,
+        voidReason: voidReason,
+      );
       final invoices = await useCases.fetchInvoices(userId);
       emit(InvoiceLoaded(invoices));
     } catch (e) {
-      emit(InvoiceError("No se pudo eliminar la factura."));
+      emit(InvoiceError("No se pudo anular la factura."));
     }
   }
 

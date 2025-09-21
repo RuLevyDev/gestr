@@ -81,6 +81,9 @@ class Invoice {
   final String? specialRegime; // RECC/Agencias/etc.
   final File? image; // Solo para carga
   final String? imageUrl; // Para mostrar desde la red
+  final DateTime? voidedAt;
+  final String? voidedBy;
+  final String? voidReason;
 
   Invoice({
     this.id,
@@ -113,6 +116,9 @@ class Invoice {
     this.specialRegime,
     this.image,
     this.imageUrl,
+    this.voidedAt,
+    this.voidedBy,
+    this.voidReason,
   });
 
   double get total => netAmount + iva;
@@ -148,6 +154,9 @@ class Invoice {
     String? specialRegime,
     File? image,
     String? imageUrl,
+    DateTime? voidedAt,
+    String? voidedBy,
+    String? voidReason,
   }) {
     return Invoice(
       id: id ?? this.id,
@@ -180,6 +189,9 @@ class Invoice {
       specialRegime: specialRegime ?? this.specialRegime,
       image: image ?? this.image,
       imageUrl: imageUrl ?? this.imageUrl,
+      voidedAt: voidedAt ?? this.voidedAt,
+      voidedBy: voidedBy ?? this.voidedBy,
+      voidReason: voidReason ?? this.voidReason,
     );
   }
 }

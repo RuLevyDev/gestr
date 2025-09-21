@@ -12,19 +12,16 @@ class ClientRepositoryImpl implements ClientRepository {
   @override
   Future<List<Client>> getClients(String userId) async {
     final snap = await _col(userId).orderBy('name').get();
-    return snap.docs.map((d) {
-      final m = d.data();
-      return Client(
-        id: d.id,
-        name: m['name'] ?? '',
-        email: m['email'],
-        phone: m['phone'],
-        taxId: m['taxId'],
-        fiscalAddress: m['fiscalAddress'],
-        countryCode: m['countryCode'],
-        idType: m['idType'],
-      );
-    }).toList();
+
+    final clients = <Client>[];
+    for (final doc in snap.docs) {
+      final data = doc.data();
+      if (data['voidedAt'] != null) {
+        continue;
+      }
+      clients.add(_mapClient(doc.id, data));
+    }
+    return clients;
   }
 
   @override
@@ -37,6 +34,9 @@ class ClientRepositoryImpl implements ClientRepository {
       'fiscalAddress': client.fiscalAddress,
       'countryCode': client.countryCode,
       'idType': client.idType,
+      'voidedAt': null,
+      'voidedBy': null,
+      'voidReason': null,
     });
   }
 
@@ -51,12 +51,30 @@ class ClientRepositoryImpl implements ClientRepository {
       'fiscalAddress': client.fiscalAddress,
       'countryCode': client.countryCode,
       'idType': client.idType,
+      'voidedAt': client.voidedAt,
+      'voidedBy': client.voidedBy,
+      'voidReason': client.voidReason,
     });
   }
 
   @override
-  Future<void> deleteClient(String userId, String clientId) async {
-    await _col(userId).doc(clientId).delete();
+  Future<Client> voidClient(
+    String userId,
+    String clientId, {
+    String? voidedBy,
+    String? voidReason,
+  }) async {
+    final docRef = _col(userId).doc(clientId);
+    await docRef.update({
+      'voidedAt': FieldValue.serverTimestamp(),
+      'voidedBy': voidedBy ?? userId,
+      'voidReason': voidReason,
+    });
+    final updated = await docRef.get();
+    if (!updated.exists) {
+      throw Exception('Cliente no encontrado');
+    }
+    return _mapClient(updated.id, updated.data()!);
   }
 
   @override
@@ -64,15 +82,31 @@ class ClientRepositoryImpl implements ClientRepository {
     final doc = await _col(userId).doc(id).get();
     if (!doc.exists) return null;
     final m = doc.data()!;
+    return _mapClient(doc.id, m);
+  }
+
+  Client _mapClient(String id, Map<String, dynamic> data) {
+    final voidedAtRaw = data['voidedAt'];
+    DateTime? voidedAt;
+    if (voidedAtRaw is Timestamp) {
+      voidedAt = voidedAtRaw.toDate();
+    } else if (voidedAtRaw is DateTime) {
+      voidedAt = voidedAtRaw;
+    } else if (voidedAtRaw is String) {
+      voidedAt = DateTime.tryParse(voidedAtRaw);
+    }
     return Client(
-      id: doc.id,
-      name: m['name'] ?? '',
-      email: m['email'],
-      phone: m['phone'],
-      taxId: m['taxId'],
-      fiscalAddress: m['fiscalAddress'],
-      countryCode: m['countryCode'],
-      idType: m['idType'],
+      id: id,
+      name: data['name'] as String? ?? '',
+      email: data['email'] as String?,
+      phone: data['phone'] as String?,
+      taxId: data['taxId'] as String?,
+      fiscalAddress: data['fiscalAddress'] as String?,
+      countryCode: data['countryCode'] as String?,
+      idType: data['idType'] as String?,
+      voidedAt: voidedAt,
+      voidedBy: data['voidedBy'] as String?,
+      voidReason: data['voidReason'] as String?,
     );
   }
 }

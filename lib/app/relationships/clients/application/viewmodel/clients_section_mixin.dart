@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gestr/app/relationships/clients/application/view/clients_section.dart';
 import 'package:gestr/app/relationships/clients/bloc/client_bloc.dart';
 import 'package:gestr/app/relationships/clients/bloc/client_event.dart';
+import 'package:gestr/app/widgets/void_confirmation_dialog.dart';
 import 'package:gestr/domain/entities/client.dart';
 import '../view/create_client_sheet.dart';
 
@@ -60,29 +61,18 @@ mixin ClientsSectionMixin on State<ClientsSection> {
   }
 
   Future<void> confirmDelete(Client client) async {
-    final ok =
-        await showDialog<bool>(
-          context: context,
-          builder:
-              (dialogContext) => AlertDialog(
-                title: const Text('Eliminar cliente'),
-                content: Text('¿Eliminar "${client.name}"?'),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(dialogContext, false),
-                    child: const Text('Cancelar'),
-                  ),
-                  FilledButton(
-                    onPressed: () => Navigator.pop(dialogContext, true),
-                    child: const Text('Eliminar'),
-                  ),
-                ],
-              ),
-        ) ??
-        false;
-    if (!mounted) return;
-    if (ok && client.id != null) {
-      context.read<ClientBloc>().add(ClientEvent.delete(client.id!));
-    }
+    final reason = await showVoidConfirmationDialog(
+      context: context,
+      title: 'Anular cliente',
+      message: '¿Quieres anular "${client.name}"?',
+    );
+    if (!mounted || client.id == null || reason == null) return;
+    final trimmedReason = reason.trim();
+    context.read<ClientBloc>().add(
+      ClientEvent.delete(
+        client.id!,
+        voidReason: trimmedReason.isEmpty ? null : trimmedReason,
+      ),
+    );
   }
 }

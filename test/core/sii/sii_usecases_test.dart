@@ -19,8 +19,12 @@ class _FakeInvoiceRepository implements InvoiceRepository {
       throw UnimplementedError();
 
   @override
-  Future<void> deleteInvoice(String userId, String invoiceId) =>
-      throw UnimplementedError();
+  Future<Invoice> voidInvoice(
+    String userId,
+    String invoiceId, {
+    String? voidedBy,
+    String? voidReason,
+  }) => throw UnimplementedError();
 
   @override
   Future<Invoice?> getInvoiceById(String userId, String id) =>

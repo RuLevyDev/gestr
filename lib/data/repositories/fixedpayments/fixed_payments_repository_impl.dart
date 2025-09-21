@@ -23,23 +23,16 @@ class FixedPaymentRepositoryImpl implements FixedPaymentRepository {
               .orderBy('startDate', descending: true)
               .get();
 
-      return snapshot.docs.map((doc) {
+      final payments = <FixedPayment>[];
+      for (final doc in snapshot.docs) {
         final data = doc.data();
-        return FixedPayment(
-          id: doc.id,
-          title: data['title'],
-          amount: (data['amount'] ?? 0).toDouble(),
-          startDate: (data['startDate'] as Timestamp).toDate(),
-          frequency: _parseStatus(data['frequency']),
-          description: data['description'],
-          supplier: data['supplier'],
-          vatRate: ((data['vatRate'] ?? 0.0) as num).toDouble(),
-          amountIsGross: (data['amountIsGross'] ?? true) as bool,
-          deductible: (data['deductible'] ?? true) as bool,
-          category: _parseCategory(data['category']),
-          imageUrl: data['imageUrl'],
-        );
-      }).toList();
+
+        if (data['voidedAt'] != null) {
+          continue;
+        }
+        payments.add(_mapFixedPayment(doc.id, data));
+      }
+      return payments;
     } catch (e) {
       throw Exception("Error al obtener los pagos fijos: $e");
     }
@@ -70,6 +63,9 @@ class FixedPaymentRepositoryImpl implements FixedPaymentRepository {
             'deductible': payment.deductible,
             'category': payment.category.name,
             'imageUrl': imageUrl,
+            'voidedAt': null,
+            'voidedBy': null,
+            'voidReason': null,
           });
     } catch (e) {
       throw Exception("Error al crear el pago fijo: $e");
@@ -110,6 +106,9 @@ class FixedPaymentRepositoryImpl implements FixedPaymentRepository {
         'deductible': payment.deductible,
         'category': payment.category.name,
         'imageUrl': imageUrl,
+        'voidedAt': payment.voidedAt,
+        'voidedBy': payment.voidedBy,
+        'voidReason': payment.voidReason,
       });
     } catch (e) {
       throw Exception("Error al actualizar el pago fijo: $e");
@@ -117,7 +116,12 @@ class FixedPaymentRepositoryImpl implements FixedPaymentRepository {
   }
 
   @override
-  Future<void> deleteFixedPayment(String userId, String paymentId) async {
+  Future<FixedPayment> voidFixedPayment(
+    String userId,
+    String paymentId, {
+    String? voidedBy,
+    String? voidReason,
+  }) async {
     try {
       final docRef = firestore
           .collection('users')
@@ -125,17 +129,20 @@ class FixedPaymentRepositoryImpl implements FixedPaymentRepository {
           .collection('fixedPayments')
           .doc(paymentId);
 
-      final doc = await docRef.get();
+      await docRef.update({
+        'voidedAt': FieldValue.serverTimestamp(),
+        'voidedBy': voidedBy ?? userId,
+        'voidReason': voidReason,
+      });
 
-      if (doc.exists && doc.data()!['imageUrl'] != null) {
-        final imageUrl = doc.data()!['imageUrl'] as String;
-        final ref = storage.refFromURL(imageUrl);
-        await ref.delete();
+      final updated = await docRef.get();
+      if (!updated.exists) {
+        throw Exception('Pago fijo no encontrado');
       }
 
-      await docRef.delete();
+      return _mapFixedPayment(updated.id, updated.data()!);
     } catch (e) {
-      throw Exception("Error al eliminar el pago fijo: $e");
+      throw Exception("Error al anular el pago fijo: $e");
     }
   }
 
@@ -153,23 +160,40 @@ class FixedPaymentRepositoryImpl implements FixedPaymentRepository {
       if (!doc.exists) return null;
 
       final data = doc.data()!;
-      return FixedPayment(
-        id: doc.id,
-        title: data['title'],
-        amount: (data['amount'] ?? 0).toDouble(),
-        startDate: (data['startDate'] as Timestamp).toDate(),
-        frequency: _parseStatus(data['frequency']),
-        description: data['description'],
-        supplier: data['supplier'],
-        vatRate: ((data['vatRate'] ?? 0.0) as num).toDouble(),
-        amountIsGross: (data['amountIsGross'] ?? true) as bool,
-        deductible: (data['deductible'] ?? true) as bool,
-        category: _parseCategory(data['category']),
-        imageUrl: data['imageUrl'],
-      );
+
+      return _mapFixedPayment(doc.id, data);
     } catch (e) {
       throw Exception("Error al obtener el pago fijo por ID: $e");
     }
+  }
+
+  FixedPayment _mapFixedPayment(String id, Map<String, dynamic> data) {
+    final voidedAtRaw = data['voidedAt'];
+    DateTime? voidedAt;
+    if (voidedAtRaw is Timestamp) {
+      voidedAt = voidedAtRaw.toDate();
+    } else if (voidedAtRaw is DateTime) {
+      voidedAt = voidedAtRaw;
+    } else if (voidedAtRaw is String) {
+      voidedAt = DateTime.tryParse(voidedAtRaw);
+    }
+    return FixedPayment(
+      id: id,
+      title: data['title'] as String? ?? '',
+      amount: (data['amount'] as num?)?.toDouble() ?? 0,
+      startDate: (data['startDate'] as Timestamp).toDate(),
+      frequency: _parseStatus(data['frequency']),
+      description: data['description'] as String?,
+      supplier: data['supplier'] as String?,
+      vatRate: ((data['vatRate'] ?? 0.0) as num).toDouble(),
+      amountIsGross: (data['amountIsGross'] ?? true) as bool,
+      deductible: (data['deductible'] ?? true) as bool,
+      category: _parseCategory(data['category']),
+      imageUrl: data['imageUrl'] as String?,
+      voidedAt: voidedAt,
+      voidedBy: data['voidedBy'] as String?,
+      voidReason: data['voidReason'] as String?,
+    );
   }
 
   Future<String> _uploadImage(File file, String folder) async {

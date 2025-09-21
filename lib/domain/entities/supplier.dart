@@ -12,6 +12,9 @@ class Supplier {
   final String? idType; // e.g., NIF, NIE, VAT, OTHER
   final List<SupplierOrderItem> orderItems;
   final List<SupplierOrder> orders;
+  final DateTime? voidedAt;
+  final String? voidedBy;
+  final String? voidReason;
 
   const Supplier({
     this.id,
@@ -24,5 +27,8 @@ class Supplier {
     this.idType,
     this.orderItems = const [],
     this.orders = const [],
+    this.voidedAt,
+    this.voidedBy,
+    this.voidReason,
   });
 }

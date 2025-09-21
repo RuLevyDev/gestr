@@ -27,7 +27,7 @@ class ClientBloc extends Bloc<ClientEvent, ClientState> {
         await _update(event.client!, emit);
         break;
       case ClientEventType.delete:
-        await _delete(event.id!, emit);
+        await _delete(event.id!, emit, voidReason: event.voidReason);
         break;
       case ClientEventType.getById:
         await _getById(event.id!, emit);
@@ -64,13 +64,22 @@ class ClientBloc extends Bloc<ClientEvent, ClientState> {
     }
   }
 
-  Future<void> _delete(String id, Emitter<ClientState> emit) async {
+  Future<void> _delete(
+    String id,
+    Emitter<ClientState> emit, {
+    String? voidReason,
+  }) async {
     try {
-      await useCases.delete(userId, id);
+      await useCases.voidClient(
+        userId,
+        id,
+        voidedBy: userId,
+        voidReason: voidReason,
+      );
       final list = await useCases.fetch(userId);
       emit(ClientLoaded(list));
     } catch (_) {
-      emit(const ClientError('No se pudo eliminar el cliente.'));
+      emit(const ClientError('No se pudo anular el cliente.'));
     }
   }
 

@@ -14,36 +14,15 @@ class SupplierRepositoryImpl implements SupplierRepository {
   @override
   Future<List<Supplier>> getSuppliers(String userId) async {
     final snap = await _col(userId).orderBy('name').get();
-    return snap.docs.map((d) {
-      final m = d.data();
-      return Supplier(
-        id: d.id,
-        name: m['name'] ?? '',
-        email: m['email'],
-        phone: m['phone'],
-        taxId: m['taxId'],
-        fiscalAddress: m['fiscalAddress'],
-        countryCode: m['countryCode'],
-        idType: m['idType'],
-        orderItems:
-            (m['orderItems'] as List<dynamic>?)
-                ?.map(
-                  (e) =>
-                      SupplierOrderItem.fromMap(Map<String, dynamic>.from(e)),
-                )
-                .toList() ??
-            const [],
-        orders:
-            (m['orders'] as List<dynamic>?)
-                ?.map(
-                  (o) => SupplierOrder.fromMap(
-                    Map<String, dynamic>.from(o as Map<String, dynamic>),
-                  ),
-                )
-                .toList() ??
-            const [],
-      );
-    }).toList();
+    final suppliers = <Supplier>[];
+    for (final doc in snap.docs) {
+      final m = doc.data();
+      if (m['voidedAt'] != null) {
+        continue;
+      }
+      suppliers.add(_mapSupplier(doc.id, m));
+    }
+    return suppliers;
   }
 
   @override
@@ -58,6 +37,9 @@ class SupplierRepositoryImpl implements SupplierRepository {
       'idType': supplier.idType,
       'orderItems': supplier.orderItems.map((i) => i.toMap()).toList(),
       'orders': supplier.orders.map((o) => o.toMap()).toList(),
+      'voidedAt': null,
+      'voidedBy': null,
+      'voidReason': null,
     });
   }
 
@@ -74,12 +56,30 @@ class SupplierRepositoryImpl implements SupplierRepository {
       'idType': supplier.idType,
       'orderItems': supplier.orderItems.map((i) => i.toMap()).toList(),
       'orders': supplier.orders.map((o) => o.toMap()).toList(),
+      'voidedAt': supplier.voidedAt,
+      'voidedBy': supplier.voidedBy,
+      'voidReason': supplier.voidReason,
     });
   }
 
   @override
-  Future<void> deleteSupplier(String userId, String supplierId) async {
-    await _col(userId).doc(supplierId).delete();
+  Future<Supplier> voidSupplier(
+    String userId,
+    String supplierId, {
+    String? voidedBy,
+    String? voidReason,
+  }) async {
+    final docRef = _col(userId).doc(supplierId);
+    await docRef.update({
+      'voidedAt': FieldValue.serverTimestamp(),
+      'voidedBy': voidedBy ?? userId,
+      'voidReason': voidReason,
+    });
+    final updated = await docRef.get();
+    if (!updated.exists) {
+      throw Exception('Proveedor no encontrado');
+    }
+    return _mapSupplier(updated.id, updated.data()!);
   }
 
   @override
@@ -87,24 +87,39 @@ class SupplierRepositoryImpl implements SupplierRepository {
     final doc = await _col(userId).doc(id).get();
     if (!doc.exists) return null;
     final m = doc.data()!;
+    return _mapSupplier(doc.id, m);
+  }
+
+  Supplier _mapSupplier(String id, Map<String, dynamic> data) {
+    final ordersRaw = data['orders'] as List<dynamic>?;
+    final orderItemsRaw = data['orderItems'] as List<dynamic>?;
+    final voidedAtRaw = data['voidedAt'];
+    DateTime? voidedAt;
+    if (voidedAtRaw is Timestamp) {
+      voidedAt = voidedAtRaw.toDate();
+    } else if (voidedAtRaw is DateTime) {
+      voidedAt = voidedAtRaw;
+    } else if (voidedAtRaw is String) {
+      voidedAt = DateTime.tryParse(voidedAtRaw);
+    }
     return Supplier(
-      id: doc.id,
-      name: m['name'] ?? '',
-      email: m['email'],
-      phone: m['phone'],
-      taxId: m['taxId'],
-      fiscalAddress: m['fiscalAddress'],
-      countryCode: m['countryCode'],
-      idType: m['idType'],
+      id: id,
+      name: data['name'] as String? ?? '',
+      email: data['email'] as String?,
+      phone: data['phone'] as String?,
+      taxId: data['taxId'] as String?,
+      fiscalAddress: data['fiscalAddress'] as String?,
+      countryCode: data['countryCode'] as String?,
+      idType: data['idType'] as String?,
       orderItems:
-          (m['orderItems'] as List<dynamic>?)
+          orderItemsRaw
               ?.map(
                 (e) => SupplierOrderItem.fromMap(Map<String, dynamic>.from(e)),
               )
               .toList() ??
           const [],
       orders:
-          (m['orders'] as List<dynamic>?)
+          ordersRaw
               ?.map(
                 (o) => SupplierOrder.fromMap(
                   Map<String, dynamic>.from(o as Map<String, dynamic>),
@@ -112,6 +127,9 @@ class SupplierRepositoryImpl implements SupplierRepository {
               )
               .toList() ??
           const [],
+      voidedAt: voidedAt,
+      voidedBy: data['voidedBy'] as String?,
+      voidReason: data['voidReason'] as String?,
     );
   }
 }

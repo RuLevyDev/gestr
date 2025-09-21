@@ -24,8 +24,7 @@ class IncomeBloc extends Bloc<IncomeEvent, IncomeState> {
         await _create(event.income!, emit);
         break;
       case IncomeEventType.delete:
-        await _delete(event.id!, emit);
-        break;
+        await _delete(event.id!, emit, voidReason: event.voidReason);
       case IncomeEventType.getById:
         await _getById(event.id!, emit);
         break;
@@ -61,13 +60,22 @@ class IncomeBloc extends Bloc<IncomeEvent, IncomeState> {
     }
   }
 
-  Future<void> _delete(String id, Emitter<IncomeState> emit) async {
+  Future<void> _delete(
+    String id,
+    Emitter<IncomeState> emit, {
+    String? voidReason,
+  }) async {
     try {
-      await useCases.delete(userId, id);
+      await useCases.voidIncome(
+        userId,
+        id,
+        voidedBy: userId,
+        voidReason: voidReason,
+      );
       final list = await useCases.fetch(userId);
       emit(IncomeLoaded(list));
     } catch (_) {
-      emit(const IncomeError('No se pudo eliminar el ingreso.'));
+      emit(const IncomeError('No se pudo anular el ingreso.'));
     }
   }
 

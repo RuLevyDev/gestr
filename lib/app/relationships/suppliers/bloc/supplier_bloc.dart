@@ -27,7 +27,7 @@ class SupplierBloc extends Bloc<SupplierEvent, SupplierState> {
         await _create(event.supplier!, emit);
         break;
       case SupplierEventType.delete:
-        await _delete(event.id!, emit);
+        await _delete(event.id!, emit, voidReason: event.voidReason);
         break;
       case SupplierEventType.getById:
         await _getById(event.id!, emit);
@@ -67,13 +67,22 @@ class SupplierBloc extends Bloc<SupplierEvent, SupplierState> {
     }
   }
 
-  Future<void> _delete(String id, Emitter<SupplierState> emit) async {
+  Future<void> _delete(
+    String id,
+    Emitter<SupplierState> emit, {
+    String? voidReason,
+  }) async {
     try {
-      await useCases.delete(userId, id);
+      await useCases.voidSupplier(
+        userId,
+        id,
+        voidedBy: userId,
+        voidReason: voidReason,
+      );
       final list = await useCases.fetch(userId);
       emit(SupplierLoaded(list));
     } catch (_) {
-      emit(const SupplierError('No se pudo eliminar el proveedor.'));
+      emit(const SupplierError('No se pudo anular el proveedor.'));
     }
   }
 

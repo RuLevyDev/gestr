@@ -7,8 +7,14 @@ class FixedPaymentEvent extends Equatable {
   final FixedPaymentEventType type;
   final FixedPayment? fixedPayment;
   final String? paymentId;
+  final String? voidReason;
 
-  const FixedPaymentEvent._(this.type, {this.fixedPayment, this.paymentId});
+  const FixedPaymentEvent._(
+    this.type, {
+    this.fixedPayment,
+    this.paymentId,
+    this.voidReason,
+  });
 
   const FixedPaymentEvent.getById(String paymentId)
     : this._(FixedPaymentEventType.getById, paymentId: paymentId);
@@ -22,9 +28,13 @@ class FixedPaymentEvent extends Equatable {
   const FixedPaymentEvent.update(FixedPayment fixedPayment)
     : this._(FixedPaymentEventType.update, fixedPayment: fixedPayment);
 
-  const FixedPaymentEvent.delete(String paymentId)
-    : this._(FixedPaymentEventType.delete, paymentId: paymentId);
+  const FixedPaymentEvent.delete(String paymentId, {String? voidReason})
+    : this._(
+        FixedPaymentEventType.delete,
+        paymentId: paymentId,
+        voidReason: voidReason,
+      );
 
   @override
-  List<Object?> get props => [type, fixedPayment, paymentId];
+  List<Object?> get props => [type, fixedPayment, paymentId, voidReason];
 }

@@ -14,8 +14,18 @@ class InvoiceUseCases {
     return _invoiceRepository.createInvoice(userId, invoice);
   }
 
-  Future<void> deleteInvoice(String userId, String invoiceId) {
-    return _invoiceRepository.deleteInvoice(userId, invoiceId);
+  Future<Invoice> voidInvoice(
+    String userId,
+    String invoiceId, {
+    String? voidedBy,
+    String? voidReason,
+  }) {
+    return _invoiceRepository.voidInvoice(
+      userId,
+      invoiceId,
+      voidedBy: voidedBy,
+      voidReason: voidReason,
+    );
   }
 
   Future<void> updateInvoice(String userId, Invoice invoice) {

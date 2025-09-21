@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gestr/app/incomes/application/view/incomes_page.dart';
 import 'package:gestr/app/incomes/bloc/income_bloc.dart';
 import 'package:gestr/app/incomes/bloc/income_event.dart';
+import 'package:gestr/app/widgets/void_confirmation_dialog.dart';
 import 'package:gestr/domain/entities/income.dart';
 
 mixin IncomesPageMixin on State<IncomesPage> {
@@ -54,29 +55,18 @@ mixin IncomesPageMixin on State<IncomesPage> {
   }
 
   Future<void> confirmDelete(Income inc) async {
-    final ok =
-        await showDialog<bool>(
-          context: context,
-          builder:
-              (dialogContext) => AlertDialog(
-                title: const Text('Eliminar ingreso'),
-                content: Text('¿Eliminar "${inc.title}"?'),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(dialogContext, false),
-                    child: const Text('Cancelar'),
-                  ),
-                  FilledButton(
-                    onPressed: () => Navigator.pop(dialogContext, true),
-                    child: const Text('Eliminar'),
-                  ),
-                ],
-              ),
-        ) ??
-        false;
-    if (!mounted) return;
-    if (ok && inc.id != null) {
-      context.read<IncomeBloc>().add(IncomeEvent.delete(inc.id!));
-    }
+    final reason = await showVoidConfirmationDialog(
+      context: context,
+      title: 'Anular ingreso',
+      message: '¿Quieres anular "${inc.title}"?',
+    );
+    if (!mounted || inc.id == null || reason == null) return;
+    final trimmedReason = reason.trim();
+    context.read<IncomeBloc>().add(
+      IncomeEvent.delete(
+        inc.id!,
+        voidReason: trimmedReason.isEmpty ? null : trimmedReason,
+      ),
+    );
   }
 }

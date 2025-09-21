@@ -4,6 +4,9 @@ class Income {
   final DateTime date;
   final double amount;
   final String? source;
+  final DateTime? voidedAt;
+  final String? voidedBy;
+  final String? voidReason;
 
   const Income({
     this.id,
@@ -11,5 +14,8 @@ class Income {
     required this.date,
     required this.amount,
     this.source,
+    this.voidedAt,
+    this.voidedBy,
+    this.voidReason,
   });
 }

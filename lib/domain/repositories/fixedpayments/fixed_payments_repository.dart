@@ -4,6 +4,11 @@ abstract class FixedPaymentRepository {
   Future<List<FixedPayment>> getFixedPayments(String userId);
   Future<void> createFixedPayment(String userId, FixedPayment payment);
   Future<void> updateFixedPayment(String userId, FixedPayment payment);
-  Future<void> deleteFixedPayment(String userId, String paymentId);
+  Future<FixedPayment> voidFixedPayment(
+    String userId,
+    String paymentId, {
+    String? voidedBy,
+    String? voidReason,
+  });
   Future<FixedPayment?> getFixedPaymentById(String userId, String id);
 }

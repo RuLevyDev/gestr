@@ -10,8 +10,13 @@ class IncomeUseCases {
       _repo.createIncome(userId, income);
   Future<void> update(String userId, Income income) =>
       _repo.updateIncome(userId, income);
-  Future<void> delete(String userId, String id) =>
-      _repo.deleteIncome(userId, id);
+  Future<Income> voidIncome(
+    String userId,
+    String id, {
+    String? voidedBy,
+    String? voidReason,
+  }) =>
+      _repo.voidIncome(userId, id, voidedBy: voidedBy, voidReason: voidReason);
   Future<Income?> getById(String userId, String id) =>
       _repo.getIncomeById(userId, id);
 }
